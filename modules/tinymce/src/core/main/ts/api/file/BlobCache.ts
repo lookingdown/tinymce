@@ -54,7 +54,7 @@ export const BlobCache = (): BlobCache => {
     return mimes[mime.toLowerCase()] || 'dat';
   };
 
-  const create = (o: BlobInfoData | string, blob?: Blob, base64?: string, filename?: string): BlobInfo => {
+  const create = (o: BlobInfoData | string, blob?: Blob, base64?: string, filename?: string, path?: string): BlobInfo => {
 
     if (Type.isString(o)) {
       const id = o;
