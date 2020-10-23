@@ -9,7 +9,7 @@ import { Arr, Fun, Type } from '@ephox/katamari';
 import * as Uuid from '../../util/Uuid';
 
 export interface BlobCache {
-  create: (o: string | BlobInfoData, blob?: Blob, base64?: string, filename?: string) => BlobInfo;
+  create: (o: string | BlobInfoData, blob?: Blob, base64?: string, filename?: string, path?: string) => BlobInfo;
   add: (blobInfo: BlobInfo) => void;
   get: (id: string) => BlobInfo | undefined;
   getByUri: (blobUri: string) => BlobInfo | undefined;
@@ -26,6 +26,7 @@ export interface BlobInfoData {
   base64: string;
   blobUri?: string;
   uri?: string;
+  path?: string;
 }
 
 export interface BlobInfo {
@@ -36,6 +37,7 @@ export interface BlobInfo {
   base64: () => string;
   blobUri: () => string;
   uri: () => string;
+  path: () => string;
 }
 
 export const BlobCache = (): BlobCache => {
@@ -53,6 +55,7 @@ export const BlobCache = (): BlobCache => {
   };
 
   const create = (o: BlobInfoData | string, blob?: Blob, base64?: string, filename?: string): BlobInfo => {
+
     if (Type.isString(o)) {
       const id = o;
 
@@ -60,7 +63,8 @@ export const BlobCache = (): BlobCache => {
         id,
         name: filename,
         blob,
-        base64
+        base64,
+        path: filename
       });
     } else if (Type.isObject(o)) {
       return toBlobInfo(o);
@@ -80,11 +84,12 @@ export const BlobCache = (): BlobCache => {
     return {
       id: Fun.constant(id),
       name: Fun.constant(name),
-      filename: Fun.constant(name + '.' + mimeToExt(o.blob.type)),
+      filename: Fun.constant(name.substring(name.lastIndexOf('/') + 1)),
       blob: Fun.constant(o.blob),
       base64: Fun.constant(o.base64),
       blobUri: Fun.constant(o.blobUri || URL.createObjectURL(o.blob)),
-      uri: Fun.constant(o.uri)
+      uri: Fun.constant(o.uri),
+      path: Fun.constant(o.path.substring(0, o.path.lastIndexOf('/') + 1))
     };
   };
 

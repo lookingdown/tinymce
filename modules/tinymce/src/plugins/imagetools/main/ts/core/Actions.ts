@@ -51,10 +51,12 @@ const getSelectedImage = (editor: Editor): Optional<SugarElement> => {
   }
 };
 
+
 const extractFilename = function (editor: Editor, url: string) {
   const m = url.match(/\/([^\/\?]+)?\.(?:jpeg|jpg|png|gif)(?:\?|$)/i);
+
   if (m) {
-    return editor.dom.encode(m[1]);
+    return editor.dom.encode(m[3]);
   }
   return null;
 };
@@ -120,6 +122,7 @@ const cancelTimedUpload = function (imageUploadTimerState) {
 
 const updateSelectedImage = function (editor: Editor, ir, uploadImmediately, imageUploadTimerState, selectedImage, size?) {
   return ir.toBlob().then(function (blob) {
+
     let uri, name, blobInfo;
 
     const blobCache = editor.editorUpload.blobCache;
@@ -130,8 +133,10 @@ const updateSelectedImage = function (editor: Editor, ir, uploadImmediately, ima
       if (blobInfo) {
         uri = blobInfo.uri();
         name = blobInfo.name();
+        path = blobInfo.path();
       } else {
-        name = extractFilename(editor, uri);
+        name = extractFilename(editor, uri).substring(extractFilename(editor, uri).lastIndexOf('/') + 1);
+        path = extractFilename(editor, uri).substring(0, extractFilename(editor, uri).lastIndexOf('/') + 1);
       }
     }
 
@@ -140,7 +145,8 @@ const updateSelectedImage = function (editor: Editor, ir, uploadImmediately, ima
       blob,
       base64: ir.toBase64(),
       uri,
-      name
+      name,
+      path
     });
 
     blobCache.add(blobInfo);
