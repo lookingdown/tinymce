@@ -53,7 +53,8 @@ const getSelectedImage = (editor: Editor): Optional<SugarElement> => {
 
 
 const extractFilename = function (editor: Editor, url: string) {
-  const m = url.match(/\/([^\/\?]+)?\.(?:jpeg|jpg|png|gif)(?:\?|$)/i);
+  
+  const m = url.match(/(https?:\/\/)([^:^\/]*)(.*)/i);
 
   if (m) {
     return editor.dom.encode(m[3]);
@@ -123,7 +124,7 @@ const cancelTimedUpload = function (imageUploadTimerState) {
 const updateSelectedImage = function (editor: Editor, ir, uploadImmediately, imageUploadTimerState, selectedImage, size?) {
   return ir.toBlob().then(function (blob) {
 
-    let uri, name, blobInfo;
+    let uri, name, path, blobCache, blobInfo;
 
     const blobCache = editor.editorUpload.blobCache;
     uri = selectedImage.src;
