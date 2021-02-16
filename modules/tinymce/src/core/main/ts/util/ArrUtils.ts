@@ -70,7 +70,7 @@ const map: {
 } = <T, R>(array, callback): R[] => {
   const out: R[] = [];
 
-  each<T>(array, function (item, index) {
+  each<T>(array, (item, index) => {
     out.push(callback(item, index, array));
   });
 
@@ -83,7 +83,7 @@ const filter: {
 } = <T>(a, f?): T[] => {
   const o: T[] = [];
 
-  each<T>(a, function (v, index) {
+  each<T>(a, (v, index) => {
     if (!f || f(v, index, a)) {
       o.push(v);
     }
@@ -107,7 +107,7 @@ const indexOf = <T>(a: ArrayLike<T>, v: T): number => {
 const reduce: {
   <T, R>(collection: ArrayLike<T>, iteratee: (acc: R, item: T, index: number) => R, accumulator: R, thisArg?: any): R;
   <T>(collection: ArrayLike<T>, iteratee: (acc: T, item: T, index: number) => T, accumulator?: undefined, thisArg?: any): T;
-} = <T, R>(collection, iteratee, accumulator?, thisArg?): R => {
+} = <R>(collection, iteratee, accumulator?, thisArg?): R => {
   let acc: R = Type.isUndefined(accumulator) ? collection[0] : accumulator;
 
   for (let i = 0; i < collection.length; i++) {

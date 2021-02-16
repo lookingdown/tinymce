@@ -5,7 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Obj, Type } from '@ephox/katamari';
+import { Fun, Obj, Optional, Type } from '@ephox/katamari';
 import DOMUtils from '../api/dom/DOMUtils';
 import Editor from '../api/Editor';
 import IconManager from '../api/IconManager';
@@ -13,6 +13,7 @@ import PluginManager from '../api/PluginManager';
 import * as Settings from '../api/Settings';
 import { ThemeInitFunc } from '../api/SettingsTypes';
 import ThemeManager from '../api/ThemeManager';
+import { EditorUiApi } from '../api/ui/Ui';
 import Tools from '../api/util/Tools';
 import * as ErrorReporter from '../ErrorReporter';
 import { appendContentCssFromSettings } from './ContentCss';
@@ -21,13 +22,13 @@ import * as InitIframe from './InitIframe';
 
 const DOM = DOMUtils.DOM;
 
-const initPlugin = function (editor: Editor, initializedPlugins: string[], plugin: string) {
+const initPlugin = (editor: Editor, initializedPlugins: string[], plugin: string) => {
   const Plugin = PluginManager.get(plugin);
 
   const pluginUrl = PluginManager.urls[plugin] || editor.documentBaseUrl.replace(/\/$/, '');
   plugin = Tools.trim(plugin);
   if (Plugin && Tools.inArray(initializedPlugins, plugin) === -1) {
-    Tools.each(PluginManager.dependencies(plugin), function (dep) {
+    Tools.each(PluginManager.dependencies(plugin), (dep) => {
       initPlugin(editor, initializedPlugins, dep);
     });
 
@@ -50,15 +51,15 @@ const initPlugin = function (editor: Editor, initializedPlugins: string[], plugi
   }
 };
 
-const trimLegacyPrefix = function (name: string) {
+const trimLegacyPrefix = (name: string) => {
   // Themes and plugins can be prefixed with - to prevent them from being lazy loaded
   return name.replace(/^\-/, '');
 };
 
-const initPlugins = function (editor: Editor) {
+const initPlugins = (editor: Editor) => {
   const initializedPlugins = [];
 
-  Tools.each(Settings.getPlugins(editor).split(/[ ,]/), function (name) {
+  Tools.each(Settings.getPlugins(editor).split(/[ ,]/), (name) => {
     initPlugin(editor, initializedPlugins, trimLegacyPrefix(name));
   });
 };
@@ -98,12 +99,12 @@ const initTheme = (editor: Editor) => {
   }
 };
 
-const renderFromLoadedTheme = function (editor: Editor) {
+const renderFromLoadedTheme = (editor: Editor) => {
   // Render UI
   return editor.theme.renderUI();
 };
 
-const renderFromThemeFunc = function (editor: Editor) {
+const renderFromThemeFunc = (editor: Editor) => {
   const elm = editor.getElement();
   const theme = Settings.getTheme(editor) as ThemeInitFunc;
   const info = theme(editor, elm);
@@ -121,7 +122,7 @@ const renderFromThemeFunc = function (editor: Editor) {
   return info;
 };
 
-const createThemeFalseResult = function (element: HTMLElement) {
+const createThemeFalseResult = (element: HTMLElement) => {
   return {
     editorContainer: element,
     iframeContainer: element,
@@ -129,7 +130,7 @@ const createThemeFalseResult = function (element: HTMLElement) {
   };
 };
 
-const renderThemeFalseIframe = function (targetElement: Element) {
+const renderThemeFalseIframe = (targetElement: Element) => {
   const iframeContainer = DOM.create('div');
 
   DOM.insertAfter(iframeContainer, targetElement);
@@ -137,12 +138,12 @@ const renderThemeFalseIframe = function (targetElement: Element) {
   return createThemeFalseResult(iframeContainer);
 };
 
-const renderThemeFalse = function (editor: Editor) {
+const renderThemeFalse = (editor: Editor) => {
   const targetElement = editor.getElement();
   return editor.inline ? createThemeFalseResult(null) : renderThemeFalseIframe(targetElement);
 };
 
-const renderThemeUi = function (editor: Editor) {
+const renderThemeUi = (editor: Editor) => {
   const elm = editor.getElement();
 
   editor.orgDisplay = elm.style.display;
@@ -156,14 +157,29 @@ const renderThemeUi = function (editor: Editor) {
   }
 };
 
-const init = function (editor: Editor) {
+const augmentEditorUiApi = (editor: Editor, api: Partial<EditorUiApi>) => {
+  const uiApiFacade: EditorUiApi = {
+    show: Optional.from(api.show).getOr(Fun.noop),
+    hide: Optional.from(api.hide).getOr(Fun.noop),
+    disable: Optional.from(api.disable).getOr(Fun.noop),
+    isDisabled: Optional.from(api.isDisabled).getOr(Fun.never),
+    enable: () => {
+      if (!editor.mode.isReadOnly()) {
+        Optional.from(api.enable).map(Fun.call);
+      }
+    }
+  };
+  editor.ui = { ...editor.ui, ...uiApiFacade };
+};
+
+const init = (editor: Editor) => {
   editor.fire('ScriptsLoaded');
 
   initIcons(editor);
   initTheme(editor);
   initPlugins(editor);
   const renderInfo = renderThemeUi(editor);
-  editor.ui = { ...editor.ui, ...renderInfo.api };
+  augmentEditorUiApi(editor, Optional.from(renderInfo.api).getOr({}));
   const boxInfo = {
     editorContainer: renderInfo.editorContainer,
     iframeContainer: renderInfo.iframeContainer

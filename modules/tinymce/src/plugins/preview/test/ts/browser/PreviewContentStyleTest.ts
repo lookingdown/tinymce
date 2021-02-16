@@ -18,26 +18,36 @@ UnitTest.asynctest('browser.tinymce.plugins.preview.PreviewContentStyleTest', (s
     Assert.eq('Should be same html', expected, regexp.test(actual));
   });
 
-  const sAssertIframeHtmlContains = function (editor, text) {
+  const sAssertIframeHtmlContains = (editor, text) => {
     return Logger.t('Assert Iframe Html contains ' + text, sAssertIframeContains(editor, text, true));
   };
 
-  const sAssertIframeHtmlNotContains = function (editor, text) {
+  const sAssertIframeHtmlNotContains = (editor, text) => {
     return Logger.t('Assert Iframe Html does not contain ' + text, sAssertIframeContains(editor, text, false));
   };
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     const tinyApis = TinyApis(editor);
+    const contentCssUrl = editor.documentBaseURI.toAbsolute('/project/tinymce/js/tinymce/skins/content/default/content.css');
 
-    Pipeline.async({},
-      Log.steps('TBA', 'Preview: Set content, set style setting and assert content and style. Delete style and assert style is removed', [
+    Pipeline.async({}, [
+      Log.stepsAsStep('TBA', 'Preview: Set content, set style setting and assert content and style. Delete style and assert style is removed', [
         tinyApis.sSetContent('<p>hello world</p>'),
         tinyApis.sSetSetting('content_style', 'p {color: blue;}'),
         sAssertIframeHtmlContains(editor, '<style type="text/css">p {color: blue;}</style>'),
         tinyApis.sDeleteSetting('content_style'),
         sAssertIframeHtmlNotContains(editor, '<style type="text/css">p {color: blue;}</style>')
+      ]),
+      Log.stepsAsStep('TINY-6529', 'Preview: Set content, set style settings and assert content and styles. content_style should take precedence. Delete style and assert style is removed', [
+        tinyApis.sSetContent('<p>hello world</p>'),
+        tinyApis.sSetSetting('content_css_cors', true),
+        tinyApis.sSetSetting('content_style', 'p {color: blue;}'),
+        sAssertIframeHtmlContains(editor, `<link type="text/css" rel="stylesheet" href="${contentCssUrl}" crossorigin="anonymous"><style type="text/css">p {color: blue;}</style>`),
+        tinyApis.sSetSetting('content_css_cors', false),
+        tinyApis.sDeleteSetting('content_style'),
+        sAssertIframeHtmlNotContains(editor, '<style type="text/css">p {color: blue;}</style>')
       ])
-      , onSuccess, onFailure);
+    ], onSuccess, onFailure);
   }, {
     theme: 'silver',
     plugins: 'preview',

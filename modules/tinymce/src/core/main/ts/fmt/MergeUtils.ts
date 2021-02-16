@@ -7,11 +7,11 @@
 
 import DOMUtils from '../api/dom/DOMUtils';
 import ElementUtils from '../api/dom/ElementUtils';
-import { FormatVars } from '../api/fmt/Format';
 import Tools from '../api/util/Tools';
 import * as Bookmarks from '../bookmark/Bookmarks';
 import * as NodeType from '../dom/NodeType';
 import { isCaretNode } from './FormatContainer';
+import { FormatVars } from './FormatTypes';
 import * as FormatUtils from './FormatUtils';
 
 const each = Tools.each;
@@ -37,7 +37,7 @@ const findElementSibling = (node: Node, siblingName: 'nextSibling' | 'previousSi
 
 const mergeSiblingsNodes = (dom: DOMUtils, prev: Node, next: Node) => {
   let sibling, tmpSibling;
-  const elementUtils = new ElementUtils(dom);
+  const elementUtils = ElementUtils(dom);
 
   // Check if next/prev exists and that they are elements
   if (prev && next) {
@@ -66,7 +66,6 @@ const mergeSiblingsNodes = (dom: DOMUtils, prev: Node, next: Node) => {
 
   return next;
 };
-
 
 const mergeSiblings = (dom: DOMUtils, format, vars: FormatVars, node: Node) => {
   // Merge next and previous siblings if they are similar <b>text</b><b>text</b> becomes <b>texttext</b>

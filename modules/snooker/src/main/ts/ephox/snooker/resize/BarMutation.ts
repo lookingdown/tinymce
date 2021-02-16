@@ -25,27 +25,27 @@ export interface BarMutation {
   };
 }
 
-export const BarMutation = function (): BarMutation {
-  const events = Events.create({
+export const BarMutation = (): BarMutation => {
+  const events: DragDistanceEvents = Events.create({
     drag: Event([ 'xDelta', 'yDelta', 'target' ])
-  }) as DragDistanceEvents;
+  });
 
   let target = Optional.none<SugarElement>();
 
   const delegate = Mutation();
 
-  delegate.events.drag.bind(function (event) {
-    target.each(function (t) {
+  delegate.events.drag.bind((event) => {
+    target.each((t) => {
       // There is always going to be this padding / border collapse / margin problem with widths. I'll have to resolve that.
       events.trigger.drag(event.xDelta, event.yDelta, t);
     });
   });
 
-  const assign = function (t: SugarElement) {
+  const assign = (t: SugarElement) => {
     target = Optional.some(t);
   };
 
-  const get = function () {
+  const get = () => {
     return target;
   };
 

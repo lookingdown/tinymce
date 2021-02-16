@@ -3,8 +3,8 @@ import { Gene, TestUniverse, TextGene } from '@ephox/boss';
 import * as Injection from 'ephox/phoenix/injection/Injection';
 import * as Finder from 'ephox/phoenix/test/Finder';
 
-UnitTest.test('InsertAtTest', function () {
-  const makeUniverse = function () {
+UnitTest.test('InsertAtTest', () => {
+  const makeUniverse = () => {
     return TestUniverse(
       Gene('root', 'root', [
         Gene('a', 'node', [
@@ -22,12 +22,13 @@ UnitTest.test('InsertAtTest', function () {
     );
   };
 
-  const check = function (expected: string, element: string, offset: number, injection: Gene) {
+  const check = (expected: string, element: string, offset: number, injection: Gene) => {
     const universe = makeUniverse();
     const start = Finder.get(universe, element);
     Injection.atStartOf(universe, start, offset, injection);
-    assert.eq(expected, universe.shortlog(function (item) {
-      return item.name === 'TEXT_GENE' ? 'text("' + item.text + '")' : item.id;
+    assert.eq(expected, universe.shortlog((item) => {
+      const props = universe.property();
+      return props.isText(item) ? `text("${props.getText(item)}")` : item.id;
     }));
   };
 

@@ -1,8 +1,9 @@
+import { Fun } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 
 declare let tinymce: any;
 
-export default function () {
+export default () => {
 
   const button = document.createElement('button');
   button.innerHTML = 'Get all annotations';
@@ -23,18 +24,18 @@ export default function () {
     setup: (editor: Editor) => {
       editor.ui.registry.addButton('annotate-alpha', {
         text: 'Annotate',
-        onAction() {
+        onAction: () => {
           const comment = window.prompt('Comment with?');
           editor.annotator.annotate('alpha', {
             comment
           });
           editor.focus();
         },
-        onSetup(btnApi) {
+        onSetup: (btnApi) => {
           editor.annotator.annotationChanged('alpha', (state, _name, _obj) => {
             btnApi.setDisabled(state);
           });
-          return () => {};
+          return Fun.noop;
         }
       });
 
@@ -53,4 +54,4 @@ export default function () {
 
     menubar: false
   });
-}
+};

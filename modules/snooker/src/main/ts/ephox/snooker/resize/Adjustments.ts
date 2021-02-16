@@ -3,13 +3,13 @@ import { SugarElement } from '@ephox/sugar';
 import { ResizeBehaviour } from '../api/ResizeBehaviour';
 import { Detail, RowData } from '../api/Structs';
 import { TableSize } from '../api/TableSize';
-import * as Deltas from '../calc/Deltas';
 import { Warehouse } from '../api/Warehouse';
+import * as Deltas from '../calc/Deltas';
 import * as CellUtils from '../util/CellUtils';
+import { BarPositions, RowInfo } from './BarPositions';
 import * as ColumnSizes from './ColumnSizes';
 import * as Recalculations from './Recalculations';
 import * as Sizes from './Sizes';
-import { BarPositions, RowInfo } from './BarPositions';
 
 const sumUp = (newSize: number[]) => Arr.foldr(newSize, (b, a) => b + a, 0);
 
@@ -30,7 +30,7 @@ const recalculateAndApply = (warehouse: Warehouse, widths: number[], tableSize: 
   });
 };
 
-const adjustWidth = (table: SugarElement, delta: number, index: number, resizing: ResizeBehaviour, tableSize: TableSize) => {
+const adjustWidth = (table: SugarElement, delta: number, index: number, resizing: ResizeBehaviour, tableSize: TableSize): void => {
   const warehouse = Warehouse.fromTable(table);
   const step = tableSize.getCellDelta(delta);
   const widths = tableSize.getWidths(warehouse, tableSize);
@@ -45,9 +45,9 @@ const adjustWidth = (table: SugarElement, delta: number, index: number, resizing
   resizing.resizeTable(tableSize.adjustTableWidth, clampedStep, isLastColumn);
 };
 
-const adjustHeight = (table: SugarElement, delta: number, index: number, direction: BarPositions<RowInfo>) => {
+const adjustHeight = (table: SugarElement, delta: number, index: number, direction: BarPositions<RowInfo>): void => {
   const warehouse = Warehouse.fromTable(table);
-  const heights = ColumnSizes.getPixelHeights(warehouse, direction);
+  const heights = ColumnSizes.getPixelHeights(warehouse, table, direction);
 
   const newHeights = Arr.map(heights, (dy, i) => index === i ? Math.max(delta + dy, CellUtils.minHeight()) : dy);
 
@@ -66,12 +66,23 @@ const adjustHeight = (table: SugarElement, delta: number, index: number, directi
   Sizes.setHeight(table, total);
 };
 
+// Using the width of the added/removed columns gathered on extraction (pixelDelta), get and apply the new column sizes and overall table width delta
+const adjustAndRedistributeWidths = <T extends Detail> (_table: SugarElement<HTMLTableElement>, list: RowData<T>[], details: { pixelDelta: number }, tableSize: TableSize, resizeBehaviour: ResizeBehaviour): void => {
+  const warehouse = Warehouse.generate(list);
+  const sizes = tableSize.getWidths(warehouse, tableSize);
+  const tablePixelWidth = tableSize.pixelWidth();
+
+  const { newSizes, delta } = resizeBehaviour.calcRedestributedWidths(sizes, tablePixelWidth, details.pixelDelta, tableSize.isRelative);
+  recalculateAndApply(warehouse, newSizes, tableSize);
+  tableSize.adjustTableWidth(delta);
+};
+
 // Ensure that the width of table cells match the passed in table information.
-const adjustWidthTo = <T extends Detail> (table: SugarElement, list: RowData<T>[], tableSize: TableSize) => {
+const adjustWidthTo = <T extends Detail> (_table: SugarElement, list: RowData<T>[], _info: { }, tableSize: TableSize): void => {
   const warehouse = Warehouse.generate(list);
   const widths = tableSize.getWidths(warehouse, tableSize);
 
   recalculateAndApply(warehouse, widths, tableSize);
 };
 
-export { adjustWidth, adjustHeight, adjustWidthTo };
+export { adjustWidth, adjustHeight, adjustWidthTo, adjustAndRedistributeWidths };

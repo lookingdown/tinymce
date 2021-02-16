@@ -1,4 +1,3 @@
-import { Chain, NamedChain, UiFinder } from '@ephox/agar';
 import { Arr } from '@ephox/katamari';
 import { Attribute, SugarBody, SugarElement, SugarNode } from '@ephox/sugar';
 import { createDataTransfer, getDragImage } from '../datatransfer/DataTransfer';
@@ -6,7 +5,10 @@ import {
   createDragendEvent, createDragenterEvent, createDragEvent, createDragoverEvent, createDragstartEvent, createDropEvent, dispatchDndEvent,
   getWindowFromElement, isDefaultPrevented
 } from '../dragndrop/DndEvents';
+import { Chain } from './Chain';
+import { NamedChain } from './NamedChain';
 import { Step } from './Step';
+import * as UiFinder from './UiFinder';
 
 interface Item {
   data: string;
@@ -55,7 +57,7 @@ const dragnDrop = (from: SugarElement<any>, to: SugarElement<any>, prevented: bo
   dispatchDndEvent(createDragendEvent(fromWin, fromRect.left, fromRect.top, transfer), from);
 };
 
-const drop = (to: SugarElement<any>, prevented: boolean, addItems: (transfer: DataTransfer) => void): void => {
+const drop = (to: SugarElement<Element>, prevented: boolean, addItems: (transfer: DataTransfer) => void): void => {
   const toWin = getWindowFromElement(to);
   const toRect = to.dom.getBoundingClientRect();
   const transfer = createDataTransfer();
@@ -69,7 +71,7 @@ const drop = (to: SugarElement<any>, prevented: boolean, addItems: (transfer: Da
   check(dispatchDndEvent(createDropEvent(toWin, toRect.left, toRect.top, transfer), to));
 };
 
-const dropFiles = (files: File[], to: SugarElement<any>, prevented: boolean = true): void => {
+const dropFiles = (files: File[], to: SugarElement<Element>, prevented: boolean = true): void => {
   drop(to, prevented, (transfer) => {
     Arr.each(files, (file) => {
       transfer.items.add(file);
@@ -77,7 +79,7 @@ const dropFiles = (files: File[], to: SugarElement<any>, prevented: boolean = tr
   });
 };
 
-const dropItems = (items: Item[], to: SugarElement<any>, prevented: boolean = true): void => {
+const dropItems = (items: Item[], to: SugarElement<Element>, prevented: boolean = true): void => {
   drop(to, prevented, (transfer) => {
     Arr.each(items, (item) => {
       transfer.items.add(item.data, item.type);
@@ -85,7 +87,7 @@ const dropItems = (items: Item[], to: SugarElement<any>, prevented: boolean = tr
   });
 };
 
-const cDragnDrop = <T> (fromSelector: string, toSelector: string, prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> => NamedChain.asChain([
+const cDragnDrop = <T extends Element> (fromSelector: string, toSelector: string, prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> => NamedChain.asChain([
   NamedChain.direct(NamedChain.inputName(), UiFinder.cFindIn(fromSelector), 'from'),
   NamedChain.direct(NamedChain.inputName(), UiFinder.cFindIn(toSelector), 'to'),
   Chain.op((obj) => dragnDrop(obj.from, obj.to, prevented)),
@@ -95,25 +97,34 @@ const cDragnDrop = <T> (fromSelector: string, toSelector: string, prevented?: bo
 const sDragnDrop = <T>(fromSelector: string, toSelector: string, prevented?: boolean): Step<T, T> =>
   Chain.asStep(SugarBody.body(), [ cDragnDrop(fromSelector, toSelector, prevented) ]);
 
+const pDragnDrop = (fromSelector: string, toSelector: string, prevented?: boolean): Promise<SugarElement<Element>> =>
+  Chain.toPromise(cDragnDrop(fromSelector, toSelector, prevented))(SugarBody.body());
+
 const sDropFiles = <T>(files: File[], toSelector: string, prevented?: boolean): Step<T, T> => Chain.asStep(SugarBody.body(), [
   UiFinder.cFindIn(toSelector),
   cDropFiles(files, prevented)
 ]);
 
-const cDropFiles = <T> (files: File[], prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> =>
+const cDropFiles = <T extends Element> (files: File[], prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> =>
   Chain.op((elm) => {
     dropFiles(files, elm, prevented);
   });
+
+const pDropFiles = <T extends Element> (elm: SugarElement<T>, files: File[], prevented?: boolean): Promise<SugarElement<T>> =>
+  Chain.toPromise(cDropFiles<T>(files, prevented))(elm);
 
 const sDropItems = <T> (items: Item[], toSelector: string, prevented?: boolean): Step<T, T> => Chain.asStep(SugarBody.body(), [
   UiFinder.cFindIn(toSelector),
   cDropItems(items, prevented)
 ]);
 
-const cDropItems = <T> (items: Item[], prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> =>
+const cDropItems = <T extends Element> (items: Item[], prevented?: boolean): Chain<SugarElement<T>, SugarElement<T>> =>
   Chain.op((elm) => {
     dropItems(items, elm, prevented);
   });
+
+const pDropItems = <T extends Element> (elm: SugarElement<T>, items: Item[], prevented?: boolean): Promise<SugarElement<T>> =>
+  Chain.toPromise(cDropItems<T>(items, prevented))(elm);
 
 export {
   isDraggable,
@@ -122,9 +133,12 @@ export {
   dropItems,
   cDragnDrop,
   sDragnDrop,
+  pDragnDrop,
   sDropFiles,
   cDropFiles,
+  pDropFiles,
   sDropItems,
   cDropItems,
+  pDropItems,
   getDragImage
 };

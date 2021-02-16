@@ -28,7 +28,7 @@ const removeTinymceElements = () => {
   Arr.each(elements, Remove.remove);
 };
 
-const setup = (callbacks: Callbacks, settings: Record<string, any>, elementOpt: Optional<SugarElement>) => {
+const setup = (callbacks: Callbacks, settings: Record<string, any>, elementOpt: Optional<SugarElement>): void => {
   const target = elementOpt.getOrThunk(() => createTarget(settings.inline));
   const randomId = Id.generate('tiny-loader');
   Attribute.set(target, 'id', randomId);
@@ -72,12 +72,12 @@ const setup = (callbacks: Callbacks, settings: Record<string, any>, elementOpt: 
     tinymce.init({
       ...settings,
       ...targetSettings,
-      setup(editor: Editor) {
+      setup: (editor: Editor) => {
         // Execute the setup called by the test.
         settingsSetup(editor);
 
-        editor.on('SkinLoaded', () => {
-          setTimeout(function () {
+        editor.once('SkinLoaded', () => {
+          setTimeout(() => {
             try {
               callbacks.run(editor, onSuccess, onFailure);
             } catch (e) {
@@ -86,7 +86,7 @@ const setup = (callbacks: Callbacks, settings: Record<string, any>, elementOpt: 
           }, 0);
         });
 
-        editor.on('SkinLoadError', (e) => {
+        editor.once('SkinLoadError', (e) => {
           callbacks.failure(e.message);
         });
       }

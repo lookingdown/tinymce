@@ -6,7 +6,7 @@ import { Warehouse } from '../api/Warehouse';
 // Returns the sum of elements of measures in the half-open range [start, end)
 // Measures is in pixels, treated as an array of integers or integers in string format.
 // NOTE: beware of accumulated rounding errors over multiple columns - could result in noticeable table width changes
-const total = function (start: number, end: number, measures: number[]): number {
+const total = (start: number, end: number, measures: number[]): number => {
   let r = 0;
   for (let i = start; i < end; i++) {
     r += measures[i] !== undefined ? measures[i] : 0;
@@ -34,7 +34,7 @@ interface CellHeightSpan extends CellHeight {
 const recalculateWidthForCells = (warehouse: Warehouse, widths: number[]): CellWidthSpan[] => {
   const all = Warehouse.justCells(warehouse);
 
-  return Arr.map(all, function (cell) {
+  return Arr.map(all, (cell) => {
     // width of a spanning cell is sum of widths of representative columns it spans
     const width = total(cell.column, cell.column + cell.colspan, widths);
     return {
@@ -67,8 +67,8 @@ const recalculateHeightForCells = (warehouse: Warehouse, heights: number[]): Cel
   });
 };
 
-const matchRowHeight = function (warehouse: Warehouse, heights: number[]): CellHeight[] {
-  return Arr.map(warehouse.all, function (row, i) {
+const matchRowHeight = (warehouse: Warehouse, heights: number[]): CellHeight[] => {
+  return Arr.map(warehouse.all, (row, i) => {
     return {
       element: row.element,
       height: heights[i]

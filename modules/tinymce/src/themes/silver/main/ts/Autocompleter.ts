@@ -109,7 +109,8 @@ const register = (editor: Editor, sharedBackstage: UiFactoryBackstageShared) => 
         },
         columns,
         ItemResponse.BUBBLE_TO_SANDBOX,
-        sharedBackstage
+        sharedBackstage,
+        match.highlightOn
       );
     });
   };
@@ -158,8 +159,8 @@ const register = (editor: Editor, sharedBackstage: UiFactoryBackstageShared) => 
 
   const doLookup = (fetchOptions?: Record<string, any>): Optional<AutocompleteLookupInfo> =>
     activeAutocompleter.get().map(
-      (ac) => getContext(editor.dom, editor.selection.getRng(), ac.triggerChar).
-        bind((newContext) => lookupWithContext(editor, getAutocompleters, newContext, fetchOptions))
+      (ac) => getContext(editor.dom, editor.selection.getRng(), ac.triggerChar)
+        .bind((newContext) => lookupWithContext(editor, getAutocompleters, newContext, fetchOptions))
     ).getOrThunk(() => lookup(editor, getAutocompleters));
 
   const load = (fetchOptions?: Record<string, any>) => {
@@ -214,7 +215,9 @@ const register = (editor: Editor, sharedBackstage: UiFactoryBackstageShared) => 
     getView: () => InlineView.getContent(autocompleter)
   };
 
-  AutocompleterEditorEvents.setup(autocompleterUiApi, editor);
+  if (editor.hasPlugin('rtc') === false) {
+    AutocompleterEditorEvents.setup(autocompleterUiApi, editor);
+  }
 };
 
 export const Autocompleter = {

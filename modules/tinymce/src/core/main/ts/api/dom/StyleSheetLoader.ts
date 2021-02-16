@@ -16,7 +16,7 @@ import Tools from '../util/Tools';
  * @class tinymce.dom.StyleSheetLoader
  */
 
-export interface StyleSheetLoader {
+interface StyleSheetLoader {
   load: (url: string, success: () => void, failure?: () => void) => void;
   loadAll: (urls: string[], success: (urls: string[]) => void, failure: (urls: string[]) => void) => void;
   unload: (url: string) => void;
@@ -38,7 +38,7 @@ interface StyleState {
   count: number;
 }
 
-export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, settings: StyleSheetLoaderSettings = {}): StyleSheetLoader {
+const StyleSheetLoader = (documentOrShadowRoot: Document | ShadowRoot, settings: StyleSheetLoaderSettings = {}): StyleSheetLoader => {
   let idCount = 0;
   const loadedStates: Record<string, StyleState> = {};
 
@@ -69,7 +69,7 @@ export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, se
     }));
 
   /**
-   * Loads the specified CSS file and calls the `loadedCallback` once it's finished loading.
+   * Loads the specified CSS file and calls the `success` callback if successfully loaded, otherwise calls `failure`.
    *
    * @method load
    * @param {String} url Url to be loaded.
@@ -199,7 +199,7 @@ export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, se
     });
 
   /**
-   * Loads the specified CSS files and calls the `success` callback once it's finished loading.
+   * Loads the specified CSS files and calls the `success` callback if successfully loaded, otherwise calls `failure`.
    *
    * @method loadAll
    * @param {Array} urls URLs to be loaded.
@@ -220,6 +220,8 @@ export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, se
 
   /**
    * Unloads the specified CSS file if no resources currently depend on it.
+   * <br>
+   * <em>Added in TinyMCE 5.5</em>
    *
    * @method unload
    * @param {String} url URL to unload or remove.
@@ -237,6 +239,8 @@ export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, se
 
   /**
    * Unloads each specified CSS file if no resources currently depend on it.
+   * <br>
+   * <em>Added in TinyMCE 5.5</em>
    *
    * @method unloadAll
    * @param {Array} urls URLs to unload or remove.
@@ -254,4 +258,6 @@ export function StyleSheetLoader(documentOrShadowRoot: Document | ShadowRoot, se
     unloadAll,
     _setReferrerPolicy
   };
-}
+};
+
+export default StyleSheetLoader;

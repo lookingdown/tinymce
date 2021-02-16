@@ -11,8 +11,8 @@ import * as Dialog from '../ui/Dialog';
 
 type CharMap = CharMap.CharMap;
 
-const register = function (editor: Editor, charMap: CharMap[]) {
-  editor.addCommand('mceShowCharmap', function () {
+const register = (editor: Editor, charMap: CharMap[]) => {
+  editor.addCommand('mceShowCharmap', () => {
     Dialog.open(editor, charMap);
   });
 };

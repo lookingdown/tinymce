@@ -1,20 +1,25 @@
+export interface Throttler<A extends any[]> {
+  readonly cancel: () => void;
+  readonly throttle: (...args: A) => void;
+}
+
 // Run a function fn after rate ms. If another invocation occurs
 // during the time it is waiting, update the arguments f will run
 // with (but keep the current schedule)
-export const adaptable = function <A extends any[], B> (fn: (...a: A) => B, rate: number) {
+export const adaptable = <A extends any[]>(fn: (...a: A) => void, rate: number): Throttler<A> => {
   let timer: number | null = null;
   let args: A | null = null;
-  const cancel = function () {
+  const cancel = () => {
     if (timer !== null) {
       clearTimeout(timer);
       timer = null;
       args = null;
     }
   };
-  const throttle = function (...newArgs: A) {
+  const throttle = (...newArgs: A) => {
     args = newArgs;
     if (timer === null) {
-      timer = setTimeout(function () {
+      timer = setTimeout(() => {
         const blargs = args === null ? [] : args;
         fn.apply(null, blargs);
         timer = null;
@@ -31,17 +36,17 @@ export const adaptable = function <A extends any[], B> (fn: (...a: A) => B, rate
 
 // Run a function fn after rate ms. If another invocation occurs
 // during the time it is waiting, ignore it completely.
-export const first = function (fn: Function, rate: number) {
+export const first = <A extends any[]>(fn: (...a: A) => void, rate: number): Throttler<A> => {
   let timer: number | null = null;
-  const cancel = function () {
+  const cancel = () => {
     if (timer !== null) {
       clearTimeout(timer);
       timer = null;
     }
   };
-  const throttle = function (...args) {
+  const throttle = (...args) => {
     if (timer === null) {
-      timer = setTimeout(function () {
+      timer = setTimeout(() => {
         fn.apply(null, args);
         timer = null;
       }, rate);
@@ -57,19 +62,19 @@ export const first = function (fn: Function, rate: number) {
 // Run a function fn after rate ms. If another invocation occurs
 // during the time it is waiting, reschedule the function again
 // with the new arguments.
-export const last = function (fn: Function, rate: number) {
+export const last = <A extends any[]>(fn: (...a: A) => void, rate: number): Throttler<A> => {
   let timer: number | null = null;
-  const cancel = function () {
+  const cancel = () => {
     if (timer !== null) {
       clearTimeout(timer);
       timer = null;
     }
   };
-  const throttle = function (...args) {
+  const throttle = (...args) => {
     if (timer !== null) {
       clearTimeout(timer);
     }
-    timer = setTimeout(function () {
+    timer = setTimeout(() => {
       fn.apply(null, args);
       timer = null;
     }, rate);

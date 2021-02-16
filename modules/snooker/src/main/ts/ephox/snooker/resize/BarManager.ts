@@ -10,72 +10,82 @@ import { BarMutation } from './BarMutation';
 import * as Bars from './Bars';
 
 export interface DragAdjustHeightEvent {
-  readonly table: SugarElement;
+  readonly table: SugarElement<HTMLTableElement>;
   readonly delta: number;
   readonly row: number;
 }
 
 export interface DragAdjustWidthEvent {
-  readonly table: SugarElement;
+  readonly table: SugarElement<HTMLTableElement>;
   readonly delta: number;
   readonly column: number;
 }
 
 export interface DragAdjustEvents {
-  registry: {
-    adjustHeight: Bindable<DragAdjustHeightEvent>;
-    adjustWidth: Bindable<DragAdjustWidthEvent>;
-    startAdjust: Bindable<{}>;
+  readonly registry: {
+    readonly adjustHeight: Bindable<DragAdjustHeightEvent>;
+    readonly adjustWidth: Bindable<DragAdjustWidthEvent>;
+    readonly startAdjust: Bindable<{}>;
   };
-  trigger: {
-    adjustHeight: (table: SugarElement, delta: number, row: number) => void;
-    adjustWidth: (table: SugarElement, delta: number, column: number) => void;
-    startAdjust: () => void;
+  readonly trigger: {
+    readonly adjustHeight: (table: SugarElement<HTMLTableElement>, delta: number, row: number) => void;
+    readonly adjustWidth: (table: SugarElement<HTMLTableElement>, delta: number, column: number) => void;
+    readonly startAdjust: () => void;
   };
+}
+
+export interface BarManager {
+  readonly destroy: () => void;
+  readonly refresh: (table: SugarElement<HTMLTableElement>) => void;
+  readonly on: () => void;
+  readonly off: () => void;
+  readonly hideBars: () => void;
+  readonly showBars: () => void;
+  readonly events: DragAdjustEvents['registry'];
 }
 
 const resizeBarDragging = Styles.resolve('resizer-bar-dragging');
 
-export const BarManager = function (wire: ResizeWire) {
+export const BarManager = (wire: ResizeWire): BarManager => {
   const mutation = BarMutation();
   const resizing = Dragger.transform(mutation, {});
 
-  let hoverTable = Optional.none<SugarElement>();
+  let hoverTable = Optional.none<SugarElement<HTMLTableElement>>();
 
-  const getResizer = function (element: SugarElement, type: string) {
+  const getResizer = (element: SugarElement, type: string) => {
     return Optional.from(Attribute.get(element, type));
   };
 
   /* Reposition the bar as the user drags */
-  mutation.events.drag.bind(function (event) {
-    getResizer(event.target, 'data-row').each(function (_dataRow) {
+  mutation.events.drag.bind((event) => {
+    getResizer(event.target, 'data-row').each((_dataRow) => {
       const currentRow = CellUtils.getCssValue(event.target, 'top');
       Css.set(event.target, 'top', currentRow + event.yDelta + 'px');
     });
 
-    getResizer(event.target, 'data-column').each(function (_dataCol) {
+    getResizer(event.target, 'data-column').each((_dataCol) => {
       const currentCol = CellUtils.getCssValue(event.target, 'left');
       Css.set(event.target, 'left', currentCol + event.xDelta + 'px');
     });
   });
 
-  const getDelta = function (target: SugarElement, dir: string) {
+  const getDelta = (target: SugarElement, dir: string) => {
     const newX = CellUtils.getCssValue(target, dir);
     const oldX = CellUtils.getAttrValue(target, 'data-initial-' + dir, 0);
     return newX - oldX;
   };
 
   /* Resize the column once the user releases the mouse */
-  resizing.events.stop.bind(function () {
-    mutation.get().each(function (target) {
-      hoverTable.each(function (table) {
-        getResizer(target, 'data-row').each(function (row) {
+  resizing.events.stop.bind(() => {
+    mutation.get().each((target) => {
+      hoverTable.each((table) => {
+        getResizer(target, 'data-row').each((row) => {
           const delta = getDelta(target, 'top');
           Attribute.remove(target, 'data-initial-top');
           events.trigger.adjustHeight(table, delta, parseInt(row, 10));
         });
 
-        getResizer(target, 'data-column').each(function (column) {
+        getResizer(target, 'data-column').each((column) => {
           const delta = getDelta(target, 'left');
           Attribute.remove(target, 'data-initial-left');
           events.trigger.adjustWidth(table, delta, parseInt(column, 10));
@@ -87,7 +97,7 @@ export const BarManager = function (wire: ResizeWire) {
 
   });
 
-  const handler = function (target: SugarElement, dir: string) {
+  const handler = (target: SugarElement, dir: string) => {
     events.trigger.startAdjust();
     mutation.assign(target);
     Attribute.set(target, 'data-initial-' + dir, CellUtils.getCssValue(target, dir));
@@ -97,7 +107,7 @@ export const BarManager = function (wire: ResizeWire) {
   };
 
   /* mousedown on resize bar: start dragging when the bar is clicked, storing the initial position. */
-  const mousedown = DomEvent.bind(wire.parent(), 'mousedown', function (event) {
+  const mousedown = DomEvent.bind(wire.parent(), 'mousedown', (event) => {
     if (Bars.isRowBar(event.target)) {
       handler(event.target, 'top');
     }
@@ -107,14 +117,14 @@ export const BarManager = function (wire: ResizeWire) {
     }
   });
 
-  const isRoot = function (e: SugarElement) {
+  const isRoot = (e: SugarElement) => {
     return Compare.eq(e, wire.view());
   };
 
   const findClosestEditableTable = (target: SugarElement): Optional<SugarElement> => SelectorFind.closest(target, 'table', isRoot).filter((table) => findClosestContentEditable(table, isRoot).exists(isContentEditableTrue));
 
   /* mouseover on table: When the mouse moves within the CONTENT AREA (NOT THE TABLE), refresh the bars. */
-  const mouseover = DomEvent.bind(wire.view(), 'mouseover', function (event) {
+  const mouseover = DomEvent.bind(wire.view(), 'mouseover', (event) => {
     findClosestEditableTable(event.target).fold(
       () => {
         /*
@@ -133,22 +143,22 @@ export const BarManager = function (wire: ResizeWire) {
     );
   });
 
-  const destroy = function () {
+  const destroy = () => {
     mousedown.unbind();
     mouseover.unbind();
     resizing.destroy();
     Bars.destroy(wire);
   };
 
-  const refresh = function (tbl: SugarElement) {
+  const refresh = (tbl: SugarElement<HTMLTableElement>) => {
     Bars.refresh(wire, tbl);
   };
 
-  const events = Events.create({
+  const events: DragAdjustEvents = Events.create({
     adjustHeight: Event([ 'table', 'delta', 'row' ]),
     adjustWidth: Event([ 'table', 'delta', 'column' ]),
     startAdjust: Event([])
-  }) as DragAdjustEvents;
+  });
 
   return {
     destroy,

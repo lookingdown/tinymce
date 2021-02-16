@@ -8,11 +8,11 @@ import Theme from 'tinymce/themes/silver/Theme';
 
 import * as Paste from '../module/test/Paste';
 
-UnitTest.asynctest('tinymce.plugins.paste.browser.PasteFormatToggleTest', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.paste.PasteFormatToggleTest', (success, failure) => {
   Theme();
   PastePlugin();
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     const tinyApis = TinyApis(editor);
     const steps = Env.webkit ?
       Log.steps('TBA', 'Paste: paste plain text',

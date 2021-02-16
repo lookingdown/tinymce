@@ -74,7 +74,7 @@ const sAssertInputValue = (label, selector, expected) => Logger.t(label,
         Assertions.assertEq(`The input value for ${label} should be: `, expected, Value.get(element));
       }
     })
-  ]),
+  ])
 );
 
 const sAssertDialogContents = (expected: Record<string, any>) => {
@@ -94,7 +94,7 @@ const sWaitForUi = (label: string, selector: string) => Logger.t('Wait for UI', 
   1000
 ));
 
-const sInsertLink = function (ui: TinyUi, url: string) {
+const sInsertLink = (ui: TinyUi, url: string) => {
   return Logger.t('Insert link', GeneralSteps.sequence([
     sOpenLinkDialog(ui),
     FocusTools.sSetActiveValue(doc, url),

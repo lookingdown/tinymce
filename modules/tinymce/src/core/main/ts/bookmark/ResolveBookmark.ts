@@ -5,7 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Optional, Optionals } from '@ephox/katamari';
+import { Fun, Optional, Optionals } from '@ephox/katamari';
 import DOMUtils from '../api/dom/DOMUtils';
 import EditorSelection from '../api/dom/Selection';
 import Env from '../api/Env';
@@ -16,7 +16,8 @@ import * as NodeType from '../dom/NodeType';
 import { getParentCaretContainer } from '../fmt/FormatContainer';
 import * as Zwsp from '../text/Zwsp';
 import {
-  Bookmark, IdBookmark, IndexBookmark, isIdBookmark, isIndexBookmark, isPathBookmark, isRangeBookmark, isStringPathBookmark, PathBookmark
+  Bookmark, IdBookmark, IndexBookmark, isIdBookmark, isIndexBookmark, isPathBookmark, isRangeBookmark, isStringPathBookmark, PathBookmark,
+  StringPathBookmark
 } from './BookmarkTypes';
 import * as CaretBookmark from './CaretBookmark';
 
@@ -29,7 +30,7 @@ const addBogus = (dom: DOMUtils, node: Node): Node => {
   return node;
 };
 
-const resolveCaretPositionBookmark = (dom: DOMUtils, bookmark) => {
+const resolveCaretPositionBookmark = (dom: DOMUtils, bookmark: StringPathBookmark) => {
   let pos;
 
   const rng = dom.createRng();
@@ -53,7 +54,7 @@ const isEmpty = (node: Node) => node.hasChildNodes() === false;
 
 const tryFindRangePosition = (node: Element, rng: Range): boolean =>
   CaretFinder.lastPositionIn(node).fold(
-    () => false,
+    Fun.never,
     (pos) => {
       rng.setStart(pos.container(), pos.offset());
       rng.setEnd(pos.container(), pos.offset());

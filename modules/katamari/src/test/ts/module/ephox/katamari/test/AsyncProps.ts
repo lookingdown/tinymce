@@ -24,14 +24,12 @@ type Testable<A> = Testable.Testable<A>;
  */
 export const promiseTest = <A>(name: string, f: () => Promise<A>): void => {
   UnitTest.asynctest(name, (success, failure) => {
-    f().then(function () {
-      success();
-    }, failure);
+    f().then(success, failure);
   });
 };
 
 // TODO: move to bedrock
-export const eqAsync = <A>(label: string, expected: A, actual: A, reject: (a: any) => void, testableA: Testable<A> = Testable.tAny) => {
+export const eqAsync = <A>(label: string, expected: A, actual: A, reject: (a: any) => void, testableA: Testable<A> = Testable.tAny): void => {
   try {
     Assert.eq(label, expected, actual, testableA);
   } catch (e) {

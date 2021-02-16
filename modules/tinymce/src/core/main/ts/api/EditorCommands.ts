@@ -5,10 +5,11 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
+import { Fun } from '@ephox/katamari';
 import { Bookmark } from '../bookmark/BookmarkTypes';
 import * as FontCommands from '../commands/FontCommands';
-import * as LineHeightCommands from '../commands/LineHeight';
 import * as IndentOutdent from '../commands/IndentOutdent';
+import * as LineHeightCommands from '../commands/LineHeight';
 import * as InsertContent from '../content/InsertContent';
 import * as NodeType from '../dom/NodeType';
 import * as InsertBr from '../newline/InsertBr';
@@ -92,7 +93,7 @@ class EditorCommands {
     }
 
     // Plugin commands
-    each(this.editor.plugins, function (p) {
+    each(this.editor.plugins, (p) => {
       if (p.execCommand && p.execCommand(command, ui, value)) {
         self.editor.fire('ExecCommand', { command, ui, value });
         state = true;
@@ -193,8 +194,8 @@ class EditorCommands {
   public addCommands(commandList: Commands[keyof Commands], type: 'exec' | 'state' | 'query' = 'exec') {
     const self = this;
 
-    each(commandList, function (callback, command) {
-      each(command.toLowerCase().split(','), function (command) {
+    each(commandList, (callback, command) => {
+      each(command.toLowerCase().split(','), (command) => {
         self.commands[type][command] = callback;
       });
     });
@@ -281,14 +282,14 @@ class EditorCommands {
     // Add execCommand overrides
     this.addCommands({
       // Ignore these, added for compatibility
-      'mceResetDesignMode,mceBeginUndoLevel'() { },
+      'mceResetDesignMode,mceBeginUndoLevel': Fun.noop,
 
       // Add undo manager logic
-      'mceEndUndoLevel,mceAddUndoLevel'() {
+      'mceEndUndoLevel,mceAddUndoLevel': () => {
         editor.undoManager.add();
       },
 
-      'Cut,Copy,Paste'(command) {
+      'Cut,Copy,Paste': (command) => {
         const doc = editor.getDoc();
         let failed;
 
@@ -321,7 +322,7 @@ class EditorCommands {
       },
 
       // Override unlink command
-      'unlink'() {
+      'unlink': () => {
         if (editor.selection.isCollapsed()) {
           const elm = editor.dom.getParent(editor.selection.getStart(), 'a');
           if (elm) {
@@ -335,7 +336,7 @@ class EditorCommands {
       },
 
       // Override justify commands to use the text formatter engine
-      'JustifyLeft,JustifyCenter,JustifyRight,JustifyFull,JustifyNone'(command) {
+      'JustifyLeft,JustifyCenter,JustifyRight,JustifyFull,JustifyNone': (command) => {
         let align = command.substring(7);
 
         if (align === 'full') {
@@ -343,7 +344,7 @@ class EditorCommands {
         }
 
         // Remove all other alignments first
-        each('left,center,right,justify'.split(','), function (name) {
+        each('left,center,right,justify'.split(','), (name) => {
           if (align !== name) {
             editor.formatter.remove('align' + name);
           }
@@ -355,7 +356,7 @@ class EditorCommands {
       },
 
       // Override list commands to fix WebKit bug
-      'InsertUnorderedList,InsertOrderedList'(command) {
+      'InsertUnorderedList,InsertOrderedList': (command) => {
         let listParent;
 
         self.execNativeCommand(command);
@@ -377,47 +378,47 @@ class EditorCommands {
       },
 
       // Override commands to use the text formatter engine
-      'Bold,Italic,Underline,Strikethrough,Superscript,Subscript'(command) {
+      'Bold,Italic,Underline,Strikethrough,Superscript,Subscript': (command) => {
         self.toggleFormat(command);
       },
 
       // Override commands to use the text formatter engine
-      'ForeColor,HiliteColor'(command, ui, value) {
+      'ForeColor,HiliteColor': (command, ui, value) => {
         self.toggleFormat(command, value);
       },
 
-      'FontName'(command, ui, value) {
+      'FontName': (command, ui, value) => {
         FontCommands.fontNameAction(editor, value);
       },
 
-      'FontSize'(command, ui, value) {
+      'FontSize': (command, ui, value) => {
         FontCommands.fontSizeAction(editor, value);
       },
 
-      'LineHeight'(command, ui, value) {
+      'LineHeight': (command, ui, value) => {
         LineHeightCommands.lineHeightAction(editor, value);
       },
 
-      'RemoveFormat'(command) {
+      'RemoveFormat': (command) => {
         editor.formatter.remove(command);
       },
 
-      'mceBlockQuote'() {
+      'mceBlockQuote': () => {
         self.toggleFormat('blockquote');
       },
 
-      'FormatBlock'(command, ui, value) {
+      'FormatBlock': (command, ui, value) => {
         return self.toggleFormat(value || 'p');
       },
 
-      'mceCleanup'() {
+      'mceCleanup': () => {
         const bookmark = editor.selection.getBookmark();
 
         editor.setContent(editor.getContent());
         editor.selection.moveToBookmark(bookmark);
       },
 
-      'mceRemoveNode'(command, ui, value) {
+      'mceRemoveNode': (command, ui, value) => {
         const node = value || editor.selection.getNode();
 
         // Make sure that the body node isn't removed
@@ -428,10 +429,10 @@ class EditorCommands {
         }
       },
 
-      'mceSelectNodeDepth'(command, ui, value) {
+      'mceSelectNodeDepth': (command, ui, value) => {
         let counter = 0;
 
-        editor.dom.getParent(editor.selection.getNode(), function (node) {
+        editor.dom.getParent(editor.selection.getNode(), (node) => {
           if (node.nodeType === 1 && counter++ === value) {
             editor.selection.select(node);
             return false;
@@ -439,53 +440,52 @@ class EditorCommands {
         }, editor.getBody());
       },
 
-      'mceSelectNode'(command, ui, value) {
+      'mceSelectNode': (command, ui, value) => {
         editor.selection.select(value);
       },
 
-      'mceInsertContent'(command, ui, value) {
+      'mceInsertContent': (command, ui, value) => {
         InsertContent.insertAtCaret(editor, value);
       },
 
-      'mceInsertRawHTML'(command, ui, value) {
+      'mceInsertRawHTML': (command, ui, value) => {
         editor.selection.setContent('tiny_mce_marker');
         const content = editor.getContent();
         editor.setContent(content.replace(/tiny_mce_marker/g, () => value));
       },
 
-      'mceInsertNewLine'(command, ui, value) {
+      'mceInsertNewLine': (command, ui, value) => {
         InsertNewLine.insert(editor, value);
       },
 
-      'mceToggleFormat'(command, ui, value) {
+      'mceToggleFormat': (command, ui, value) => {
         self.toggleFormat(value);
       },
 
-      'mceSetContent'(command, ui, value) {
+      'mceSetContent': (command, ui, value) => {
         editor.setContent(value);
       },
 
-      'Indent,Outdent'(command) {
+      'Indent,Outdent': (command) => {
         IndentOutdent.handle(editor, command);
       },
 
-      'mceRepaint'() {
-      },
+      'mceRepaint': Fun.noop,
 
-      'InsertHorizontalRule'() {
+      'InsertHorizontalRule': () => {
         editor.execCommand('mceInsertContent', false, '<hr />');
       },
 
-      'mceToggleVisualAid'() {
+      'mceToggleVisualAid': () => {
         editor.hasVisual = !editor.hasVisual;
         editor.addVisual();
       },
 
-      'mceReplaceContent'(command, ui, value) {
+      'mceReplaceContent': (command, ui, value) => {
         editor.execCommand('mceInsertContent', false, value.replace(/\{\$selection\}/g, editor.selection.getContent({ format: 'text' })));
       },
 
-      'mceInsertLink'(command, ui, value) {
+      'mceInsertLink': (command, ui, value) => {
         if (typeof value === 'string') {
           value = { href: value };
         }
@@ -506,7 +506,7 @@ class EditorCommands {
         }
       },
 
-      'selectAll'() {
+      'selectAll': () => {
         const editingHost = editor.dom.getParent(editor.selection.getStart(), NodeType.isContentEditableTrue);
         if (editingHost) {
           const rng = editor.dom.createRng();
@@ -515,11 +515,11 @@ class EditorCommands {
         }
       },
 
-      'mceNewDocument'() {
+      'mceNewDocument': () => {
         editor.setContent('');
       },
 
-      'InsertLineBreak'(command, ui, value) {
+      'InsertLineBreak': (command, ui, value) => {
         InsertBr.insert(editor, value);
         return true;
       }
@@ -528,7 +528,7 @@ class EditorCommands {
     const alignStates = (name: string) => () => {
       const selection = editor.selection;
       const nodes = selection.isCollapsed() ? [ editor.dom.getParent(selection.getNode(), editor.dom.isBlock) ] : selection.getSelectedBlocks();
-      const matches = map(nodes, function (node) {
+      const matches = map(nodes, (node) => {
         return !!editor.formatter.matchNode(node, name);
       });
       return inArray(matches, true) !== -1;
@@ -561,11 +561,11 @@ class EditorCommands {
 
     // Add undo manager logic
     self.addCommands({
-      Undo() {
+      Undo: () => {
         editor.undoManager.undo();
       },
 
-      Redo() {
+      Redo: () => {
         editor.undoManager.redo();
       }
     });

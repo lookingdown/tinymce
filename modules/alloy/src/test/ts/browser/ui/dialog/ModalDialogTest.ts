@@ -105,12 +105,12 @@ UnitTest.asynctest('ModalDialogTest', (success, failure) => {
         ],
 
         dragBlockClass: 'drag-blocker',
-        lazySink(comp) {
+        lazySink: (comp) => {
           Assertions.assertEq('Checking dialog passed through to lazySink', true, Compare.eq(comp.element, dialog.element));
           return Result.value(sink);
         },
 
-        useTabstopAt(elem) {
+        useTabstopAt: (elem) => {
           return !Class.has(elem, 'untabbable');
         },
 
@@ -333,7 +333,7 @@ UnitTest.asynctest('ModalDialogTest', (success, failure) => {
       Logger.t(
         'Set the dialog to busy again without setting it to idle first',
         Step.sync(() => {
-          ModalDialog.setBusy(dialog, (_d, _bs) => ({
+          ModalDialog.setBusy(dialog, (_bs) => ({
             dom: {
               tag: 'div',
               classes: [ 'test-busy-second-class' ],
@@ -388,5 +388,5 @@ UnitTest.asynctest('ModalDialogTest', (success, failure) => {
         }))
       )
     ];
-  }, () => { success(); }, failure);
+  }, success, failure);
 });

@@ -5,7 +5,7 @@ import * as Structs from '../api/Structs';
 import { Warehouse } from '../api/Warehouse';
 import * as TableGrid from './TableGrid';
 
-const toDetails = (grid: Structs.RowCells[], comparator: (a: SugarElement, b: SugarElement) => boolean) => {
+const toDetails = (grid: Structs.RowCells[], comparator: (a: SugarElement, b: SugarElement) => boolean): Structs.RowDetails[] => {
   const seen: boolean[][] = Arr.map(grid, (row) =>
     Arr.map(row.cells, Fun.never)
   );
@@ -33,12 +33,12 @@ const toDetails = (grid: Structs.RowCells[], comparator: (a: SugarElement, b: Su
   });
 };
 
-const toGrid = (warehouse: Warehouse, generators: Generators, isNew: boolean) => {
+const toGrid = (warehouse: Warehouse, generators: Generators, isNew: boolean): Structs.RowCells[] => {
   const grid: Structs.RowCells[] = [];
 
   if (Warehouse.hasColumns(warehouse)) {
     const groupElementNew = Arr.map(Warehouse.justColumns(warehouse), (column: Structs.Column): Structs.ElementNew =>
-      Structs.elementnew(column.element, isNew)
+      Structs.elementnew(column.element, isNew, false)
     );
 
     grid.push(Structs.rowcells(groupElementNew, 'colgroup'));
@@ -49,9 +49,9 @@ const toGrid = (warehouse: Warehouse, generators: Generators, isNew: boolean) =>
     for (let columnIndex = 0; columnIndex < warehouse.grid.columns; columnIndex++) {
       // The element is going to be the element at that position, or a newly generated gap.
       const element = Warehouse.getAt(warehouse, rowIndex, columnIndex).map((item) =>
-        Structs.elementnew(item.element, isNew)
+        Structs.elementnew(item.element, isNew, item.isLocked)
       ).getOrThunk(() =>
-        Structs.elementnew(generators.gap(), true)
+        Structs.elementnew(generators.gap(), true, false)
       );
       rowCells.push(element);
     }

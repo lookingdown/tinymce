@@ -6,7 +6,7 @@ import * as Walker from 'ephox/phoenix/gather/Walker';
 import { Walkers } from 'ephox/phoenix/gather/Walkers';
 import * as Finder from 'ephox/phoenix/test/Finder';
 
-UnitTest.test('WalkerPathTest', function () {
+UnitTest.test('WalkerPathTest', () => {
   const universe = TestUniverse(
     Gene('root', 'root', [
       Gene('1', 'node', [
@@ -42,7 +42,7 @@ UnitTest.test('WalkerPathTest', function () {
     ])
   );
 
-  const checkPath = function (expected: string[], id: string, direction: Direction) {
+  const checkPath = (expected: string[], id: string, direction: Direction) => {
     const start = Finder.get(universe, id);
     let path: string[] = [];
     let current: Optional<Traverse<Gene>> = Optional.some({ item: start, mode: Walker.advance });

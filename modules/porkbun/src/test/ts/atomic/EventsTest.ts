@@ -16,16 +16,16 @@ interface TestEvents {
   };
 }
 
-UnitTest.test('Events', function () {
-  (function () {
-    const events = Events.create({
+UnitTest.test('Events', () => {
+  (() => {
+    const events: TestEvents = Events.create({
       myEvent: Event([ 'name' ])
-    }) as TestEvents;
+    });
 
     let called = false;
     let calledEvent: MyEvent | Record<string, () => any> = {};
 
-    const handler = function (event: MyEvent) {
+    const handler = (event: MyEvent) => {
       calledEvent = event;
       called = true;
     };
@@ -50,18 +50,20 @@ UnitTest.test('Events', function () {
     events.registry.myEvent.unbind(handler);
   })();
 
-  (function () {
+  (() => {
     const events = Events.create({
       emptyEvent: Event([])
     });
 
     assert.throwsError(
-      function () { events.registry.emptyEvent.bind(undefined as any); },
+      () => {
+        events.registry.emptyEvent.bind(undefined as any);
+      },
       'Event bind error: undefined handler'
     );
   })();
 
-  (function () {
+  (() => {
     const ea = Events.create({
       chook: Event([ 'a', 'b', 'c' ])
     });
@@ -71,7 +73,7 @@ UnitTest.test('Events', function () {
     });
 
     assert.throws(
-      function () {
+      () => {
         try {
           eb.trigger.quack('hay', 'bee', 'quee');
         } catch (ex) {
@@ -81,7 +83,7 @@ UnitTest.test('Events', function () {
       'Cannot trigger a source event.'
     );
 
-    eb.registry.quack.bind(function (evt) {
+    eb.registry.quack.bind((evt) => {
       assert.eq('ay', evt.a);
       assert.eq('bee', evt.b);
       assert.eq('sea', evt.c);
@@ -90,7 +92,7 @@ UnitTest.test('Events', function () {
 
   })();
 
-  (function () {
+  (() => {
     const ea = Events.create({
       chook: Event([ 'a', 'b', 'c', 'd', 'e' ]) // superset of arguments
     });
@@ -99,7 +101,7 @@ UnitTest.test('Events', function () {
       quack: SourceEvent([ 'a', 'b', 'c' ], ea.registry.chook)
     });
 
-    eb.registry.quack.bind(function (evt) {
+    eb.registry.quack.bind((evt) => {
       assert.eq('ay', evt.a);
       assert.eq('bee', evt.b);
       assert.eq('sea', evt.c);

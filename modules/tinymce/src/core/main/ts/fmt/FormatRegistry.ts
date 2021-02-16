@@ -7,29 +7,33 @@
 
 import { Obj, Type } from '@ephox/katamari';
 import Editor from '../api/Editor';
-import { Format, Formats } from '../api/fmt/Format';
 import * as Settings from '../api/Settings';
 import Tools from '../api/util/Tools';
 import * as DefaultFormats from './DefaultFormats';
+import { Format, Formats } from './FormatTypes';
 
 export interface FormatRegistry {
-  get (name?: string): Format[] | Record<string, Format[]>;
-  has (name: string): boolean;
-  register (name: string | Formats, format?: Format[] | Format): void;
-  unregister (name: string): Formats;
+  get: {
+    (name: string): Format[];
+    (): Record<string, Format[]>;
+  };
+  has: (name: string) => boolean;
+  register: (name: string | Formats, format?: Format[] | Format) => void;
+  unregister: (name: string) => Formats;
 }
 
-export function FormatRegistry(editor: Editor): FormatRegistry {
+export const FormatRegistry = (editor: Editor): FormatRegistry => {
   const formats: Record<string, Format[]> = {};
 
-  const get = (name?: string) => name ? formats[name] : formats;
+  const get = (name?: string): Format[] | Record<string, Format[]> =>
+    name ? formats[name] : formats;
 
   const has = (name: string): boolean => Obj.has(formats, name);
 
-  const register = function (name: string | Formats, format?: Format | Format[]) {
+  const register = (name: string | Formats, format?: Format | Format[]) => {
     if (name) {
       if (typeof name !== 'string') {
-        Tools.each(name, function (format, name) {
+        Tools.each(name, (format, name) => {
           register(name, format);
         });
       } else {
@@ -38,7 +42,7 @@ export function FormatRegistry(editor: Editor): FormatRegistry {
           format = [ format ];
         }
 
-        Tools.each(format, function (format: any) {
+        Tools.each(format, (format: any) => {
           // Set deep to false by default on selector formats this to avoid removing
           // alignment on images inside paragraphs when alignment is changed on paragraphs
           if (typeof format.deep === 'undefined') {
@@ -72,7 +76,7 @@ export function FormatRegistry(editor: Editor): FormatRegistry {
     }
   };
 
-  const unregister = function (name: string) {
+  const unregister = (name: string) => {
     if (name && formats[name]) {
       delete formats[name];
     }
@@ -84,9 +88,9 @@ export function FormatRegistry(editor: Editor): FormatRegistry {
   register(Settings.getFormats(editor));
 
   return {
-    get,
+    get: get as FormatRegistry['get'],
     has,
     register,
     unregister
   };
-}
+};

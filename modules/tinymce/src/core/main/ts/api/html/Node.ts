@@ -21,7 +21,7 @@ const typeLookup = {
 };
 
 // Walks the tree left/right
-const walk = function (node: AstNode, root: AstNode | null, prev?: boolean): AstNode {
+const walk = (node: AstNode, root: AstNode | null, prev?: boolean): AstNode => {
   const startName = prev ? 'lastChild' : 'firstChild';
   const siblingName = prev ? 'prev' : 'next';
 
@@ -177,10 +177,10 @@ class AstNode {
    * @param {String} value Optional value to set.
    * @return {String/tinymce.html.Node} String or undefined on a get operation or the current node on a set operation.
    */
-  public attr(name: string, value: string): string | AstNode;
-  public attr(name: Record<string, string>): AstNode;
+  public attr(name: string, value: string | null): AstNode;
+  public attr(name: Record<string, string | null>): AstNode;
   public attr(name: string): string;
-  public attr(name: string | Record<string, string>, value?: string): string | AstNode {
+  public attr(name: string | Record<string, string | null>, value?: string | null): string | AstNode {
     const self = this;
     let attrs: Attributes;
 

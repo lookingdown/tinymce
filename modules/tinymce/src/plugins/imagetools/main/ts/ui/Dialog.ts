@@ -5,23 +5,24 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
+import { Cell, Fun } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 import { Dialog } from 'tinymce/core/api/ui/Ui';
 import * as Actions from '../core/Actions';
 import * as ImageSize from '../core/ImageSize';
 import * as ImageToolsEvents from './ImageToolsEvents';
 
-type ImageToolsState = {
+interface ImageToolsState {
   blob: Blob;
   url: string;
-};
+}
 
 const createState = (blob: Blob): ImageToolsState => ({
   blob,
   url: URL.createObjectURL(blob)
 });
 
-const makeOpen = (editor: Editor, imageUploadTimerState) => () => {
+const makeOpen = (editor: Editor, imageUploadTimerState: Cell<number>) => () => {
   const getLoadedSpec = (currentState: ImageToolsState): Dialog.DialogSpec<{ imagetools: ImageToolsState }> => ({
     title: 'Edit Image',
     size: 'large',
@@ -59,7 +60,7 @@ const makeOpen = (editor: Editor, imageUploadTimerState) => () => {
       });
       api.close();
     },
-    onCancel: () => { }, // TODO: reimplement me
+    onCancel: Fun.noop, // TODO: reimplement me
     onAction: (api, details) => {
       switch (details.name) {
         case ImageToolsEvents.saveState:
@@ -83,8 +84,7 @@ const makeOpen = (editor: Editor, imageUploadTimerState) => () => {
   const originalImgOpt = Actions.getSelectedImage(editor);
   const originalSizeOpt = originalImgOpt.map((origImg) => ImageSize.getNaturalImageSize(origImg.dom));
 
-  const imgOpt = Actions.getSelectedImage(editor);
-  imgOpt.each((img) => {
+  originalImgOpt.each((img) => {
     Actions.getEditableImage(editor, img.dom).each((_) => {
       Actions.findBlob(editor, img.dom).then((blob) => {
         const state = createState(blob);

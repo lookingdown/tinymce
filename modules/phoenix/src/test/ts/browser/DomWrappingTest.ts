@@ -2,20 +2,20 @@ import { assert, UnitTest } from '@ephox/bedrock-client';
 import { Class, Html, Insert, InsertAll, Remove, SelectorFind, SugarElement, Traverse } from '@ephox/sugar';
 import * as DomWrapping from 'ephox/phoenix/api/dom/DomWrapping';
 
-UnitTest.test('DomWrappingTest', function () {
+UnitTest.test('DomWrappingTest', () => {
   const root = SugarElement.fromTag('div');
   const body = SelectorFind.first('body').getOrDie();
 
   Insert.append(body, root);
 
   const t = SugarElement.fromText;
-  const s = function (tag: string, xs: SugarElement[]) {
+  const s = (tag: string, xs: SugarElement[]) => {
     const element = SugarElement.fromTag(tag);
     InsertAll.append(element, xs);
     return element;
   };
 
-  const check = function (input: SugarElement[], f: (e: SugarElement) => void) {
+  const check = (input: SugarElement[], f: (e: SugarElement) => void) => {
     const container = SugarElement.fromTag('div');
     Insert.append(root, container);
     InsertAll.append(container, input);
@@ -23,12 +23,12 @@ UnitTest.test('DomWrappingTest', function () {
     Remove.remove(container);
   };
 
-  const checker = function (expected: string, p1: number[], offset1: number, p2: number[], offset2: number, input: SugarElement[], initial: string) {
-    check(input, function (container: SugarElement) {
+  const checker = (expected: string, p1: number[], offset1: number, p2: number[], offset2: number, input: SugarElement[], initial: string) => {
+    check(input, (container: SugarElement) => {
       assert.eq(initial, Html.get(container));
       const first = c(container, p1);
       const second = c(container, p2);
-      DomWrapping.wrapWith(first, offset1, second, offset2, function () {
+      DomWrapping.wrapWith(first, offset1, second, offset2, () => {
         const basic = SugarElement.fromTag('span');
         Class.add(basic, 'me');
         return DomWrapping.nu(basic);
@@ -38,7 +38,7 @@ UnitTest.test('DomWrappingTest', function () {
     });
   };
 
-  const c = function (element: SugarElement, paths: number[]): SugarElement {
+  const c = (element: SugarElement, paths: number[]): SugarElement => {
     const children = Traverse.children(element);
     return paths.length === 0 ? element : c(children[paths[0]], paths.slice(1));
   };

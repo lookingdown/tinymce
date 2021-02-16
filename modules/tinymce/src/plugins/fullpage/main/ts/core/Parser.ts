@@ -29,7 +29,7 @@ interface Data {
   active_color?: string;
 }
 
-const parseHeader = function (head: string) {
+const parseHeader = (head: string) => {
   // Parse the contents with a DOM parser
   return DomParser({
     validate: false,
@@ -38,16 +38,16 @@ const parseHeader = function (head: string) {
   }).parse(head, { format: 'xhtml' });
 };
 
-const htmlToData = function (editor: Editor, head: string) {
+const htmlToData = (editor: Editor, head: string) => {
   const headerFragment = parseHeader(head);
   const data: Data = {};
   let elm, matches;
 
-  function getAttr(elm, name) {
+  const getAttr = (elm, name) => {
     const value = elm.attr(name);
 
     return value || '';
-  }
+  };
 
   // Default some values
   // TODO: Not sure these are used anymore
@@ -77,7 +77,7 @@ const htmlToData = function (editor: Editor, head: string) {
   }
 
   // Parse meta elements
-  Tools.each<AstNode>(headerFragment.getAll('meta'), function (meta) {
+  Tools.each<AstNode>(headerFragment.getAll('meta'), (meta) => {
     const name = meta.attr('name');
     const httpEquiv = meta.attr('http-equiv');
     let matches;
@@ -101,7 +101,7 @@ const htmlToData = function (editor: Editor, head: string) {
 
   // Parse stylesheets
   data.stylesheets = [];
-  Tools.each(headerFragment.getAll('link'), function (link) {
+  Tools.each(headerFragment.getAll('link'), (link) => {
     if (link.attr('rel') === 'stylesheet') {
       data.stylesheets.push(link.attr('href'));
     }
@@ -120,21 +120,21 @@ const htmlToData = function (editor: Editor, head: string) {
   return data;
 };
 
-const dataToHtml = function (editor: Editor, data: Data, head) {
+const dataToHtml = (editor: Editor, data: Data, head) => {
   let headElement, elm, value;
   const dom = editor.dom;
 
-  function setAttr(elm, name, value) {
+  const setAttr = (elm, name, value) => {
     elm.attr(name, value ? value : undefined);
-  }
+  };
 
-  function addHeadNode(node) {
+  const addHeadNode = (node) => {
     if (headElement.firstChild) {
       headElement.insert(node, headElement.firstChild);
     } else {
       headElement.append(node);
     }
-  }
+  };
 
   const headerFragment = parseHeader(head);
   headElement = headerFragment.getAll('head')[0];
@@ -188,7 +188,7 @@ const dataToHtml = function (editor: Editor, data: Data, head) {
 
   // Add meta encoding
   elm = null;
-  Tools.each(headerFragment.getAll('meta'), function (meta) {
+  Tools.each(headerFragment.getAll('meta'), (meta) => {
     if (meta.attr('http-equiv') === 'Content-Type') {
       elm = meta;
     }
@@ -223,7 +223,7 @@ const dataToHtml = function (editor: Editor, data: Data, head) {
   }
 
   // Add/update/remove meta
-  Tools.each('keywords,description,author,copyright,robots'.split(','), function (name) {
+  Tools.each('keywords,description,author,copyright,robots'.split(','), (name) => {
     const nodes = headerFragment.getAll('meta');
     let i, meta;
     const value = data[name];
@@ -253,14 +253,14 @@ const dataToHtml = function (editor: Editor, data: Data, head) {
   });
 
   const currentStyleSheetsMap: Record<string, AstNode> = {};
-  Tools.each(headerFragment.getAll('link'), function (stylesheet) {
+  Tools.each(headerFragment.getAll('link'), (stylesheet) => {
     if (stylesheet.attr('rel') === 'stylesheet') {
       currentStyleSheetsMap[stylesheet.attr('href')] = stylesheet;
     }
   });
 
   // Add new
-  Tools.each(data.stylesheets, function (stylesheet) {
+  Tools.each(data.stylesheets, (stylesheet) => {
     if (!currentStyleSheetsMap[stylesheet]) {
       elm = new AstNode('link', 1);
       elm.attr({
@@ -276,7 +276,7 @@ const dataToHtml = function (editor: Editor, data: Data, head) {
   });
 
   // Delete old
-  Tools.each(currentStyleSheetsMap, function (stylesheet) {
+  Tools.each(currentStyleSheetsMap, (stylesheet) => {
     stylesheet.remove();
   });
 

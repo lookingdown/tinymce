@@ -1,5 +1,5 @@
 import { FieldProcessorAdt } from '@ephox/boulder';
-import { Cell, Optional } from '@ephox/katamari';
+import { Cell, Fun, Optional } from '@ephox/katamari';
 import { EventArgs } from '@ephox/sugar';
 
 import { AlloyComponent } from '../../api/component/ComponentApi';
@@ -15,7 +15,7 @@ import * as TouchBlockerEvents from './TouchBlockerEvents';
 import * as TouchData from './TouchData';
 import { TouchDraggingConfig } from './TouchDraggingTypes';
 
-const events = <E>(dragConfig: TouchDraggingConfig<E>, dragState: DraggingState, updateStartState: (comp: AlloyComponent) => void) => {
+const events = <E>(dragConfig: TouchDraggingConfig<E>, dragState: DraggingState, updateStartState: (comp: AlloyComponent) => void): Array<AlloyEvents.AlloyEventKeyAndHandler<EventArgs<TouchEvent>>> => {
   const blockerCell = Cell<Optional<AlloyComponent>>(Optional.none());
 
   // Android fires events on the component at all times, while iOS initially fires on the component
@@ -33,9 +33,9 @@ const events = <E>(dragConfig: TouchDraggingConfig<E>, dragState: DraggingState,
       const dragApi: BlockerDragApi<TouchEvent> = {
         drop: stop,
         // delayDrop is not used by touch
-        delayDrop() { },
+        delayDrop: Fun.noop,
         forceDrop: stop,
-        move(event) {
+        move: (event) => {
           DragUtils.move(component, dragConfig, dragState, TouchData, event);
         }
       };

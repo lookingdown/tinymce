@@ -1,11 +1,12 @@
+import { Fun } from '@ephox/katamari';
 import { getDemoRegistry } from '../buttons/DemoRegistry';
 
 const editor = {
   on: (_s, _f) => { },
-  isDirty: () => true
+  isDirty: Fun.always
 };
 
-export const registerSpellcheckerItems = () => {
+export const registerSpellcheckerItems = (): void => {
   getDemoRegistry().addSplitButton('spellchecker', {
     type: 'splitbutton',
     // disabled: false,
@@ -14,7 +15,7 @@ export const registerSpellcheckerItems = () => {
       editor.on('SpellcheckStart SpellcheckEnd', (e) => {
         buttonApi.setActive(e);
       });
-      return () => { };
+      return Fun.noop;
     },
     fetch: (callback) => {
       // read all the langauges

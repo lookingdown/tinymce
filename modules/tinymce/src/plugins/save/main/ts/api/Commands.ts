@@ -7,12 +7,12 @@
 
 import * as Actions from '../core/Actions';
 
-const register = function (editor) {
-  editor.addCommand('mceSave', function () {
+const register = (editor) => {
+  editor.addCommand('mceSave', () => {
     Actions.save(editor);
   });
 
-  editor.addCommand('mceCancel', function () {
+  editor.addCommand('mceCancel', () => {
     Actions.cancel(editor);
   });
 };

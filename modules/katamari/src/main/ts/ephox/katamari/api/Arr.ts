@@ -7,9 +7,11 @@ type ArrayMorphism<T, U> = (x: T, i: number) => U;
 type ArrayPredicate<T> = ArrayMorphism<T, boolean>;
 type Comparator<T> = (a: T, b: T) => number;
 
+/* eslint-disable @typescript-eslint/unbound-method */
 const nativeSlice = Array.prototype.slice;
 const nativeIndexOf = Array.prototype.indexOf;
 const nativePush = Array.prototype.push;
+/* eslint-enable */
 
 const rawIndexOf = <T> (ts: ArrayLike<T>, t: T): number =>
   nativeIndexOf.call(ts, t);
@@ -148,14 +150,14 @@ export const groupBy = <T>(xs: ArrayLike<T>, f: (a: T) => any): T[][] => {
 };
 
 export const foldr = <T, U>(xs: ArrayLike<T>, f: (acc: U, x: T) => U, acc: U): U => {
-  eachr(xs, function (x) {
+  eachr(xs, (x) => {
     acc = f(acc, x);
   });
   return acc;
 };
 
 export const foldl = <T = any, U = any>(xs: ArrayLike<T>, f: (acc: U, x: T) => U, acc: U): U => {
-  each(xs, function (x) {
+  each(xs, (x) => {
     acc = f(acc, x);
   });
   return acc;
@@ -215,7 +217,7 @@ export const forall = <T>(xs: ArrayLike<T>, pred: ArrayPredicate<T>): boolean =>
   return true;
 };
 
-export const equal = <T>(a1: ArrayLike<T>, a2: ArrayLike<T>, eq: Eq.Eq<T> = Eq.eqAny) =>
+export const equal = <T>(a1: ArrayLike<T>, a2: ArrayLike<T>, eq: Eq.Eq<T> = Eq.eqAny): boolean =>
   Eq.eqArray(eq).eq(a1, a2);
 
 export const reverse = <T>(xs: ArrayLike<T>): T[] => {
@@ -243,9 +245,11 @@ export const sort = <T>(xs: ArrayLike<T>, comparator?: Comparator<T>): T[] => {
   return copy;
 };
 
-export const head = <T>(xs: ArrayLike<T>): Optional<T> => xs.length === 0 ? Optional.none() : Optional.some(xs[0]);
+export const get = <T>(xs: ArrayLike<T>, i: number): Optional<T> => i >= 0 && i < xs.length ? Optional.some(xs[i]) : Optional.none();
 
-export const last = <T>(xs: ArrayLike<T>): Optional<T> => xs.length === 0 ? Optional.none() : Optional.some(xs[xs.length - 1]);
+export const head = <T>(xs: ArrayLike<T>): Optional<T> => get(xs, 0);
+
+export const last = <T>(xs: ArrayLike<T>): Optional<T> => get(xs, xs.length - 1);
 
 export const from: <T>(x: ArrayLike<T>) => T[] = Type.isFunction(Array.from) ? Array.from : (x) => nativeSlice.call(x);
 

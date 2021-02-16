@@ -1,33 +1,21 @@
 import { Optional } from '@ephox/katamari';
-import { Bindable, Event, Events } from '@ephox/porkbun';
+import { Event, Events } from '@ephox/porkbun';
 import { EventArgs, SugarPosition } from '@ephox/sugar';
 import { DragMode } from '../api/DragApis';
+import { DragEvents, DragState } from './DragTypes';
 
-export interface InDragEvent {
-  readonly info: SugarPosition;
-}
-
-interface InDragEvents {
-  registry: {
-    move: Bindable<InDragEvent>;
-  };
-  trigger: {
-    move: (info: SugarPosition) => void;
-  };
-}
-
-export default function () {
+export const InDrag = (): DragState => {
 
   let previous = Optional.none<SugarPosition>();
 
-  const reset = function () {
+  const reset = () => {
     previous = Optional.none();
   };
 
   // Return position delta between previous position and nu position,
   // or None if this is the first. Set the previous position to nu.
-  const update = function (mode: DragMode, nu: SugarPosition) {
-    const result = previous.map(function (old) {
+  const update = (mode: DragMode, nu: SugarPosition) => {
+    const result = previous.map((old) => {
       return mode.compare(old, nu);
     });
 
@@ -35,26 +23,26 @@ export default function () {
     return result;
   };
 
-  const onEvent = function (event: EventArgs, mode: DragMode) {
+  const onEvent = (event: EventArgs, mode: DragMode) => {
     const dataOption = mode.extract(event);
 
     // Dragster move events require a position delta. The moveevent is only triggered
     // on the second and subsequent dragster move events. The first is dropped.
-    dataOption.each(function (data) {
+    dataOption.each((data) => {
       const offset = update(mode, data);
-      offset.each(function (d) {
+      offset.each((d) => {
         events.trigger.move(d);
       });
     });
   };
 
-  const events = Events.create({
+  const events: DragEvents = Events.create({
     move: Event([ 'info' ])
-  }) as InDragEvents;
+  });
 
   return {
     onEvent,
     reset,
     events: events.registry
   };
-}
+};

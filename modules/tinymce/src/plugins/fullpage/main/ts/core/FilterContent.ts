@@ -6,6 +6,7 @@
  */
 
 import Editor from 'tinymce/core/api/Editor';
+import { GetContentEvent } from 'tinymce/core/api/EventTypes';
 import Tools from 'tinymce/core/api/util/Tools';
 import * as Settings from '../api/Settings';
 import * as Parser from './Parser';
@@ -16,7 +17,7 @@ const each = Tools.each;
 const low = (s: string) =>
   s.replace(/<\/?[A-Z]+/g, (a: string) => a.toLowerCase());
 
-const handleSetContent = function (editor: Editor, headState, footState, evt) {
+const handleSetContent = (editor: Editor, headState, footState, evt) => {
   let startPos, endPos, content, styles = '';
   const dom = editor.dom;
 
@@ -62,7 +63,7 @@ const handleSetContent = function (editor: Editor, headState, footState, evt) {
 
   // Parse header and update iframe
   const headerFragment = Parser.parseHeader(headState.get());
-  each(headerFragment.getAll('style'), function (node) {
+  each(headerFragment.getAll('style'), (node) => {
     if (node.firstChild) {
       styles += node.firstChild.value;
     }
@@ -89,14 +90,14 @@ const handleSetContent = function (editor: Editor, headState, footState, evt) {
   }
 
   const currentStyleSheetsMap: Record<string, HTMLLinkElement> = {};
-  Tools.each(headElm.getElementsByTagName('link'), function (stylesheet: HTMLLinkElement) {
+  Tools.each(headElm.getElementsByTagName('link'), (stylesheet: HTMLLinkElement) => {
     if (stylesheet.rel === 'stylesheet' && stylesheet.getAttribute('data-mce-fullpage')) {
       currentStyleSheetsMap[stylesheet.href] = stylesheet;
     }
   });
 
   // Add new
-  Tools.each(headerFragment.getAll('link'), function (stylesheet) {
+  Tools.each(headerFragment.getAll('link'), (stylesheet) => {
     const href = stylesheet.attr('href');
     if (!href) {
       return true;
@@ -115,12 +116,12 @@ const handleSetContent = function (editor: Editor, headState, footState, evt) {
   });
 
   // Delete old
-  Tools.each(currentStyleSheetsMap, function (stylesheet) {
+  Tools.each(currentStyleSheetsMap, (stylesheet) => {
     stylesheet.parentNode.removeChild(stylesheet);
   });
 };
 
-const getDefaultHeader = function (editor) {
+const getDefaultHeader = (editor) => {
   let header = '', value, styles = '';
 
   if (Settings.getDefaultXmlPi(editor)) {
@@ -156,17 +157,17 @@ const getDefaultHeader = function (editor) {
   return header;
 };
 
-const handleGetContent = function (editor: Editor, head, foot, evt) {
-  if (!evt.selection && (!evt.source_view || !Settings.shouldHideInSourceView(editor))) {
+const handleGetContent = (editor: Editor, head, foot, evt: GetContentEvent) => {
+  if (evt.format === 'html' && !evt.selection && (!evt.source_view || !Settings.shouldHideInSourceView(editor))) {
     evt.content = Protect.unprotectHtml(Tools.trim(head) + '\n' + Tools.trim(evt.content) + '\n' + Tools.trim(foot));
   }
 };
 
-const setup = function (editor: Editor, headState, footState) {
-  editor.on('BeforeSetContent', function (evt) {
+const setup = (editor: Editor, headState, footState) => {
+  editor.on('BeforeSetContent', (evt) => {
     handleSetContent(editor, headState, footState, evt);
   });
-  editor.on('GetContent', function (evt) {
+  editor.on('GetContent', (evt) => {
     handleGetContent(editor, headState.get(), footState.get(), evt);
   });
 };

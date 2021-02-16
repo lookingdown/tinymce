@@ -1,7 +1,7 @@
-import { SimpleOrSketchSpec } from '@ephox/alloy';
 import { FieldPresence, FieldProcessorAdt, FieldSchema, Processor, ValueSchema } from '@ephox/boulder';
 import { Adt, Fun, Id, Optional } from '@ephox/katamari';
 
+import { SimpleOrSketchSpec } from '../api/component/SpecTypes';
 import { CompositeSketchDetail } from '../api/ui/Sketcher';
 
 type DeepPartial<T> = {
@@ -108,7 +108,7 @@ const groupSpec = ValueSchema.objOf([
   fPname, fDefaults, fOverrides
 ]);
 
-const asNamedPart = function <T> (part: PartTypeAdt<T>): Optional<T> {
+const asNamedPart = <T>(part: PartTypeAdt<T>): Optional<T> => {
   return part.fold(Optional.some, Optional.none as () => Optional<T>, Optional.some, Optional.some);
 };
 
@@ -117,7 +117,7 @@ const name = <T extends { name: string }>(part: PartTypeAdt<T>): string => {
   return part.fold(get, get, get, get);
 };
 
-const asCommon = function <T> (part: PartTypeAdt<T>): T {
+const asCommon = <T>(part: PartTypeAdt<T>): T => {
   return part.fold(Fun.identity, Fun.identity, Fun.identity, Fun.identity);
 };
 

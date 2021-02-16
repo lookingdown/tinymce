@@ -8,6 +8,11 @@
 import { SugarElement } from '@ephox/sugar';
 import Editor from 'tinymce/core/api/Editor';
 
+export interface TableEventData {
+  readonly structure: boolean;
+  readonly style: boolean;
+}
+
 const fireNewRow = (editor: Editor, row: HTMLElement) => editor.fire('newrow', { node: row });
 const fireNewCell = (editor: Editor, cell: HTMLElement) => editor.fire('newcell', { node: cell });
 
@@ -32,11 +37,21 @@ const fireTableSelectionClear = (editor: Editor) => {
   editor.fire('TableSelectionClear');
 };
 
+const fireTableModified = (editor: Editor, table: HTMLTableElement, data: TableEventData) => {
+  editor.fire('TableModified', { ...data, table });
+};
+
+const styleModified: TableEventData = { structure: false, style: true };
+const structureModified: TableEventData = { structure: true, style: false };
+
 export {
   fireNewRow,
   fireNewCell,
   fireObjectResizeStart,
   fireObjectResized,
   fireTableSelectionChange,
-  fireTableSelectionClear
+  fireTableSelectionClear,
+  fireTableModified,
+  styleModified,
+  structureModified
 };

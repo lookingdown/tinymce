@@ -1,10 +1,11 @@
 /* eslint-disable no-console */
 import { Merger } from '@ephox/katamari';
 import { SugarElement } from '@ephox/sugar';
+import { RawEditorSettings, TinyMCE } from 'tinymce/core/api/PublicApi';
 
-declare let tinymce: any;
+declare let tinymce: TinyMCE;
 
-export default function () {
+export default () => {
 
   const makeSidebar = (ed, name: string, background: string, width: number) => {
     ed.ui.registry.addSidebar(name, {
@@ -27,7 +28,7 @@ export default function () {
     });
   };
 
-  const settings = {
+  const settings: RawEditorSettings = {
     skin_url: '../../../../js/tinymce/skins/ui/oxide',
     content_css: '../../../../js/tinymce/skins/content/default/content.css',
     images_upload_url: 'd',
@@ -48,7 +49,7 @@ export default function () {
     importcss_append: true,
     height: 400,
     image_advtab: true,
-    file_picker_callback(callback, _value, meta) {
+    file_picker_callback: (callback, _value, meta) => {
       if (meta.fieldname === 'poster') {
         callback('test.mp4', { altsource: 'blah.ogg', width: '400px', poster: 'testing.jpg', embed: '<p>test</p>' });
         return;
@@ -99,7 +100,7 @@ export default function () {
         'autosave lists'
       ]
     },
-    setup(ed) {
+    setup: (ed) => {
       makeSidebar(ed, 'sidebar1', 'green', 200);
     },
     plugins: [
@@ -152,9 +153,9 @@ export default function () {
     toolbar_mode: 'floating',
     emoticons_database_url: '/src/plugins/emoticons/main/js/emojis.js',
     resize_img_proportional: true,
-    table_use_colgroups: true
+    format_empty_lines: true
   };
 
   tinymce.init(settings);
   tinymce.init(Merger.deepMerge(settings, { inline: true, selector: 'div.tinymce' }));
-}
+};

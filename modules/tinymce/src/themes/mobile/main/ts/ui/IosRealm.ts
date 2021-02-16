@@ -45,8 +45,8 @@ export default (scrollIntoView: () => void): MobileRealm => {
 
   const socket = CommonRealm.makeSocket();
 
-  const dropup = Dropup.build(function () {
-    webapp.run(function (w) {
+  const dropup = Dropup.build(() => {
+    webapp.run((w) => {
       w.refreshStructure();
     });
   }, scrollIntoView);
@@ -55,38 +55,38 @@ export default (scrollIntoView: () => void): MobileRealm => {
   alloy.add(socket);
   alloy.add(dropup.component);
 
-  const setToolbarGroups = function (rawGroups) {
+  const setToolbarGroups = (rawGroups) => {
     const groups = toolbar.createGroups(rawGroups);
     toolbar.setGroups(groups);
   };
 
-  const setContextToolbar = function (rawGroups) {
+  const setContextToolbar = (rawGroups) => {
     const groups = toolbar.createGroups(rawGroups);
     toolbar.setContextToolbar(groups);
   };
 
-  const focusToolbar = function () {
+  const focusToolbar = () => {
     toolbar.focus();
   };
 
-  const restoreToolbar = function () {
+  const restoreToolbar = () => {
     toolbar.restoreToolbar();
   };
 
-  const init = function (spec) {
+  const init = (spec) => {
     webapp.set(
       IosWebapp.produce(spec)
     );
   };
 
-  const exit = function () {
-    webapp.run(function (w) {
+  const exit = () => {
+    webapp.run((w) => {
       Replacing.remove(socket, switchToEdit);
       w.exit();
     });
   };
 
-  const updateMode = function (readOnly) {
+  const updateMode = (readOnly) => {
     CommonRealm.updateMode(socket, switchToEdit, readOnly, alloy.root);
   };
 

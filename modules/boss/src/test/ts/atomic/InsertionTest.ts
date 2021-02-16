@@ -6,8 +6,8 @@ import * as Locator from 'ephox/boss/mutant/Locator';
 import * as Logger from 'ephox/boss/mutant/Logger';
 import * as Tracks from 'ephox/boss/mutant/Tracks';
 
-UnitTest.test('InsertionTest', function () {
-  const data = function (): Gene {
+UnitTest.test('InsertionTest', () => {
+  const data = (): Gene => {
     return Gene('A', '.', [
       Gene('B', '.'),
       Gene('C', '.', [
@@ -19,7 +19,7 @@ UnitTest.test('InsertionTest', function () {
     ]);
   };
 
-  const check = function (expected: string, method: (a: Gene, b: Gene) => void, input: Gene, anchorId: string, itemId: string) {
+  const check = (expected: string, method: (a: Gene, b: Gene) => void, input: Gene, anchorId: string, itemId: string) => {
     const family = Tracks.track(input, Optional.none());
     const anchor = Locator.byId(family, anchorId).getOrDie();
     const item = Locator.byId(family, itemId).getOrDie();
@@ -27,15 +27,15 @@ UnitTest.test('InsertionTest', function () {
     assert.eq(expected, Logger.basic(family));
   };
 
-  const checkBefore = function (expected: string, input: Gene, anchorId: string, itemId: string) {
+  const checkBefore = (expected: string, input: Gene, anchorId: string, itemId: string) => {
     check(expected, Insertion.before, input, anchorId, itemId);
   };
 
-  const checkAfter = function (expected: string, input: Gene, anchorId: string, itemId: string) {
+  const checkAfter = (expected: string, input: Gene, anchorId: string, itemId: string) => {
     check(expected, Insertion.after, input, anchorId, itemId);
   };
 
-  const checkWrap = function (expected: string, input: Gene, anchorId: string, wrapper: Gene) {
+  const checkWrap = (expected: string, input: Gene, anchorId: string, wrapper: Gene) => {
     const family = Tracks.track(input, Optional.none());
     const anchor = Locator.byId(family, anchorId).getOrDie();
     Insertion.wrap(anchor, wrapper);
@@ -53,10 +53,10 @@ UnitTest.test('InsertionTest', function () {
   checkWrap('A(B,C(D(WRAPPER(E)),F))', data(), 'E', Gene('WRAPPER', '.'));
   checkWrap('A(WRAPPER(B),C(D(E),F))', data(), 'B', Gene('WRAPPER', '.'));
 
-  const checkAfterAll = function (expected: string, input: Gene, anchorId: string, itemIds: string[]) {
+  const checkAfterAll = (expected: string, input: Gene, anchorId: string, itemIds: string[]) => {
     const family = Tracks.track(input, Optional.none());
     const anchor = Locator.byId(family, anchorId).getOrDie('Did not find anchor: ' + anchorId);
-    const items = Arr.map(itemIds, function (itemId) {
+    const items = Arr.map(itemIds, (itemId) => {
       return Locator.byId(family, itemId).getOrDie('Did not find item: ' + itemId);
     });
     Insertion.afterAll(anchor, items);

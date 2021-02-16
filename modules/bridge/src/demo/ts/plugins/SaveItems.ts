@@ -1,12 +1,13 @@
+import { Fun } from '@ephox/katamari';
 import { getDemoRegistry } from '../buttons/DemoRegistry';
 
 const editor = {
   on: (_s, _f) => { },
   off: (_s, _f) => { },
-  isDirty: () => true
+  isDirty: Fun.always
 };
 
-export const registerSaveItems = () => {
+export const registerSaveItems = (): void => {
   getDemoRegistry().addButton('save', {
     type: 'button',
     disabled: false,

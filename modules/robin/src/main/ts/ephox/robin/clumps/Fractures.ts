@@ -1,14 +1,14 @@
 import { Universe } from '@ephox/boss';
 import { Arr, Fun, Optional } from '@ephox/katamari';
 import * as Parent from '../api/general/Parent';
-import { breakToLeft, breakToRight, LeftRight } from '../parent/Breaker';
+import { breakToLeft, breakToRight, BrokenPath, LeftRight } from '../parent/Breaker';
 import * as Subset from '../parent/Subset';
 
 // Find the subsection of DIRECT children of parent from [first, last])
-const slice = function <E, D> (universe: Universe<E, D>, parent: E, first: Optional<E>, last: Optional<E>) {
+const slice = <E, D>(universe: Universe<E, D>, parent: E, first: Optional<E>, last: Optional<E>): Optional<E[]> => {
   const children = universe.property().children(parent);
 
-  const finder = function (elem: E) {
+  const finder = (elem: E) => {
     return Arr.findIndex(children, Fun.curry(universe.eq, elem));
   };
 
@@ -19,8 +19,8 @@ const slice = function <E, D> (universe: Universe<E, D>, parent: E, first: Optio
   return firstIndex > -1 && lastIndex > -1 ? Optional.some(children.slice(firstIndex, lastIndex + 1)) : Optional.none<E[]>();
 };
 
-const breakPath = function <E, D> (universe: Universe<E, D>, element: E, common: E, breaker: (universe: Universe<E, D>, parent: E, child: E) => Optional<LeftRight<E>>) {
-  const isTop = function (elem: E) {
+const breakPath = <E, D>(universe: Universe<E, D>, element: E, common: E, breaker: (universe: Universe<E, D>, parent: E, child: E) => Optional<LeftRight<E>>): BrokenPath<E> => {
+  const isTop = (elem: E) => {
     return universe.property().parent(elem).fold(
       Fun.always,
       Fun.curry(universe.eq, common)
@@ -30,7 +30,7 @@ const breakPath = function <E, D> (universe: Universe<E, D>, element: E, common:
   return Parent.breakPath(universe, element, isTop, breaker);
 };
 
-const breakLeft = function <E, D> (universe: Universe<E, D>, element: E, common: E) {
+const breakLeft = <E, D>(universe: Universe<E, D>, element: E, common: E): Optional<E> => {
   // If we are the top and we are the left, use default value
   if (universe.eq(common, element)) {
     return Optional.none<E>();
@@ -44,7 +44,7 @@ const breakLeft = function <E, D> (universe: Universe<E, D>, element: E, common:
   }
 };
 
-const breakRight = function <E, D> (universe: Universe<E, D>, element: E, common: E) {
+const breakRight = <E, D>(universe: Universe<E, D>, element: E, common: E): Optional<E> => {
   // If we are the top and we are the right, use default value
   if (universe.eq(common, element)) {
     return Optional.none<E>();
@@ -54,13 +54,13 @@ const breakRight = function <E, D> (universe: Universe<E, D>, element: E, common
   }
 };
 
-const same = function <E, D> (universe: Universe<E, D>, isRoot: (e: E) => boolean, element: E, ceiling: (e: E) => E) {
+const same = <E, D>(universe: Universe<E, D>, isRoot: (e: E) => boolean, element: E, ceiling: (e: E) => E): Optional<E[]> => {
   const common = ceiling(element);
   // If there are no important formatting elements above, just return element, otherwise split to important element above.
   return universe.eq(common, element) ? Optional.some([ element ]) : breakToCommon(universe, common, element, element);
 };
 
-const breakToCommon = function <E, D> (universe: Universe<E, D>, common: E, start: E, finish: E) {
+const breakToCommon = <E, D>(universe: Universe<E, D>, common: E, start: E, finish: E): Optional<E[]> => {
   // We have the important top-level shared ancestor, we now have to split from the start and finish up
   // to the shared parent. Break from the first node to the common parent AFTER the second break as the first
   // will impact the second (assuming LEFT to RIGHT) and not vice versa.
@@ -70,23 +70,23 @@ const breakToCommon = function <E, D> (universe: Universe<E, D>, common: E, star
 };
 
 // Find the shared ancestor that we are going to split up to.
-const shared = function <E, D> (universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E) {
+const shared = <E, D>(universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E): Optional<E> => {
   const subset = Subset.ancestors(universe, start, finish, isRoot);
-  return subset.shared.orThunk(function () {
+  return subset.shared.orThunk(() => {
     // Default to shared root, if we don't have a shared ancestor.
-    return Parent.sharedOne(universe, function (_, elem) {
+    return Parent.sharedOne(universe, (_, elem) => {
       return isRoot(elem) ? Optional.some(elem) : universe.up().predicate(elem, isRoot);
     }, [ start, finish ]);
   }).map(ceiling);
 };
 
-const diff = function <E, D> (universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E) {
-  return shared(universe, isRoot, start, finish, ceiling).bind(function (common) {
+const diff = <E, D>(universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E): Optional<E[]> => {
+  return shared(universe, isRoot, start, finish, ceiling).bind((common) => {
     return breakToCommon(universe, common, start, finish);
   });
 };
 
-const fracture = function <E, D> (universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E = Fun.identity) {
+const fracture = <E, D>(universe: Universe<E, D>, isRoot: (e: E) => boolean, start: E, finish: E, ceiling: (e: E) => E = Fun.identity): Optional<E[]> => {
   return universe.eq(start, finish) ? same(universe, isRoot, start, ceiling) : diff(universe, isRoot, start, finish, ceiling);
 };
 

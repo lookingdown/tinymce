@@ -1,16 +1,17 @@
+import Editor from 'tinymce/core/api/Editor';
 import PluginManager from 'tinymce/core/api/PluginManager';
 
-const Plugin = function (_editor, _url) {
-  return {
-    getMetadata() {
-      return {
-        name: 'Fake',
-        url: 'http://www.fake.com'
-      };
-    }
+export default () => {
+  const Plugin = (_editor: Editor, _url: string) => {
+    return {
+      getMetadata: () => {
+        return {
+          name: 'Fake',
+          url: 'http://www.fake.com'
+        };
+      }
+    };
   };
+
+  PluginManager.add('fake', Plugin);
 };
-
-PluginManager.add('fake', Plugin);
-
-export default function () {}

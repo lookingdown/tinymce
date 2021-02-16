@@ -5,12 +5,12 @@ import * as Structs from 'ephox/snooker/api/Structs';
 import * as TableMerge from 'ephox/snooker/test/TableMerge';
 import TestGenerator from 'ephox/snooker/test/TestGenerator';
 
-UnitTest.test('TableMergeTest', function () {
+UnitTest.test('TableMergeTest', () => {
   const generator = TestGenerator;
   const start = Structs.address;
   const suite = TableMerge.suite;
 
-  const en = (fakeElement: any, isNew: boolean) => Structs.elementnew(fakeElement as SugarElement, isNew);
+  const en = (fakeElement: any, isNew: boolean) => Structs.elementnew(fakeElement as SugarElement, isNew, false);
 
   // Advanced Spans
   const gridAdvancedOne = () => [

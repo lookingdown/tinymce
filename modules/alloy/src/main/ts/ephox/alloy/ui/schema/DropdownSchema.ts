@@ -38,7 +38,7 @@ const parts: () => PartType.PartTypeAdt[] = Fun.constant([
       Fields.tieredMenuMarkers()
     ],
     name: 'menu',
-    defaults(detail) {
+    defaults: (detail) => {
       return {
         onExecute: detail.onExecute
       };
@@ -48,7 +48,8 @@ const parts: () => PartType.PartTypeAdt[] = Fun.constant([
   InternalSink.partType()
 ]);
 
-const name = () => 'Dropdown';
+const name = Fun.constant('Dropdown');
+
 export {
   name,
   schema,

@@ -11,7 +11,7 @@ import * as NodeType from './NodeType';
 
 const DOM = DOMUtils.DOM;
 
-const normalizeList = function (dom, ul) {
+const normalizeList = (dom, ul) => {
   let sibling;
   const parentNode = ul.parentNode;
 
@@ -38,8 +38,8 @@ const normalizeList = function (dom, ul) {
   }
 };
 
-const normalizeLists = function (dom, element) {
-  Tools.each(Tools.grep(dom.select('ol,ul', element)), function (ul) {
+const normalizeLists = (dom, element) => {
+  Tools.each(Tools.grep(dom.select('ol,ul', element)), (ul) => {
     normalizeList(dom, ul);
   });
 };

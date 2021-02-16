@@ -1,4 +1,4 @@
-import { ApproxStructure, Assertions, Step, StructAssert, Waiter } from '@ephox/agar';
+import { ApproxStructure, Assertions, PhantomSkipper, Step, StructAssert, Waiter } from '@ephox/agar';
 import { UnitTest } from '@ephox/bedrock-client';
 import { Arr } from '@ephox/katamari';
 import { Css } from '@ephox/sugar';
@@ -7,13 +7,14 @@ import * as GuiFactory from 'ephox/alloy/api/component/GuiFactory';
 import * as GuiSetup from 'ephox/alloy/api/testhelpers/GuiSetup';
 import { Button } from 'ephox/alloy/api/ui/Button';
 import { SplitSlidingToolbar } from 'ephox/alloy/api/ui/SplitSlidingToolbar';
-import * as PhantomSkipper from 'ephox/alloy/test/PhantomSkipper';
 import * as TestPartialToolbarGroup from 'ephox/alloy/test/toolbar/TestPartialToolbarGroup';
 
 UnitTest.asynctest('SplitSlidingToolbarTest', (success, failure) => {
   // Tests requiring 'flex' do not currently work on phantom. Use the remote to see how it is
   // viewed as an invalid value.
-  if (PhantomSkipper.skip()) { return success(); }
+  if (PhantomSkipper.detect()) {
+    return success();
+  }
 
   GuiSetup.setup((store, _doc, _body) => {
     const pPrimary = SplitSlidingToolbar.parts.primary({
@@ -205,5 +206,5 @@ UnitTest.asynctest('SplitSlidingToolbarTest', (success, failure) => {
       // TODO: Add testing for sliding?
       GuiSetup.mRemoveStyles
     ];
-  }, () => { success(); }, failure);
+  }, success, failure);
 });

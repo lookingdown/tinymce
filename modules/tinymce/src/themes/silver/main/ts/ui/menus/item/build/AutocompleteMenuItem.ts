@@ -7,7 +7,7 @@
 
 import { Behaviour, GuiFactory, ItemTypes, MaxHeight, Tooltipping } from '@ephox/alloy';
 import { InlineContent, Toolbar } from '@ephox/bridge';
-import { Obj, Optional } from '@ephox/katamari';
+import { Fun, Obj, Optional, Regex } from '@ephox/katamari';
 import { SugarElement } from '@ephox/sugar';
 import DOMUtils from 'tinymce/core/api/dom/DOMUtils';
 import I18n from 'tinymce/core/api/util/I18n';
@@ -24,8 +24,8 @@ type TooltipWorker = (success: (elem: HTMLElement) => void) => void;
 const tooltipBehaviour = (
   meta: Record<string, any>, sharedBackstage: UiFactoryBackstageShared
 ): Behaviour.NamedConfiguredBehaviour<Behaviour.BehaviourConfigSpec, Behaviour.BehaviourConfigDetail>[] =>
-  Obj.get(meta, 'tooltipWorker').
-    map((tooltipWorker: TooltipWorker) => [
+  Obj.get(meta, 'tooltipWorker')
+    .map((tooltipWorker: TooltipWorker) => [
       Tooltipping.config({
         lazySink: sharedBackstage.getSink,
         tooltipDom: {
@@ -51,16 +51,15 @@ const tooltipBehaviour = (
           });
         }
       })
-    ]).
-    getOr([]);
+    ])
+    .getOr([]);
 
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const encodeText = (text: string) => DOMUtils.DOM.encode(text);
 const replaceText = (text: string, matchText: string): string => {
   const translated = I18n.translate(text);
   const encoded = encodeText(translated);
   if (matchText.length > 0) {
-    const escapedMatchRegex = new RegExp(escapeRegExp(matchText), 'gi');
+    const escapedMatchRegex = new RegExp(Regex.escape(matchText), 'gi');
     return encoded.replace(escapedMatchRegex, (match) => `<span class="tox-autocompleter-highlight">${match}</span>`);
   } else {
     return encoded;
@@ -92,12 +91,12 @@ const renderAutocompleteItem = (
   return renderCommonItem({
     data: buildData(spec),
     disabled: spec.disabled,
-    getApi: () => ({}),
+    getApi: Fun.constant({}),
     onAction: (_api) => onItemValueHandler(spec.value, spec.meta),
-    onSetup: () => () => { },
+    onSetup: Fun.constant(Fun.noop),
     triggersSubmenu: false,
     itemBehaviours: tooltipBehaviour(spec.meta, sharedBackstage)
   }, structure, itemResponse, sharedBackstage.providers);
 };
 
-export { renderAutocompleteItem };
+export { renderAutocompleteItem, replaceText, tooltipBehaviour };

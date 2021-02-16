@@ -1,8 +1,10 @@
-import { Arr, Cell, Obj, Optional } from '@ephox/katamari';
+import { Arr, Cell, Fun, Obj, Optional } from '@ephox/katamari';
 
 import { ItemDataTuple } from '../../ui/types/ItemTypes';
 import { nuState } from '../common/BehaviourState';
-import { DatasetRepresentingState, ManualRepresentingState, MemoryRepresentingState, RepresentingConfig } from './RepresentingTypes';
+import {
+  DatasetRepresentingState, ManualRepresentingState, MemoryRepresentingState, RepresentingConfig, RepresentingState
+} from './RepresentingTypes';
 
 const memory = (): MemoryRepresentingState => {
   const data = Cell<any>(null);
@@ -28,9 +30,7 @@ const memory = (): MemoryRepresentingState => {
 };
 
 const manual = (): ManualRepresentingState => {
-  const readState = () => {
-
-  };
+  const readState = Fun.noop;
 
   return nuState({
     readState
@@ -88,7 +88,8 @@ const dataset = (): DatasetRepresentingState => {
   });
 };
 
-const init = (spec: RepresentingConfig) => spec.store.manager.state(spec);
+const init = (spec: RepresentingConfig): RepresentingState =>
+  spec.store.manager.state(spec);
 
 export {
   memory,

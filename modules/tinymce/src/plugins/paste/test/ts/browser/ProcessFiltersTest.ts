@@ -7,14 +7,14 @@ import * as ProcessFilters from 'tinymce/plugins/paste/core/ProcessFilters';
 import PastePlugin from 'tinymce/plugins/paste/Plugin';
 import Theme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('tinymce.plugins.paste.browser.ProcessFiltersTest', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.paste.ProcessFiltersTest', (success, failure) => {
 
   Theme();
   PastePlugin();
 
-  const cProcessPre = function (html, internal, preProcess) {
+  const cProcessPre = (html, internal, preProcess) => {
     return Chain.control(
-      Chain.mapper(function (editor: any) {
+      Chain.mapper((editor: any) => {
         editor.on('PastePreProcess', preProcess);
 
         const result = ProcessFilters.process(editor, html, internal);
@@ -27,9 +27,9 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.ProcessFiltersTest', (success,
     );
   };
 
-  const cProcessPrePost = function (html, internal, preProcess, postProcess) {
+  const cProcessPrePost = (html, internal, preProcess, postProcess) => {
     return Chain.control(
-      Chain.mapper(function (editor: any) {
+      Chain.mapper((editor: any) => {
         editor.on('PastePreProcess', preProcess);
         editor.on('PastePostProcess', postProcess);
 
@@ -44,27 +44,27 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.ProcessFiltersTest', (success,
     );
   };
 
-  const preventHandler = function (e) {
+  const preventHandler = (e) => {
     e.preventDefault();
   };
 
-  const preProcessHandler = function (e) {
+  const preProcessHandler = (e) => {
     e.content += 'X';
   };
 
-  const postProcessHandler = function (editor) {
-    return function (e) {
+  const postProcessHandler = (editor) => {
+    return (e) => {
       editor.dom.remove(editor.dom.select('b', e.node), true);
     };
   };
 
-  const assertInternal = function (expectedFlag) {
-    return function (e) {
+  const assertInternal = (expectedFlag) => {
+    return (e) => {
       Assertions.assertEq('Should be expected internal flag', expectedFlag, e.internal);
     };
   };
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     Pipeline.async({}, [
       Chain.asStep(editor, Log.chains('TBA', 'Paste: Paste pre process only', [
         cProcessPre('a', true, preProcessHandler),

@@ -38,18 +38,18 @@ export interface Direction {
   readonly first: <E>(children: E[]) => Optional<E>;
 }
 
-export type Transition = <E, D> (universe: Universe<E, D>, item: E, direction: Direction, _transition?: Transition) => Optional<Traverse<E>>;
+export type Transition = <E, D>(universe: Universe<E, D>, item: E, direction: Direction, _transition?: Transition) => Optional<Traverse<E>>;
 
 export interface Traverse<E> {
   readonly item: E;
   readonly mode: Transition;
 }
 
-export type Successor = {
+export interface Successor {
   readonly current: Transition;
   readonly next: Transition;
   readonly fallback: Optional<Transition>;
-};
+}
 
 export interface Wrapter<E> {
   readonly element: E;

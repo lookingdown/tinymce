@@ -19,12 +19,12 @@ import * as Buttons from './ui/Buttons';
  * @private
  */
 
-export default function () {
-  PluginManager.add('autosave', function (editor) {
+export default () => {
+  PluginManager.add('autosave', (editor) => {
     BeforeUnload.setup(editor);
     Buttons.register(editor);
 
-    editor.on('init', function () {
+    editor.on('init', () => {
       if (Settings.shouldRestoreWhenEmpty(editor) && editor.dom.isEmpty(editor.getBody())) {
         Storage.restoreDraft(editor);
       }
@@ -32,4 +32,4 @@ export default function () {
 
     return Api.get(editor);
   });
-}
+};

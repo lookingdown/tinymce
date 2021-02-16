@@ -1,4 +1,4 @@
-import { Optional } from '@ephox/katamari';
+import { Fun, Optional } from '@ephox/katamari';
 import { Css, Width } from '@ephox/sugar';
 
 import { AlloyComponent } from '../../api/component/ComponentApi';
@@ -69,14 +69,13 @@ const moveBy = (direction: number, spectrum: AlloyComponent, detail: HorizontalS
   return Optional.some(xValue);
 };
 
-const handleMovement = (direction: number) => (spectrum: AlloyComponent, detail: HorizontalSliderDetail): Optional<boolean> => moveBy(direction, spectrum, detail).map((): boolean => true);
+const handleMovement = (direction: number) => (spectrum: AlloyComponent, detail: HorizontalSliderDetail): Optional<boolean> =>
+  moveBy(direction, spectrum, detail).map<boolean>(Fun.always);
 
 // get x offset from event
 const getValueFromEvent = (simulatedEvent: NativeSimulatedEvent): Optional<number> => {
   const pos = ModelCommon.getEventSource(simulatedEvent);
-  return pos.map(function (p) {
-    return p.left;
-  });
+  return pos.map((p) => p.left);
 };
 
 // find the x offset of a given value from the model

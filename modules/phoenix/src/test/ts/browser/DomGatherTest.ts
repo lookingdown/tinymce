@@ -4,11 +4,11 @@ import { SugarElement } from '@ephox/sugar';
 import * as DomGather from 'ephox/phoenix/api/dom/DomGather';
 import { Page } from '../module/ephox/phoenix/test/Page';
 
-UnitTest.test('DomGatherTest', function () {
+UnitTest.test('DomGatherTest', () => {
   const page = Page();
 
-  const is = function (x: SugarElement) {
-    return function (e: SugarElement) {
+  const is = (x: SugarElement) => {
+    return (e: SugarElement) => {
       return e.dom === x.dom;
     };
   };
@@ -20,7 +20,7 @@ UnitTest.test('DomGatherTest', function () {
     expected: SugarElement;
   }
 
-  const check = function (spec: CheckItem) {
+  const check = (spec: CheckItem) => {
     const actual = spec.seek(spec.element, spec.predicate, is(page.container)).getOrDie('No actual element found.');
     assert.eq(spec.expected.dom, actual.dom);
   };

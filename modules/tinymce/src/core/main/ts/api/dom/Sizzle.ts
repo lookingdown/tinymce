@@ -24,7 +24,7 @@ import { Arr } from '@ephox/katamari';
 
 /* eslint-enable */
 
-/* eslint-disable no-bitwise, prefer-const */
+/* eslint-disable no-bitwise, prefer-const, no-nested-ternary, @typescript-eslint/consistent-type-assertions, prefer-arrow/prefer-arrow-functions, @tinymce/prefer-fun, @typescript-eslint/unbound-method */
 
 let support,
   Expr,
@@ -427,9 +427,9 @@ function createButtonPseudo(type) {
  * @param {Function} fn
  */
 function createPositionalPseudo(fn) {
-  return markFunction(function (argument) {
+  return markFunction((argument) => {
     argument = +argument;
-    return markFunction(function (seed, matches) {
+    return markFunction((seed, matches) => {
       let j,
         matchIndexes = fn([], seed.length, argument),
         i = matchIndexes.length;
@@ -508,11 +508,11 @@ setDocument = Sizzle.setDocument = function (node) {
   if (parent && parent !== getTop(parent)) {
     // IE11 does not have attachEvent, so all must suffer
     if (parent.addEventListener) {
-      parent.addEventListener('unload', function () {
+      parent.addEventListener('unload', () => {
         setDocument();
       }, false);
     } else if (parent.attachEvent) {
-      parent.attachEvent('onunload', function () {
+      parent.attachEvent('onunload', () => {
         setDocument();
       });
     }
@@ -1068,7 +1068,9 @@ Expr = Sizzle.selectors = {
     TAG(nodeNameSelector) {
       const nodeName = nodeNameSelector.replace(runescape, funescape).toLowerCase();
       return nodeNameSelector === '*' ?
-        function () { return true; } :
+        function () {
+          return true;
+        } :
         function (elem) {
           return elem.nodeName && elem.nodeName.toLowerCase() === nodeName;
         };
@@ -1079,7 +1081,7 @@ Expr = Sizzle.selectors = {
 
       return pattern ||
         (pattern = new RegExp('(^|' + whitespace + ')' + className + '(' + whitespace + '|$)')) &&
-        classCache(className, function (elem) {
+        classCache(className, (elem) => {
           return pattern.test(typeof elem.className === 'string' && elem.className || typeof elem.getAttribute !== strundefined && elem.getAttribute('class') || '');
         });
     },
@@ -1217,7 +1219,7 @@ Expr = Sizzle.selectors = {
       if (fn.length > 1) {
         args = [ pseudo, pseudo, '', argument ];
         return Expr.setFilters.hasOwnProperty(pseudo.toLowerCase()) ?
-          markFunction(function (seed, matches) {
+          markFunction((seed, matches) => {
             let idx,
               matched = fn(seed, argument),
               i = matched.length;
@@ -1237,7 +1239,7 @@ Expr = Sizzle.selectors = {
 
   pseudos: {
     // Potentially complex pseudos
-    not: markFunction(function (selector) {
+    not: markFunction((selector) => {
       // Trim the selector passed to compile
       // to avoid treating leading and trailing
       // spaces as combinators
@@ -1246,7 +1248,7 @@ Expr = Sizzle.selectors = {
         matcher = compile(selector.replace(rtrim, '$1'));
 
       return matcher[expando] ?
-        markFunction(function (seed, matches, context, xml) {
+        markFunction((seed, matches, context, xml) => {
           let elem,
             unmatched = matcher(seed, null, xml, []),
             i = seed.length;
@@ -1261,17 +1263,19 @@ Expr = Sizzle.selectors = {
         function (elem, context, xml) {
           input[0] = elem;
           matcher(input, null, xml, results);
+          // Don't keep the element (issue #299)
+          input[0] = null;
           return !results.pop();
         };
     }),
 
-    has: markFunction(function (selector) {
+    has: markFunction((selector) => {
       return function (elem) {
         return Sizzle(selector, elem).length > 0;
       };
     }),
 
-    contains: markFunction(function (text) {
+    contains: markFunction((text) => {
       text = text.replace(runescape, funescape);
       return function (elem) {
         return (elem.textContent || elem.innerText || getText(elem)).indexOf(text) > -1;
@@ -1285,7 +1289,7 @@ Expr = Sizzle.selectors = {
     // The matching of C against the element's language value is performed case-insensitively.
     // The identifier C does not have to be a valid language name."
     // http://www.w3.org/TR/selectors/#lang-pseudo
-    lang: markFunction(function (lang) {
+    lang: markFunction((lang) => {
       // lang value must be a valid identifier
       if (!ridentifier.test(lang || '')) {
         Sizzle.error('unsupported lang: ' + lang);
@@ -1390,19 +1394,19 @@ Expr = Sizzle.selectors = {
     },
 
     // Position-in-collection
-    first: createPositionalPseudo(function () {
+    first: createPositionalPseudo(() => {
       return [ 0 ];
     }),
 
-    last: createPositionalPseudo(function (matchIndexes, length) {
+    last: createPositionalPseudo((matchIndexes, length) => {
       return [ length - 1 ];
     }),
 
-    eq: createPositionalPseudo(function (matchIndexes, length, argument) {
+    eq: createPositionalPseudo((matchIndexes, length, argument) => {
       return [ argument < 0 ? argument + length : argument ];
     }),
 
-    even: createPositionalPseudo(function (matchIndexes, length) {
+    even: createPositionalPseudo((matchIndexes, length) => {
       let i = 0;
       for (; i < length; i += 2) {
         matchIndexes.push(i);
@@ -1410,7 +1414,7 @@ Expr = Sizzle.selectors = {
       return matchIndexes;
     }),
 
-    odd: createPositionalPseudo(function (matchIndexes, length) {
+    odd: createPositionalPseudo((matchIndexes, length) => {
       let i = 1;
       for (; i < length; i += 2) {
         matchIndexes.push(i);
@@ -1418,7 +1422,7 @@ Expr = Sizzle.selectors = {
       return matchIndexes;
     }),
 
-    lt: createPositionalPseudo(function (matchIndexes, length, argument) {
+    lt: createPositionalPseudo((matchIndexes, length, argument) => {
       let i = argument < 0 ? argument + length : argument;
       for (; --i >= 0;) {
         matchIndexes.push(i);
@@ -1426,7 +1430,7 @@ Expr = Sizzle.selectors = {
       return matchIndexes;
     }),
 
-    gt: createPositionalPseudo(function (matchIndexes, length, argument) {
+    gt: createPositionalPseudo((matchIndexes, length, argument) => {
       let i = argument < 0 ? argument + length : argument;
       for (; ++i < length;) {
         matchIndexes.push(i);
@@ -1635,7 +1639,7 @@ function setMatcher(preFilter, selector?, matcher?, postFilter?, postFinder?, po
   if (postFinder && !postFinder[expando]) {
     postFinder = setMatcher(postFinder, postSelector);
   }
-  return markFunction(function (seed, results, context, xml) {
+  return markFunction((seed, results, context, xml) => {
     let temp, i, elem,
       preMap = [],
       postMap = [],
@@ -1729,17 +1733,20 @@ function matcherFromTokens(tokens) {
     i = leadingRelative ? 1 : 0,
 
     // The foundational matcher ensures that elements are reachable from top-level context(s)
-    matchContext = addCombinator(function (elem) {
+    matchContext = addCombinator((elem) => {
       return elem === checkContext;
     }, implicitRelative, true),
-    matchAnyContext = addCombinator(function (elem) {
+    matchAnyContext = addCombinator((elem) => {
       return indexOf.call(checkContext, elem) > -1;
     }, implicitRelative, true),
     matchers = [ function (elem, context, xml) {
-      return (!leadingRelative && (xml || context !== outermostContext)) || (
+      const ret = (!leadingRelative && (xml || context !== outermostContext)) || (
         (checkContext = context).nodeType ?
           matchContext(elem, context, xml) :
           matchAnyContext(elem, context, xml));
+      // Avoid hanging onto element (issue #299)
+      checkContext = null;
+      return ret;
     } ];
 
   for (; i < len; i++) {

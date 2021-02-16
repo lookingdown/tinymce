@@ -4,7 +4,7 @@ import { Unicode } from '@ephox/katamari';
 import { KAssert } from '@ephox/katamari-assertions';
 import * as Selection from 'ephox/robin/smartselect/Selection';
 
-UnitTest.test('SelectionTest', function () {
+UnitTest.test('SelectionTest', () => {
   const doc1 = TestUniverse(Gene('root', 'root', [
     Gene('p1', 'p', [
       TextGene('a', 'There i'),
@@ -52,7 +52,7 @@ UnitTest.test('SelectionTest', function () {
     endOffset: number;
   }
 
-  const check = function (expected: Expected, doc: TestUniverse, id: string, offset: number) {
+  const check = (expected: Expected, doc: TestUniverse, id: string, offset: number) => {
     const item = doc.find(doc.get(), id).getOrDie('Could not find item: ' + id);
     const actual = Selection.word(doc, item, offset).getOrDie('Selection for: (' + id + ', ' + offset + ') yielded nothing');
     Assert.eq('Selection for: (' + id + ', ' + offset + ') => startContainer', expected.startContainer, actual.startContainer.id);
@@ -61,7 +61,7 @@ UnitTest.test('SelectionTest', function () {
     Assert.eq('Selection for: (' + id + ', ' + offset + ') => endOffset', expected.endOffset, actual.endOffset);
   };
 
-  const checkNone = function (doc: TestUniverse, id: string, offset: number) {
+  const checkNone = (doc: TestUniverse, id: string, offset: number) => {
     const actual = doc.find(doc.get(), id).bind((item) =>
       Selection.word(doc, item, offset)
     );

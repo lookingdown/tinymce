@@ -13,7 +13,7 @@ UnitTest.asynctest('browser.tinymce.plugins.spellchecker.AddToDictionaryTest', (
 
   const dict = [];
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     const api = TinyApis(editor);
     const ui = TinyUi(editor);
 
@@ -39,7 +39,7 @@ UnitTest.asynctest('browser.tinymce.plugins.spellchecker.AddToDictionaryTest', (
     toolbar: 'spellchecker',
     spellchecker_languages: 'English=en,French=fr,German=de',
     base_url: '/project/tinymce/js/tinymce',
-    spellchecker_callback(method, text, success, _failure) {
+    spellchecker_callback: (method, text, success, _failure) => {
       if (method === 'spellcheck') {
         success({ dictionary: dict, words: { hello: [ 'word1' ], world: [ 'word2' ] }});
       } else if (method === 'addToDictionary') {

@@ -2,11 +2,19 @@ import { Obj, Optional } from '@ephox/katamari';
 import { SugarBody, SugarElement } from '@ephox/sugar';
 
 import { AlloyComponent } from '../api/component/ComponentApi';
-import EventRegistry, { ElementAndHandler, UidAndHandler } from '../events/EventRegistry';
+import { ElementAndHandler, EventRegistry, UidAndHandler } from '../events/EventRegistry';
 import * as AlloyLogger from '../log/AlloyLogger';
 import * as Tagger from './Tagger';
 
-export default () => {
+export interface Registry {
+  readonly find: (isAboveRoot: (elem: SugarElement) => boolean, type: string, target: SugarElement) => Optional<ElementAndHandler>;
+  readonly filter: (type: string) => UidAndHandler[];
+  readonly register: (component: AlloyComponent) => void;
+  readonly unregister: (component: AlloyComponent) => void;
+  readonly getById: (id: string) => Optional<AlloyComponent>;
+}
+
+export const Registry = (): Registry => {
   const events = EventRegistry();
 
   // An index of uid -> built components
@@ -22,16 +30,21 @@ export default () => {
 
   const failOnDuplicate = (component: AlloyComponent, tagId: string): void => {
     const conflict = components[tagId];
-    if (conflict === component) { unregister(component); } else { throw new Error(
-      'The tagId "' + tagId + '" is already used by: ' + AlloyLogger.element(conflict.element) + '\nCannot use it for: ' + AlloyLogger.element(component.element) + '\n' +
+    if (conflict === component) {
+      unregister(component);
+    } else {
+      throw new Error(
+        'The tagId "' + tagId + '" is already used by: ' + AlloyLogger.element(conflict.element) + '\nCannot use it for: ' + AlloyLogger.element(component.element) + '\n' +
         'The conflicting element is' + (SugarBody.inBody(conflict.element) ? ' ' : ' not ') + 'already in the DOM'
-    );
+      );
     }
   };
 
   const register = (component: AlloyComponent): void => {
     const tagId = readOrTag(component);
-    if (Obj.hasNonNullableKey(components, tagId)) { failOnDuplicate(component, tagId); }
+    if (Obj.hasNonNullableKey(components, tagId)) {
+      failOnDuplicate(component, tagId);
+    }
     // Component is passed through an an extra argument to all events
     const extraArgs = [ component ];
     events.registerId(extraArgs, tagId, component.events);
@@ -47,7 +60,8 @@ export default () => {
 
   const filter = (type: string): UidAndHandler[] => events.filterByType(type);
 
-  const find = (isAboveRoot: (elem: SugarElement) => boolean, type: string, target: SugarElement): Optional<ElementAndHandler> => events.find(isAboveRoot, type, target);
+  const find = (isAboveRoot: (elem: SugarElement) => boolean, type: string, target: SugarElement): Optional<ElementAndHandler> =>
+    events.find(isAboveRoot, type, target);
 
   const getById = (id: string): Optional<AlloyComponent> => Obj.get(components, id);
 

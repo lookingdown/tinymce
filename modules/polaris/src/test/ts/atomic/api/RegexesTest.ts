@@ -2,7 +2,7 @@ import { assert, UnitTest } from '@ephox/bedrock-client';
 import { Arr, Obj } from '@ephox/katamari';
 import * as Regexes from 'ephox/polaris/api/Regexes';
 
-UnitTest.test('RegexesTest', function () {
+UnitTest.test('RegexesTest', () => {
   const ephoxCases = [
     'www.google.com.au',
     'www.google.com.au:80',
@@ -20,7 +20,8 @@ UnitTest.test('RegexesTest', function () {
     `http://-.~_!$&'()*+,;=:%40:80%2f::::::@example.com?-.~_!$&'()*+,;=:%40:80%2f::::::@e#-.~_!$&'()*+,;=:%40:80%2f::::::@e`,
     'http://xn--domain.com',
     'www.google.ca/index.htm?id=/bla/bla',
-    'https://www.amazon.com.au/gp/product/B0798R2WXG/ref=s9_acsd_top_hd_bw_b5QhTfX_c_x_w?pf_rd_m=ANEGB3WVEVKZB&pf_rd_s=merchandised-search-4&pf_rd_r=KF6SD7C0M69MKF2FR9CC&pf_rd_t=101&pf_rd_p=8ad3bdba-b846-5350-9c00-72c2cb7191dd&pf_rd_i=4975211051'
+    'https://www.amazon.com.au/gp/product/B0798R2WXG/ref=s9_acsd_top_hd_bw_b5QhTfX_c_x_w?pf_rd_m=ANEGB3WVEVKZB&pf_rd_s=merchandised-search-4&pf_rd_r=KF6SD7C0M69MKF2FR9CC&pf_rd_t=101&pf_rd_p=8ad3bdba-b846-5350-9c00-72c2cb7191dd&pf_rd_i=4975211051',
+    'https://www.birddoctor.net/refId,56511/refDownload.pml'
   ];
 
   // More cases, http://formvalidation.io/validators/uri/
@@ -129,13 +130,13 @@ UnitTest.test('RegexesTest', function () {
 
   const falseCases = ephoxFalseCases.concat(mathiasBynensFalse);
 
-  Arr.each(trueCases, function (cs) {
+  Arr.each(trueCases, (cs) => {
     const matched = Regexes.link().exec(cs);
     assert.eq(cs, matched !== null && matched[0], 'expected true but was false: ' + cs);
     if (matched !== null && matched.length > 1) {
       // eslint-disable-next-line no-console
       console.log('matched groups:');
-      Arr.each(matched, function (s, i) {
+      Arr.each(matched, (s, i) => {
         // eslint-disable-next-line no-console
         console.log(i, s);
       });
@@ -143,7 +144,7 @@ UnitTest.test('RegexesTest', function () {
     }
   });
 
-  Arr.each(falseCases, function (cs) {
+  Arr.each(falseCases, (cs) => {
     const match = Regexes.link().exec(cs);
     assert.eq(false, match !== null && cs === match[0], 'expected false but was true: ' + cs);
   });
@@ -221,10 +222,44 @@ UnitTest.test('RegexesTest', function () {
   };
 
   // remember don't inline the module function execution, JS regexes have state!
-  Obj.each(autolinks, function (v, k) {
+  Obj.each(autolinks, (v, k) => {
     const match = Regexes.autolink().exec(k);
     if (match !== null) {
       const url = match[1];
+      assert.eq(true, v === url, 'expected ' + v + ' but was "' + url + '"');
+    } else {
+      assert.fail('expected ' + v + ' but did not match "' + k + '"');
+    }
+  });
+
+  const onlyWithPathLinks = { // Ignore trailing comma and period in URL path
+    'http://google.com': 'http://google.com',
+    'http://google.com.': 'http://google.com',
+    'http://google.com,': 'http://google.com',
+    'http://google.com/,': 'http://google.com/',
+    'http://google.com/,,': 'http://google.com/',
+    'http://google.com/.': 'http://google.com/',
+    'http://google.com/..': 'http://google.com/',
+    'http://google.com/,/': 'http://google.com/,/',
+    'http://google.com/,/,': 'http://google.com/,/',
+    'http://google.com/abc': 'http://google.com/abc',
+    'http://google.com/abc,': 'http://google.com/abc',
+    'http://google.com/abc.': 'http://google.com/abc',
+    'http://google.com/,ab,c': 'http://google.com/,ab,c',
+    'http://google.com/ab,c': 'http://google.com/ab,c',
+    'http://google.com/ab,c,': 'http://google.com/ab,c',
+    'http://google.com/ab,c.': 'http://google.com/ab,c',
+    'http://google.com/abc,d/,': 'http://google.com/abc,d/',
+    'http://google.com/abc,d/.': 'http://google.com/abc,d/',
+    'http://google.com/a,bc,d/,': 'http://google.com/a,bc,d/',
+    'http://google.com/a,bc,d/.': 'http://google.com/a,bc,d/',
+    'Visit, please, http://google.com/a,bc,d/. Good luck!': 'http://google.com/a,bc,d/',
+  };
+
+  Obj.each(onlyWithPathLinks, (v, k) => {
+    const match = Regexes.link().exec(k);
+    if (match !== null) {
+      const url = match[0];
       assert.eq(true, v === url, 'expected ' + v + ' but was "' + url + '"');
     } else {
       assert.fail('expected ' + v + ' but did not match "' + k + '"');

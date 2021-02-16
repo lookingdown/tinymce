@@ -118,6 +118,12 @@ const getContentCss = (editor: Editor): string[] => {
   }
 };
 
+const getFontCss = (editor: Editor): string[] => {
+  const fontCss = editor.getParam('font_css', []);
+
+  return Type.isArray(fontCss) ? fontCss : Arr.map(fontCss.split(','), Strings.trim);
+};
+
 const getDirectionality = (editor: Editor): string | undefined => editor.getParam('directionality', I18n.isRtl() ? 'rtl' : undefined);
 
 const getInlineBoundarySelector = (editor: Editor): string => editor.getParam('inline_boundaries_selector', 'a[href],code,.mce-annotation', 'string');
@@ -127,7 +133,7 @@ const getObjectResizing = (editor: Editor): string | false => {
   if (selector === false || Env.iOS) {
     return false;
   } else {
-    return Type.isString(selector) ? selector : 'table,img,figure.image,div';
+    return Type.isString(selector) ? selector : 'table,img,figure.image,div,video,iframe';
   }
 };
 
@@ -158,6 +164,8 @@ const getPreviewStyles = (editor: Editor): string => {
     return '';
   }
 };
+
+const canFormatEmptyLines = (editor: Editor) => editor.getParam('format_empty_lines', false, 'boolean');
 
 const getCustomUiSelector = (editor: Editor): string => editor.getParam('custom_ui_selector', '', 'string');
 
@@ -190,6 +198,12 @@ const getPlugins = (editor: Editor): string => editor.getParam('plugins', '', 's
 const getExternalPlugins = (editor: Editor) => editor.getParam('external_plugins');
 
 const shouldBlockUnsupportedDrop = (editor: Editor) => editor.getParam('block_unsupported_drop', true, 'boolean');
+
+const isVisualAidsEnabled = (editor: Editor) => editor.getParam('visual', true, 'boolean');
+
+const getVisualAidsTableClass = (editor: Editor) => editor.getParam('visual_table_class', 'mce-item-table', 'string');
+
+const getVisualAidsAnchorClass = (editor: Editor) => editor.getParam('visual_anchor_class', 'mce-item-anchor', 'string');
 
 export {
   getIframeAttrs,
@@ -236,6 +250,7 @@ export {
   isInlineBoundariesEnabled,
   getFormats,
   getPreviewStyles,
+  canFormatEmptyLines,
   getCustomUiSelector,
   getThemeUrl,
   isInline,
@@ -251,5 +266,9 @@ export {
   hasContentCssCors,
   getPlugins,
   getExternalPlugins,
-  shouldBlockUnsupportedDrop
+  shouldBlockUnsupportedDrop,
+  isVisualAidsEnabled,
+  getVisualAidsTableClass,
+  getFontCss,
+  getVisualAidsAnchorClass
 };

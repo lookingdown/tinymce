@@ -3,7 +3,7 @@ import { SugarBody, SugarElement, Traverse } from '@ephox/sugar';
 
 /* eslint-disable no-console */
 
-const iframeDoc = (element: SugarElement<HTMLFrameElement>): Optional<SugarElement<HTMLDocument>> => {
+const iframeDoc = (element: SugarElement<HTMLFrameElement>): Optional<SugarElement<Document>> => {
   const dom = element.dom;
   try {
     const idoc = dom.contentWindow ? dom.contentWindow.document : dom.contentDocument;
@@ -17,7 +17,7 @@ const iframeDoc = (element: SugarElement<HTMLFrameElement>): Optional<SugarEleme
 };
 
 // NOTE: This looks like it is only used in the demo. Move out.
-const readDoc = (element: SugarElement) => {
+const readDoc = (element: SugarElement): SugarElement<Document> => {
   const optDoc = iframeDoc(element);
   return optDoc.getOrThunk(() =>
     // INVESTIGATE: This is new, but there is nothing else than can be done here atm. Rethink.
@@ -26,7 +26,9 @@ const readDoc = (element: SugarElement) => {
 };
 
 const write = (element: SugarElement, content: string): void => {
-  if (!SugarBody.inBody(element)) { throw new Error('Internal error: attempted to write to an iframe that is not n the DOM'); }
+  if (!SugarBody.inBody(element)) {
+    throw new Error('Internal error: attempted to write to an iframe that is not n the DOM');
+  }
 
   const doc = readDoc(element);
   const dom = doc.dom;

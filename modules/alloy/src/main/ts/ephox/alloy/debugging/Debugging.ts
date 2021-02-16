@@ -70,31 +70,37 @@ const makeEventLogger = (eventName: string, initialTarget: SugarElement): Debugg
   const startTime = new Date().getTime();
 
   return {
-    logEventCut(_name: string, target: SugarElement, purpose: string) {
+    logEventCut: (_name: string, target: SugarElement, purpose: string) => {
       sequence.push({ outcome: 'cut', target, purpose });
     },
-    logEventStopped(_name: string, target: SugarElement, purpose: string) {
+    logEventStopped: (_name: string, target: SugarElement, purpose: string) => {
       sequence.push({ outcome: 'stopped', target, purpose });
     },
-    logNoParent(_name: string, target: SugarElement, purpose: string) {
+    logNoParent: (_name: string, target: SugarElement, purpose: string) => {
       sequence.push({ outcome: 'no-parent', target, purpose });
     },
-    logEventNoHandlers(_name: string, target: SugarElement) {
+    logEventNoHandlers: (_name: string, target: SugarElement) => {
       sequence.push({ outcome: 'no-handlers-left', target });
     },
-    logEventResponse(_name: string, target: SugarElement, purpose: string) {
+    logEventResponse: (_name: string, target: SugarElement, purpose: string) => {
       sequence.push({ outcome: 'response', purpose, target });
     },
-    write() {
+    write: () => {
       const finishTime = new Date().getTime();
-      if (Arr.contains([ 'mousemove', 'mouseover', 'mouseout', SystemEvents.systemInit() ], eventName)) { return; }
+      if (Arr.contains([ 'mousemove', 'mouseover', 'mouseout', SystemEvents.systemInit() ], eventName)) {
+        return;
+      }
       // eslint-disable-next-line no-console
       console.log(eventName, {
         event: eventName,
         time: finishTime - startTime,
         target: initialTarget.dom,
         sequence: Arr.map(sequence, (s) => {
-          if (!Arr.contains([ 'cut', 'stopped', 'response' ], s.outcome)) { return s.outcome; } else { return '{' + s.purpose + '} ' + s.outcome + ' at (' + AlloyLogger.element(s.target) + ')'; }
+          if (!Arr.contains([ 'cut', 'stopped', 'response' ], s.outcome)) {
+            return s.outcome;
+          } else {
+            return '{' + s.purpose + '} ' + s.outcome + ' at (' + AlloyLogger.element(s.target) + ')';
+          }
         })
       });
     }
@@ -130,8 +136,10 @@ const path = [
   'alloy/debugging/Debugging'
 ];
 
-const getTrace = () => {
-  if (debugging === false) { return unknown; }
+const getTrace = (): string => {
+  if (debugging === false) {
+    return unknown;
+  }
   const err = new Error();
   if (err.stack !== undefined) {
     const lines = err.stack.split('\n');
@@ -141,7 +149,7 @@ const getTrace = () => {
   }
 };
 
-const logHandler = (_label: string, _handlerName: string, _trace: any) => {
+const logHandler = (_label: string, _handlerName: string, _trace: any): void => {
   // if (debugging) console.log(label + ' [' + handlerName + ']', trace);
 };
 
@@ -154,7 +162,8 @@ const ignoreEvent = {
   write: Fun.noop
 };
 
-const monitorEvent = (eventName: string, initialTarget: SugarElement, f: EventProcessor): boolean => processEvent(eventName, initialTarget, f);
+const monitorEvent = (eventName: string, initialTarget: SugarElement, f: EventProcessor): boolean =>
+  processEvent(eventName, initialTarget, f);
 
 const inspectorInfo = (comp: AlloyComponent) => {
   const go = (c: AlloyComponent): InspectorInfo => {
@@ -178,7 +187,7 @@ const inspectorInfo = (comp: AlloyComponent) => {
   return go(comp);
 };
 
-const getOrInitConnection = () => {
+const getOrInitConnection = (): Inspector => {
   const win: AlloyGlobal = Global;
   // The format of the global is going to be:
   // lookup(uid) -> Optional { name => data }
@@ -194,7 +203,7 @@ const getOrInitConnection = () => {
 
     win[CHROME_INSPECTOR_GLOBAL] = {
       systems: { },
-      lookup(uid: string) {
+      lookup: (uid: string) => {
         const systems = win[CHROME_INSPECTOR_GLOBAL].systems;
         const connections: string[] = Obj.keys(systems);
         return Arr.findMap(connections, (conn) => {
@@ -221,7 +230,7 @@ const getOrInitConnection = () => {
   }
 };
 
-const registerInspector = (name: string, gui: GuiSystem) => {
+const registerInspector = (name: string, gui: GuiSystem): void => {
   const connection = getOrInitConnection();
   connection.systems[name] = gui;
 };

@@ -5,6 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
+import { Fun } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 import Env from 'tinymce/core/api/Env';
 import Delay from 'tinymce/core/api/util/Delay';
@@ -92,10 +93,11 @@ const hasSelectedContent = (editor: Editor): boolean => !editor.selection.isColl
 const cut = (editor: Editor) => (evt: ClipboardEvent) => {
   if (hasSelectedContent(editor)) {
     setClipboardData(evt, getData(editor), fallback(editor), () => {
-      if (Env.browser.isChrome()) {
+      if (Env.browser.isChrome() || Env.browser.isFirefox()) {
         const rng = editor.selection.getRng();
         // Chrome fails to execCommand from another execCommand with this message:
         // "We don't execute document.execCommand() this time, because it is called recursively.""
+        // Firefox 82 now also won't run recursive commands, but it doesn't log an error
         Delay.setEditorTimeout(editor, () => { // detach
           // Restore the range before deleting, as Chrome on Android will
           // collapse the selection after a cut event has fired.
@@ -111,7 +113,7 @@ const cut = (editor: Editor) => (evt: ClipboardEvent) => {
 
 const copy = (editor: Editor) => (evt: ClipboardEvent) => {
   if (hasSelectedContent(editor)) {
-    setClipboardData(evt, getData(editor), fallback(editor), () => {});
+    setClipboardData(evt, getData(editor), fallback(editor), Fun.noop);
   }
 };
 

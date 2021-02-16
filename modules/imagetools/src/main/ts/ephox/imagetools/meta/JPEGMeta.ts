@@ -21,8 +21,8 @@ interface Header {
   segment: ArrayBuffer;
 }
 
-const extractFrom = function (blob: Blob): Promise<JPEGMeta> {
-  return Conversions.blobToArrayBuffer(blob).then<JPEGMeta>(function (ar) {
+const extractFrom = (blob: Blob): Promise<JPEGMeta> => {
+  return Conversions.blobToArrayBuffer(blob).then<JPEGMeta>((ar) => {
     try {
       const br = new BinaryReader(ar);
       if (readShort(br, 0).is(0xFFD8)) { // is JPEG
@@ -52,7 +52,7 @@ const extractFrom = function (blob: Blob): Promise<JPEGMeta> {
   });
 };
 
-const extractHeaders = function (br: BinaryReader): Header[] {
+const extractHeaders = (br: BinaryReader): Header[] => {
   const headers: Header[] = [];
 
   let idx = 2;

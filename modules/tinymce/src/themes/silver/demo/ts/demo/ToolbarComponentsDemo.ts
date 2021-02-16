@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
 import { GuiFactory } from '@ephox/alloy';
-import { Arr, Optional } from '@ephox/katamari';
+import { Arr, Fun, Optional } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 
 import { identifyButtons } from 'tinymce/themes/silver/ui/toolbar/Integration';
 import { setupDemo } from '../components/DemoHelpers';
 
-export default function () {
+export default () => {
 
   const buttons = {
     'alpha': {
@@ -74,14 +74,14 @@ export default function () {
 
   const helpers = setupDemo();
   const mockEditor: Editor = {
-    on: () => { },
+    on: Fun.noop,
     formatter: {
-      canApply: () => true,
-      match: () => true,
-      remove: () => { },
-      apply: () => { }
+      canApply: Fun.always,
+      match: Fun.always,
+      remove: Fun.noop,
+      apply: Fun.noop
     },
-    focus: () => { },
+    focus: Fun.noop,
     undoManager: {
       transact: (f) => f()
     }
@@ -145,4 +145,4 @@ export default function () {
   });
 
   helpers.uiMothership.add(toolbar);
-}
+};

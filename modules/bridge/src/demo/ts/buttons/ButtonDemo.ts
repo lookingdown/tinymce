@@ -1,7 +1,8 @@
+import { Fun } from '@ephox/katamari';
 import { getDemoRegistry } from './DemoRegistry';
 
 /* eslint-disable no-console */
-export const registerDemoButtons = () => {
+export const registerDemoButtons = (): void => {
   getDemoRegistry().addButton('code', {
     icon: 'code',
     tooltip: 'Source code',
@@ -47,7 +48,7 @@ export const registerDemoButtons = () => {
     tooltip: 'Bold',
     onSetup: (api) => {
       api.setActive(false);
-      return () => { };
+      return Fun.noop;
     },
     onAction: (_api) => {
       console.log('bold clicked');

@@ -1,6 +1,7 @@
-import { Log } from '@ephox/agar';
+import { Assertions, Log, Step } from '@ephox/agar';
 import { Arr } from '@ephox/katamari';
 import { TinyApis } from '@ephox/mcagar';
+import { EditorEvent } from 'tinymce/core/api/util/EventDispatcher';
 import { sAssertTableStructureWithSizes } from './TableTestUtils';
 
 type SizingMode = 'relative' | 'fixed' | 'responsive';
@@ -57,13 +58,26 @@ const generateTable = (mode: SizingMode, width: number, rows: number, cols: numb
   return `<table border="1" style="border-collapse: collapse;${tableWidth}">${getColumns()}<tbody>${renderedRows}</tbody></table>`;
 };
 
-const sTableSizingModeScenarioTest = (editor, tinyApis: TinyApis, title: string, description: string, withColGroups: boolean, scenario: Scenario) =>
-  Log.stepsAsStep(title, description, [
+interface TableModifiedEvent { type: string; structure: boolean; style: boolean }
+const sTableSizingModeScenarioTest = (editor, tinyApis: TinyApis, title: string, description: string, withColGroups: boolean, scenario: Scenario, expectedEvents: TableModifiedEvent[] = [{ type: 'tablemodified', structure: true, style: false }]) => {
+  let events = [];
+  editor.on('TableModified', (event: EditorEvent<{ structure: boolean; style: boolean }>) => events.push({
+    type: event.type,
+    structure: event.structure,
+    style: event.style,
+  }));
+  const clearEvents = Step.sync(() => events = []);
+
+  return Log.stepsAsStep(title, description, [
+    clearEvents,
     tinyApis.sSetContent(generateTable(scenario.mode, scenario.tableWidth, scenario.rows, scenario.cols, withColGroups)),
     tinyApis.sSetSelection([ 0, withColGroups ? 1 : 0, 0, 0 ], 0, [ 0, withColGroups ? 1 : 0, 0, 0 ], 0),
     tinyApis.sExecCommand('mceTableSizingMode', scenario.newMode),
-    sAssertTableStructureWithSizes(editor, scenario.cols, scenario.rows, getUnit(scenario.newMode), scenario.expectedTableWidth, scenario.expectedWidths, withColGroups)
+    sAssertTableStructureWithSizes(editor, scenario.cols, scenario.rows, getUnit(scenario.newMode), scenario.expectedTableWidth, scenario.expectedWidths, withColGroups),
+    Step.sync(() => Assertions.assertEq('Expected events fired', expectedEvents, events)),
+    clearEvents,
   ]);
+};
 
 export {
   sTableSizingModeScenarioTest

@@ -5,9 +5,10 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Arr, Cell, Singleton } from '@ephox/katamari';
+import { Arr, Cell, Singleton, Strings, Type } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 import Env from 'tinymce/core/api/Env';
+import { BlobInfo } from 'tinymce/core/api/file/BlobCache';
 import Delay from 'tinymce/core/api/util/Delay';
 import { EditorEvent } from 'tinymce/core/api/util/EventDispatcher';
 import Promise from 'tinymce/core/api/util/Promise';
@@ -23,6 +24,11 @@ import * as Utils from './Utils';
 import * as Whitespace from './Whitespace';
 
 declare let window: any;
+
+interface FileResult {
+  readonly blob: File;
+  readonly uri: string;
+}
 
 const doPaste = (editor: Editor, content: string, internal: boolean, pasteAsText: boolean) => {
   const args = ProcessFilters.process(editor, content, internal);
@@ -127,16 +133,16 @@ const isValidDataUriImage = (editor: Editor, imgElm: HTMLImageElement) => {
 };
 
 const extractFilename = (editor: Editor, str: string) => {
-  const m = str.match(/([\s\S]+?)\.(?:jpeg|jpg|png|gif)$/i);
-  return m ? editor.dom.encode(m[1]) : null;
+  const m = str.match(/([\s\S]+?)(?:\.[a-z0-9.]+)$/i);
+  return Type.isNonNullable(m) ? editor.dom.encode(m[1]) : null;
 };
 
 const uniqueId = Utils.createIdGenerator('mceclip');
 
-const pasteImage = (editor: Editor, imageItem) => {
+const pasteImage = (editor: Editor, imageItem: FileResult) => {
   const { data: base64, type } = parseDataUri(imageItem.uri);
   const id = uniqueId();
-  const name = Settings.getImagesReuseFilename(editor) && imageItem.blob.name ? extractFilename(editor, imageItem.blob.name) : id;
+  const file = imageItem.blob;
   const img = new Image();
 
   img.src = imageItem.uri;
@@ -144,11 +150,15 @@ const pasteImage = (editor: Editor, imageItem) => {
   // TODO: Move the bulk of the cache logic to EditorUpload
   if (isValidDataUriImage(editor, img)) {
     const blobCache = editor.editorUpload.blobCache;
-    let blobInfo;
+    let blobInfo: BlobInfo;
 
     const existingBlobInfo = blobCache.getByData(base64, type);
     if (!existingBlobInfo) {
-      blobInfo = blobCache.create(id, imageItem.blob, base64, name);
+      const useFileName = Settings.getImagesReuseFilename(editor) && Type.isNonNullable(file.name);
+      const name = useFileName ? extractFilename(editor, file.name) : id;
+      const filename = useFileName ? file.name : undefined;
+
+      blobInfo = blobCache.create(id, file, base64, name, filename);
       blobCache.add(blobInfo);
     } else {
       blobInfo = existingBlobInfo;
@@ -162,8 +172,12 @@ const pasteImage = (editor: Editor, imageItem) => {
 
 const isClipboardEvent = (event: Event): event is ClipboardEvent => event.type === 'paste';
 
-const readBlobsAsDataUris = (items: File[]) => Promise.all(Arr.map(items, (item: any) => new Promise((resolve) => {
-  const blob = item.getAsFile ? item.getAsFile() : item;
+const isDataTransferItem = (item: DataTransferItem | File): item is DataTransferItem =>
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  Type.isNonNullable((item as DataTransferItem).getAsFile);
+
+const readFilesAsDataUris = (items: Array<File | DataTransferItem>) => Promise.all(Arr.map(items, (item) => new Promise<FileResult>((resolve) => {
+  const blob = isDataTransferItem(item) ? item.getAsFile() : item;
 
   const reader = new window.FileReader();
   reader.onload = () => {
@@ -175,11 +189,17 @@ const readBlobsAsDataUris = (items: File[]) => Promise.all(Arr.map(items, (item:
   reader.readAsDataURL(blob);
 })));
 
-const getImagesFromDataTransfer = (dataTransfer: DataTransfer) => {
+const isImage = (editor: Editor) => {
+  const allowedExtensions = Settings.getAllowedImageFileTypes(editor);
+  return (file: File) => Strings.startsWith(file.type, 'image/') && Arr.exists(allowedExtensions, (extension) => {
+    return Utils.getImageMimeType(extension) === file.type;
+  });
+};
+
+const getImagesFromDataTransfer = (editor: Editor, dataTransfer: DataTransfer): File[] => {
   const items = dataTransfer.items ? Arr.map(Arr.from(dataTransfer.items), (item) => item.getAsFile()) : [];
   const files = dataTransfer.files ? Arr.from(dataTransfer.files) : [];
-  const images = Arr.filter(items.length > 0 ? items : files, (file) => /^image\/(jpeg|png|gif|bmp)$/.test(file.type));
-  return images;
+  return Arr.filter(items.length > 0 ? items : files, isImage(editor));
 };
 
 /**
@@ -190,21 +210,21 @@ const getImagesFromDataTransfer = (dataTransfer: DataTransfer) => {
  * @param  {DOMRange} rng Rng object to move selection to.
  * @return {Boolean} true/false if the image data was found or not.
  */
-const pasteImageData = (editor, e: ClipboardEvent | DragEvent, rng: Range) => {
+const pasteImageData = (editor: Editor, e: ClipboardEvent | DragEvent, rng: Range) => {
   const dataTransfer = isClipboardEvent(e) ? e.clipboardData : e.dataTransfer;
 
   if (Settings.getPasteDataImages(editor) && dataTransfer) {
-    const images = getImagesFromDataTransfer(dataTransfer);
+    const images = getImagesFromDataTransfer(editor, dataTransfer);
 
     if (images.length > 0) {
       e.preventDefault();
 
-      readBlobsAsDataUris(images).then((blobResults) => {
+      readFilesAsDataUris(images).then((fileResults) => {
         if (rng) {
           editor.selection.setRng(rng);
         }
 
-        Arr.each(blobResults, (result) => {
+        Arr.each(fileResults, (result) => {
           pasteImage(editor, result);
         });
       });
@@ -232,15 +252,18 @@ const isKeyboardPasteEvent = (e: KeyboardEvent) => (VK.metaKeyPressed(e) && e.ke
 
 const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: Cell<string>) => {
   const keyboardPasteEvent = Singleton.value();
+  const keyboardPastePressed = Singleton.value();
   let keyboardPastePlainTextState;
 
-  editor.on('keydown', function (e) {
-    function removePasteBinOnKeyUp(e) {
+  editor.on('keyup', keyboardPastePressed.clear);
+
+  editor.on('keydown', (e) => {
+    const removePasteBinOnKeyUp = (e: EditorEvent<KeyboardEvent>) => {
       // Ctrl+V or Shift+Insert
       if (isKeyboardPasteEvent(e) && !e.isDefaultPrevented()) {
         pasteBin.remove();
       }
-    }
+    };
 
     // Ctrl+V or Shift+Insert
     if (isKeyboardPasteEvent(e) && !e.isDefaultPrevented()) {
@@ -255,12 +278,11 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
       // Prevent undoManager keydown handler from making an undo level with the pastebin in it
       e.stopImmediatePropagation();
 
-      // track that this is a keyboard paste event but remove it once the paste event
-      // has had enough time to be added to the stack first
+      // track that this is a keyboard paste event, this will be removed when the paste event fires.
       keyboardPasteEvent.set(e);
-      window.setTimeout(() => {
-        keyboardPasteEvent.clear();
-      }, 100);
+      // IE doesn't always fire keydown if the keys are spammed fast enough, so register that paste is
+      // pressed, this will be removed on keyup
+      keyboardPastePressed.set(true);
 
       // IE doesn't support Ctrl+Shift+V and it doesn't even produce a paste event
       // so lets fake a paste event and let IE use the execCommand/dataTransfer methods
@@ -276,13 +298,13 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
       // Remove pastebin if we get a keyup and no paste event
       // For example pasting a file in IE 11 will not produce a paste event
       editor.once('keyup', removePasteBinOnKeyUp);
-      editor.once('paste', function () {
+      editor.once('paste', () => {
         editor.off('keyup', removePasteBinOnKeyUp);
       });
     }
   });
 
-  function insertClipboardContent(clipboardContent: ClipboardContents, isKeyBoardPaste: boolean, plainTextMode: boolean, internal: boolean) {
+  const insertClipboardContent = (editor: Editor, clipboardContent: ClipboardContents, isKeyBoardPaste: boolean, plainTextMode: boolean, internal: boolean) => {
     let content;
 
     // Grab HTML from Clipboard API or paste bin as a fallback
@@ -304,7 +326,7 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
     pasteBin.remove();
 
     const isPlainTextHtml = (internal === false && Newlines.isPlainText(content));
-    const isImage = SmartPaste.isImageUrl(content);
+    const isImage = SmartPaste.isImageUrl(editor, content);
 
     // If we got nothing from clipboard API and pastebin or the content is a plain text (with only
     // some BRs, Ps or DIVs as newlines) then we fallback to plain/text
@@ -324,7 +346,7 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
     }
 
     // If the content is the paste bin default HTML then it was
-    // impossible to get the cliboard data out.
+    // impossible to get the clipboard data out.
     if (pasteBin.isDefaultContent(content)) {
       if (!isKeyBoardPaste) {
         editor.windowManager.alert('Please use Ctrl+V/Cmd+V keyboard shortcuts to paste contents.');
@@ -338,14 +360,17 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
     } else {
       pasteHtml(editor, content, internal);
     }
-  }
+  };
 
-  const getLastRng = function () {
+  const getLastRng = () => {
     return pasteBin.getLastRng() || editor.selection.getRng();
   };
 
-  editor.on('paste', function (e: EditorEvent<ClipboardEvent & { ieFake: boolean }>) {
-    const isKeyBoardPaste = keyboardPasteEvent.isSet();
+  editor.on('paste', (e: EditorEvent<ClipboardEvent & { ieFake: boolean }>) => {
+    const isKeyboardPaste = keyboardPasteEvent.isSet() || keyboardPastePressed.isSet();
+    if (isKeyboardPaste) {
+      keyboardPasteEvent.clear();
+    }
     const clipboardContent = getClipboardContent(editor, e);
 
     const plainTextMode = pasteFormat.get() === 'text' || keyboardPastePlainTextState;
@@ -364,15 +389,15 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
     }
 
     // Not a keyboard paste prevent default paste and try to grab the clipboard contents using different APIs
-    if (!isKeyBoardPaste) {
+    if (!isKeyboardPaste) {
       e.preventDefault();
     }
 
     // Try IE only method if paste isn't a keyboard paste
-    if (Env.ie && (!isKeyBoardPaste || e.ieFake) && !hasContentType(clipboardContent, 'text/html')) {
+    if (Env.ie && (!isKeyboardPaste || e.ieFake) && !hasContentType(clipboardContent, 'text/html')) {
       pasteBin.create();
 
-      editor.dom.bind(pasteBin.getEl(), 'paste', function (e) {
+      editor.dom.bind(pasteBin.getEl(), 'paste', (e) => {
         e.stopPropagation();
       });
 
@@ -389,10 +414,10 @@ const registerEventHandlers = (editor: Editor, pasteBin: PasteBin, pasteFormat: 
         internal = InternalHtml.isMarked(clipboardContent['text/html']);
       }
 
-      insertClipboardContent(clipboardContent, isKeyBoardPaste, plainTextMode, internal);
+      insertClipboardContent(editor, clipboardContent, isKeyboardPaste, plainTextMode, internal);
     } else {
-      Delay.setEditorTimeout(editor, function () {
-        insertClipboardContent(clipboardContent, isKeyBoardPaste, plainTextMode, internal);
+      Delay.setEditorTimeout(editor, () => {
+        insertClipboardContent(editor, clipboardContent, isKeyboardPaste, plainTextMode, internal);
       }, 0);
     }
   });

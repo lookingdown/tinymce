@@ -31,8 +31,8 @@ export interface URIConstructor {
 
   new (url: string, settings?: URISettings): URI;
 
-  getDocumentBaseUrl (loc: { protocol: string; host?: string; href?: string; pathname?: string }): string;
-  parseDataUri (uri: string): { type: string; data: string };
+  getDocumentBaseUrl: (loc: { protocol: string; host?: string; href?: string; pathname?: string }) => string;
+  parseDataUri: (uri: string) => { type: string; data: string };
 }
 
 class URI {
@@ -133,7 +133,7 @@ class URI {
     // Parse URL (Credits goes to Steave, http://blog.stevenlevithan.com/archives/parseuri)
     url = url.replace(/@@/g, '(mce_at)'); // Zope 3 workaround, they use @@something
 
-    const urlMatch = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@\/]*):?([^:@\/]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/.exec(url);
+    const urlMatch = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@\/]*):?([^:@\/]*))?@)?(\[[a-zA-Z0-9:.%]+\]|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/.exec(url);
 
     each(queryParts, (v, i) => {
       let part = urlMatch[i];
@@ -348,7 +348,7 @@ class URI {
     const normalizedPath = path.split('/');
 
     // Remove empty chunks
-    each(normalizedBase, function (k) {
+    each(normalizedBase, (k) => {
       if (k) {
         o.push(k);
       }

@@ -18,8 +18,8 @@ import * as PrePostProcess from './core/PrePostProcess';
 import * as Quirks from './core/Quirks';
 import * as Buttons from './ui/Buttons';
 
-export default function () {
-  PluginManager.add('paste', function (editor) {
+export default () => {
+  PluginManager.add('paste', (editor) => {
     if (DetectProPlugin.hasProPlugin(editor) === false) {
       const draggingInternallyState = Cell(false);
       const pasteFormat = Cell(Settings.isPasteAsTextEnabled(editor) ? 'text' : 'html');
@@ -35,4 +35,4 @@ export default function () {
       return Api.get(clipboard, quirks);
     }
   });
-}
+};

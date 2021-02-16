@@ -1,10 +1,10 @@
-import { Assertions, Chain, UiFinder, Waiter } from '@ephox/agar';
+import { Assertions, Chain, PhantomSkipper, UiFinder, Waiter } from '@ephox/agar';
 import { Id } from '@ephox/katamari';
 import { Attribute, Class, Css, Insert, Remove, SelectorFind, SugarElement } from '@ephox/sugar';
 
 const styleClass = Id.generate('ui-test-styles');
 
-const addStyles = function () {
+const addStyles = () => {
   const link = SugarElement.fromTag('link');
   Attribute.setAll(link, {
     rel: 'Stylesheet',
@@ -17,18 +17,18 @@ const addStyles = function () {
   Insert.append(head, link);
 };
 
-const removeStyles = function () {
+const removeStyles = () => {
   const head = SugarElement.fromDom(document.head);
   SelectorFind.descendant(head, '.' + styleClass).each(Remove.remove);
 };
 
-const sWaitForToolstrip = function (realm) {
+const sWaitForToolstrip = (realm) => {
   return Waiter.sTryUntil(
     'Waiting until CSS has loaded',
     Chain.asStep(realm.element, [
       UiFinder.cFindIn('.tinymce-mobile-toolstrip'),
-      Chain.op(function (toolstrip) {
-        if (navigator.userAgent.indexOf('PhantomJS') === -1) {
+      Chain.op((toolstrip) => {
+        if (!PhantomSkipper.detect()) {
           Assertions.assertEq('Checking toolstrip is flex', 'flex', Css.get(toolstrip, 'display'));
         }
       })

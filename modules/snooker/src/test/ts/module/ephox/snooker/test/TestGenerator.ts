@@ -1,12 +1,13 @@
 import { Fun } from '@ephox/katamari';
+import { SugarElement, TextContent } from '@ephox/sugar';
 import { SimpleGenerators } from 'ephox/snooker/api/Generators';
 
-export default function (): SimpleGenerators {
+export default (): SimpleGenerators => {
   let cellCounter = 0;
   let colCounter = 0;
   let replaceCounter = 0;
 
-  const cell = function () {
+  const cell = () => {
     const r = '?_' + cellCounter;
     cellCounter++;
     return r;
@@ -18,10 +19,16 @@ export default function (): SimpleGenerators {
     return r;
   };
 
-  const replace = function (name: string) {
-    const r = 'h(' + name + ')_' + replaceCounter;
-    replaceCounter++;
-    return r;
+  const replace = (elem: SugarElement<Node> | string | number) => {
+    if (typeof elem === 'string' || typeof elem === 'number') {
+      const r = `h(${ elem })_${ replaceCounter }`;
+      replaceCounter++;
+      return r;
+    } else {
+      TextContent.set(elem, `h(${ TextContent.get(elem) })_${ replaceCounter }`);
+      replaceCounter++;
+      return elem;
+    }
   };
 
   return {
@@ -32,4 +39,4 @@ export default function (): SimpleGenerators {
     col,
     replace
   } as unknown as SimpleGenerators; // fake generator for atomic tests
-}
+};

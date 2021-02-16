@@ -4,7 +4,7 @@ import { Arr, Optional } from '@ephox/katamari';
 import { KAssert } from '@ephox/katamari-assertions';
 import * as Subset from 'ephox/robin/parent/Subset';
 
-UnitTest.test('SubsetTest', function () {
+UnitTest.test('SubsetTest', () => {
   const universe = TestUniverse(Gene('root', 'root', [
     Gene('one-nine', 'ol', [
       Gene('one', 'li', [
@@ -26,7 +26,7 @@ UnitTest.test('SubsetTest', function () {
     ])
   ]));
 
-  const check = function (expected: Optional<string[]>, startId: string, finishId: string) {
+  const check = (expected: Optional<string[]>, startId: string, finishId: string) => {
     const start = universe.find(universe.get(), startId).getOrDie();
     const finish = universe.find(universe.get(), finishId).getOrDie();
 

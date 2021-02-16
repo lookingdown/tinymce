@@ -15,8 +15,8 @@ import { LastSuggestion } from './core/Actions';
 import * as Buttons from './ui/Buttons';
 import * as SuggestionsMenu from './ui/SuggestionsMenu';
 
-export default function () {
-  PluginManager.add('spellchecker', function (editor, pluginUrl) {
+export default () => {
+  PluginManager.add('spellchecker', (editor, pluginUrl) => {
     if (DetectProPlugin.hasProPlugin(editor) === false) {
       const startedState = Cell(false);
       const currentLanguageState = Cell<string>(Settings.getLanguage(editor));
@@ -30,4 +30,4 @@ export default function () {
       return Api.get(editor, startedState, lastSuggestionsState, textMatcherState, currentLanguageState, pluginUrl);
     }
   });
-}
+};

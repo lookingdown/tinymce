@@ -50,11 +50,11 @@ const sAssertTableStructure = (editor: Editor, structure: StructAssert) => Logge
   Assertions.assertStructure('Should be a table the expected structure', structure, table);
 }));
 
-const sOpenToolbarOn = function (editor, selector, path) {
+const sOpenToolbarOn = (editor, selector, path) => {
   return Logger.t('Open dialog from toolbar', Chain.asStep(TinyDom.fromDom(editor.getBody()), [
     UiFinder.cFindIn(selector),
     Cursors.cFollow(path),
-    Chain.op(function (target) {
+    Chain.op((target) => {
       editor.selection.select(target.dom);
     }),
     Mouse.cClick
@@ -125,7 +125,7 @@ const sChooseTab = (tabName: string) => Logger.t('Choose tab ' + tabName, Chain.
 
 const sAssertDialogPresence = (label, expected) => Logger.t('Assert dialog is present', Chain.asStep({}, [
   cWaitForDialog,
-  Chain.op(function (dialog) {
+  Chain.op((dialog) => {
     Assertions.assertPresence(
       label,
       expected,
@@ -149,7 +149,7 @@ const sAssertListBoxValue = (label, section, expected) => Logger.t('Assert selec
 ]));
 
 const cGetBody = Chain.control(
-  Chain.mapper(function (editor: any) {
+  Chain.mapper((editor: any) => {
     return TinyDom.fromDom(editor.getBody());
   }),
   Guard.addLogging('Get body')
@@ -230,7 +230,7 @@ const cDeleteRow = Chain.control(
   Guard.addLogging('Delete row')
 );
 
-const cDragHandle = function (id, deltaH, deltaV) {
+const cDragHandle = (id, deltaH, deltaV) => {
   return Chain.control(
     NamedChain.asChain([
       NamedChain.direct(NamedChain.inputName(), Chain.identity, 'editor'),
@@ -278,7 +278,7 @@ const cDragResizeBar = (rowOrCol: 'row' | 'column', index: number, dx: number, d
   );
 
 const cGetWidth = Chain.control(
-  Chain.mapper(function (input: any) {
+  Chain.mapper((input: any) => {
     const editor = input.editor;
     const elm = input.element.dom;
     return getWidths(editor, elm);
@@ -301,7 +301,6 @@ const cGetCellWidth = (rowNumber: number, columnNumber: number) => Chain.control
   Guard.addLogging('Get cell width')
 );
 
-
 const cGetInput = (selector: string) => Chain.control(
   Chain.fromChains([
     Chain.inject(SugarBody.body()),
@@ -322,7 +321,7 @@ const sAssertInputValue = (label, selector, expected) => Logger.t(label,
         Assertions.assertEq(`The input value for ${label} should be: `, expected, Value.get(element));
       }
     })
-  ]),
+  ])
 );
 
 const sSetInputValue = (label, selector, value) => Logger.t(label,
@@ -337,7 +336,7 @@ const sSetInputValue = (label, selector, value) => Logger.t(label,
         Value.set(element, value);
       }
     })
-  ]),
+  ])
 );
 
 const sGotoGeneralTab = Chain.asStep({}, [

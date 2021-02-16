@@ -7,8 +7,8 @@ import * as MatchSplitter from 'ephox/phoenix/search/MatchSplitter';
 import * as Finder from 'ephox/phoenix/test/Finder';
 import * as TestRenders from 'ephox/phoenix/test/TestRenders';
 
-UnitTest.test('MatchSplitterTest', function () {
-  const data = function () {
+UnitTest.test('MatchSplitterTest', () => {
+  const data = () => {
     return Gene('root', 'root', [
       TextGene('1', 'AB'),
       TextGene('2', 'C'),
@@ -24,17 +24,17 @@ UnitTest.test('MatchSplitterTest', function () {
     word: string;
   }
 
-  const check = function (all: string[], expected: CheckExpect[], ids: string[], matches: (PRange & { word: string })[], input: Gene) {
+  const check = (all: string[], expected: CheckExpect[], ids: string[], matches: (PRange & { word: string })[], input: Gene) => {
     const universe = TestUniverse(input);
     const items = Finder.getAll(universe, ids);
-    const list = PositionArray.generate(items, function (item, start) {
+    const list = PositionArray.generate(items, (item, start) => {
       const finish = start + universe.property().getText(item).length;
       return Optional.some(Spot.range(item, start, finish));
     });
 
     const actual = MatchSplitter.separate(universe, list, matches);
     assert.eq(expected.length, actual.length, 'Wrong sizes for MatchSplitter');
-    assert.eq(expected, Arr.map(actual, function (a) {
+    assert.eq(expected, Arr.map(actual, (a) => {
       return {
         text: TestRenders.texts(a.elements),
         exact: a.exact,
@@ -46,7 +46,7 @@ UnitTest.test('MatchSplitterTest', function () {
 
   };
 
-  const match = function (start: number, finish: number, word: string): PRange & { word: string } {
+  const match = (start: number, finish: number, word: string): PRange & { word: string } => {
     return {
       start,
       finish,

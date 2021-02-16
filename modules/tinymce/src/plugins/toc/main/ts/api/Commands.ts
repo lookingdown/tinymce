@@ -7,12 +7,12 @@
 
 import * as Toc from '../core/Toc';
 
-const register = function (editor) {
-  editor.addCommand('mceInsertToc', function () {
+const register = (editor) => {
+  editor.addCommand('mceInsertToc', () => {
     Toc.insertToc(editor);
   });
 
-  editor.addCommand('mceUpdateToc', function () {
+  editor.addCommand('mceUpdateToc', () => {
     Toc.updateToc(editor);
   });
 };

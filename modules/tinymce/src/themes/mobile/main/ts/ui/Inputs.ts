@@ -18,10 +18,10 @@ import * as UiDomFactory from '../util/UiDomFactory';
 
 const clearInputBehaviour = 'input-clearing';
 
-const field = function (name, placeholder) {
+const field = (name, placeholder) => {
   const inputSpec = Memento.record(Input.sketch({
     inputAttributes: { placeholder: I18n.translate(placeholder) },
-    onSetValue(input, _data) {
+    onSetValue: (input, _data) => {
       // If the value changes, inform the container so that it can update whether the "x" is visible
       AlloyTriggers.emit(input, NativeEvents.input());
     },
@@ -40,7 +40,7 @@ const field = function (name, placeholder) {
   const buttonSpec = Memento.record(
     Button.sketch({
       dom: UiDomFactory.dom('<button class="${prefix}-input-container-x ${prefix}-icon-cancel-circle ${prefix}-icon"></button>'),
-      action(button) {
+      action: (button) => {
         const input = inputSpec.get(button);
         Representing.setValue(input, '');
       }
@@ -60,14 +60,14 @@ const field = function (name, placeholder) {
           toggleClass: Styles.resolve('input-container-empty')
         }),
         Composing.config({
-          find(comp) {
+          find: (comp) => {
             return Optional.some(inputSpec.get(comp));
           }
         }),
         AddEventsBehaviour.config(clearInputBehaviour, [
           // INVESTIGATE: Because this only happens on input,
           // it won't reset unless it has an initial value
-          AlloyEvents.run(NativeEvents.input(), function (iContainer) {
+          AlloyEvents.run(NativeEvents.input(), (iContainer) => {
             const input = inputSpec.get(iContainer);
             const val = Representing.getValue(input);
             const f = val.length > 0 ? Toggling.off : Toggling.on;
@@ -88,7 +88,7 @@ const hidden = (name) => ({
         display: 'none'
       }
     },
-    getInitialValue() {
+    getInitialValue: () => {
       return Optional.none();
     }
   })

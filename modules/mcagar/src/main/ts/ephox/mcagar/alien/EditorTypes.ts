@@ -1,10 +1,10 @@
-type EventCallback = false | ((event: any) => void);
+type EventCallback = (event: any) => void;
 
 export interface Selection {
   win: Window;
 
   setRng: (rng: Range) => void;
-  getRng: () => Range;
+  getRng: () => Range | null;
   select: (node: Node, content?: boolean) => Node;
   setCursorLocation: (node?: Node, offset?: number) => void;
   isCollapsed: () => boolean;
@@ -13,6 +13,7 @@ export interface Selection {
 export interface Editor {
   id: string;
   settings: Record<string, any>;
+  inline: boolean;
 
   dom: any;
   editorCommands: any;

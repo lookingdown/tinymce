@@ -49,6 +49,7 @@ export interface ParserFilter {
 
 export interface DomParserSettings {
   allow_html_data_urls?: boolean;
+  allow_svg_data_urls?: boolean;
   allow_conditional_comments?: boolean;
   allow_html_in_named_anchor?: boolean;
   allow_script_urls?: boolean;
@@ -70,15 +71,15 @@ export interface DomParserSettings {
 
 interface DomParser {
   schema: Schema;
-  addAttributeFilter (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void): void;
-  getAttributeFilters (): ParserFilter[];
-  addNodeFilter (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void): void;
-  getNodeFilters (): ParserFilter[];
-  filterNode (node: AstNode): AstNode;
-  parse (html: string, args?: ParserArgs): AstNode;
+  addAttributeFilter: (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void) => void;
+  getAttributeFilters: () => ParserFilter[];
+  addNodeFilter: (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void) => void;
+  getNodeFilters: () => ParserFilter[];
+  filterNode: (node: AstNode) => AstNode;
+  parse: (html: string, args?: ParserArgs) => AstNode;
 }
 
-const DomParser = function (settings?: DomParserSettings, schema = Schema()): DomParser {
+const DomParser = (settings?: DomParserSettings, schema = Schema()): DomParser => {
   const nodeFilters = {};
   const attributeFilters = [];
   let matchedNodes = {};
@@ -88,7 +89,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
   settings.validate = 'validate' in settings ? settings.validate : true;
   settings.root_name = settings.root_name || 'body';
 
-  const fixInvalidChildren = function (nodes) {
+  const fixInvalidChildren = (nodes: AstNode[]) => {
     let ni, node, parent, parents, newParent, currentNode, tempNode, childNode, i;
     let sibling, nextNode;
 
@@ -263,7 +264,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
    * @param {function} callback Callback function to execute once it has collected nodes.
    */
   const addNodeFilter = (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void) => {
-    each(explode(name), function (name) {
+    each(explode(name), (name) => {
       let list = nodeFilters[name];
 
       if (!list) {
@@ -301,7 +302,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
    * @param {function} callback Callback function to execute once it has collected nodes.
    */
   const addAttributeFilter = (name: string, callback: (nodes: AstNode[], name: string, args: ParserArgs) => void) => {
-    each(explode(name), function (name) {
+    each(explode(name), (name) => {
       let i;
 
       for (i = 0; i < attributeFilters.length; i++) {
@@ -360,12 +361,12 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
 
     isInWhiteSpacePreservedElement = whiteSpaceElements.hasOwnProperty(args.context) || whiteSpaceElements.hasOwnProperty(settings.root_name);
 
-    const addRootBlocks = function () {
+    const addRootBlocks = () => {
       let node = rootNode.firstChild, next, rootBlockNode;
 
       // Removes whitespace at beginning and end of block so:
       // <p> x </p> -> <p>x</p>
-      const trim = function (rootBlockNode) {
+      const trim = (rootBlockNode) => {
         if (rootBlockNode) {
           node = rootBlockNode.firstChild;
           if (node && node.type === 3) {
@@ -409,7 +410,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
       trim(rootBlockNode);
     };
 
-    const createNode = function (name, type) {
+    const createNode = (name, type) => {
       const node = new AstNode(name, type);
       let list;
 
@@ -426,7 +427,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
       return node;
     };
 
-    const removeWhitespaceBefore = function (node) {
+    const removeWhitespaceBefore = (node) => {
       let textNode, textNodeNext, textVal, sibling;
       const blockElements = schema.getBlockElements();
 
@@ -461,7 +462,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
       }
     };
 
-    const cloneAndExcludeBlocks = function (input) {
+    const cloneAndExcludeBlocks = (input) => {
       let name;
       const output = {};
 
@@ -477,6 +478,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
     const parser = SaxParser({
       validate,
       allow_html_data_urls: settings.allow_html_data_urls,
+      allow_svg_data_urls: settings.allow_svg_data_urls,
       allow_script_urls: settings.allow_script_urls,
       allow_conditional_comments: settings.allow_conditional_comments,
       preserve_cdata: settings.preserve_cdata,
@@ -484,11 +486,11 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
       // Exclude P and LI from DOM parsing since it's treated better by the DOM parser
       self_closing_elements: cloneAndExcludeBlocks(schema.getSelfClosingElements()),
 
-      cdata(text) {
+      cdata: (text) => {
         node.append(createNode('#cdata', 4)).value = text;
       },
 
-      text(text, raw) {
+      text: (text, raw) => {
         let textNode;
 
         // Trim all redundant whitespace on non white space elements
@@ -508,22 +510,22 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
         }
       },
 
-      comment(text) {
+      comment: (text) => {
         node.append(createNode('#comment', 8)).value = text;
       },
 
-      pi(name, text) {
+      pi: (name, text) => {
         node.append(createNode(name, 7)).value = text;
         removeWhitespaceBefore(node);
       },
 
-      doctype(text) {
+      doctype: (text) => {
         const newNode = node.append(createNode('#doctype', 10));
         newNode.value = text;
         removeWhitespaceBefore(node);
       },
 
-      start(name, attrs, empty) {
+      start: (name, attrs, empty) => {
         let newNode, attrFiltersLen, attrName, parent;
 
         const elementRule = validate ? schema.getElementRule(name) : {} as SchemaElement;
@@ -573,7 +575,7 @@ const DomParser = function (settings?: DomParserSettings, schema = Schema()): Do
         }
       },
 
-      end(name) {
+      end: (name) => {
         let textNode, text, sibling, tempNode;
 
         const elementRule: Partial<SchemaElement> = validate ? schema.getElementRule(name) : {};

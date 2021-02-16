@@ -4,6 +4,8 @@ import Jsc from '@ephox/wrap-jsverify';
 import { Step } from '../api/Step';
 import { TestLogs } from '../api/TestLogs';
 
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 const logNoPromises = Thunk.cached(() => {
   // eslint-disable-next-line no-console
   console.warn('No native promise support on browser to run async property tests. Skipping!');
@@ -11,7 +13,7 @@ const logNoPromises = Thunk.cached(() => {
 
 const fakePromise = (): PromiseLike<true> => {
   const self = {
-    then(fs: (result: any) => void) {
+    then: (fs: (result: any) => void) => {
       logNoPromises();
       fs(true);
       return self;

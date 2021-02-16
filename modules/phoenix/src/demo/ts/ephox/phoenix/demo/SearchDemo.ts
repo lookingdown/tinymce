@@ -36,14 +36,14 @@ const buttonWord = SugarElement.fromTag('button');
 Attribute.set(buttonWord, 'type', 'input');
 Insert.append(buttonWord, SugarElement.fromText('Highlight word'));
 
-const wrapper = function () {
+const wrapper = () => {
   const c = SugarElement.fromTag('span');
   Class.add(c, 'highlighted');
   Css.set(c, 'background-color', '#cadbee');
   return DomWrapping.nu(c);
 };
 
-DomEvent.bind(button, 'click', function (_event) {
+DomEvent.bind(button, 'click', (_event) => {
   const token = Value.get(input);
   if (token.length > 0) {
     const matches = DomSearch.safeToken([ content ], token);
@@ -51,7 +51,7 @@ DomEvent.bind(button, 'click', function (_event) {
   }
 });
 
-DomEvent.bind(buttonWord, 'click', function (_event) {
+DomEvent.bind(buttonWord, 'click', (_event) => {
   const word = Value.get(input);
   if (word.length > 0) {
     const matches = DomSearch.safeWords([ content ], [ word ]);
@@ -59,8 +59,8 @@ DomEvent.bind(buttonWord, 'click', function (_event) {
   }
 });
 
-const highlight = function (matches: SearchResult<SugarElement>[]) {
-  Arr.each(matches, function (x) {
+const highlight = (matches: SearchResult<SugarElement>[]) => {
+  Arr.each(matches, (x) => {
     DomWrapping.wrapper(x.elements, wrapper);
   });
 };

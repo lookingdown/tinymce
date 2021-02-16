@@ -1,15 +1,15 @@
 import { Assertions, Chain, Guard, Log, Pipeline } from '@ephox/agar';
 import { UnitTest } from '@ephox/bedrock-client';
-import { Editor as McEditor } from '@ephox/mcagar';
+import { McEditor } from '@ephox/mcagar';
 
 import Plugin from 'tinymce/plugins/paste/Plugin';
 import Theme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('tinymce.plugins.paste.browser.PasteSettingsTest', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.paste.PasteSettingsTest', (success, failure) => {
   Theme();
   Plugin();
 
-  const cCreateInlineEditor = function (settings) {
+  const cCreateInlineEditor = (settings) => {
     return Chain.control(
       McEditor.cFromSettings({
         ...settings,
@@ -31,12 +31,10 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PasteSettingsTest', (success, 
         paste_as_text: true,
         plugins: 'paste'
       }),
-      Chain.op(function (editor) {
+      Chain.op((editor) => {
         Assertions.assertEq('Should be text format', 'text', editor.plugins.paste.clipboard.pasteFormat.get());
       }),
       cRemoveEditor
     ]))
-  ], function () {
-    success();
-  }, failure);
+  ], success, failure);
 });

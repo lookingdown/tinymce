@@ -6,16 +6,16 @@ import * as Fitment from 'ephox/snooker/test/Fitment';
 import * as TableMerge from 'ephox/snooker/test/TableMerge';
 import TestGenerator from 'ephox/snooker/test/TestGenerator';
 
-UnitTest.test('FitmentTest', function () {
+UnitTest.test('FitmentTest', () => {
   const generator = TestGenerator;
   const start = Structs.address;
   const measureTest = Fitment.measureTest;
   const tailorTest = Fitment.tailorTest;
   const mergeGridsTest = TableMerge.mergeTest;
 
-  const en = (fakeElement: any, isNew: boolean) => Structs.elementnew(fakeElement as SugarElement, isNew);
+  const en = (fakeElement: any, isNew: boolean) => Structs.elementnew(fakeElement as SugarElement, isNew, false);
 
-  const check = function <T extends (...args: A) => void, A extends any[]>(test: T, ...args: A) {
+  const check = <T extends (...args: A) => void, A extends any[]>(test: T, ...args: A) => {
     test.apply(null, args);
   };
 

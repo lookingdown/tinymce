@@ -4,35 +4,35 @@ import * as Structure from '../general/Structure';
 
 const universe = DomUniverse();
 
-const isBlock = function (element: SugarElement) {
+const isBlock = (element: SugarElement): boolean => {
   return Structure.isBlock(universe, element);
 };
 
-const isList = function (element: SugarElement) {
+const isList = (element: SugarElement): boolean => {
   return Structure.isList(universe, element);
 };
 
-const isFormatting = function (element: SugarElement) {
+const isFormatting = (element: SugarElement): boolean => {
   return Structure.isFormatting(universe, element);
 };
 
-const isHeading = function (element: SugarElement) {
+const isHeading = (element: SugarElement): boolean => {
   return Structure.isHeading(universe, element);
 };
 
-const isContainer = function (element: SugarElement) {
+const isContainer = (element: SugarElement): boolean => {
   return Structure.isContainer(universe, element);
 };
 
-const isEmptyTag = function (element: SugarElement) {
+const isEmptyTag = (element: SugarElement): boolean => {
   return Structure.isEmptyTag(universe, element);
 };
 
-const isFrame = function (element: SugarElement) {
+const isFrame = (element: SugarElement): boolean => {
   return Structure.isFrame(universe, element);
 };
 
-const isInline = function (element: SugarElement) {
+const isInline = (element: SugarElement): boolean => {
   return Structure.isInline(universe, element);
 };
 

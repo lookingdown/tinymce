@@ -1,5 +1,5 @@
-import { Arr, Cell, Contracts, Optional } from '@ephox/katamari';
-import { Css, SugarElement, SugarNode } from '@ephox/sugar';
+import { Arr, Cell, Fun, Optional, Optionals } from '@ephox/katamari';
+import { Attribute, Css, SugarElement, SugarNode } from '@ephox/sugar';
 import { getAttrValue } from '../util/CellUtils';
 
 export interface CellSpan {
@@ -39,7 +39,8 @@ export interface GeneratorsTransform extends GeneratorsWrapper {
 }
 
 export interface GeneratorsMerging extends GeneratorsWrapper {
-  readonly combine: (cell: SugarElement) => () => SugarElement;
+  readonly unmerge: (cell: SugarElement) => () => SugarElement;
+  readonly merge: (cells: SugarElement[]) => () => SugarElement;
 }
 
 interface Recent {
@@ -52,9 +53,7 @@ interface Item {
   readonly sub: SugarElement;
 }
 
-const verifyGenerators: (gen: Generators) => Generators = Contracts.exactly([ 'cell', 'row', 'replace', 'gap', 'col', 'colgroup' ]);
-
-const elementToData = function (element: SugarElement): CellSpan {
+const elementToData = (element: SugarElement): CellSpan => {
   const colspan = getAttrValue(element, 'colspan', 1);
   const rowspan = getAttrValue(element, 'rowspan', 1);
   return {
@@ -65,11 +64,10 @@ const elementToData = function (element: SugarElement): CellSpan {
 };
 
 // note that `toData` seems to be only for testing
-const modification = function (generators: Generators, toData = elementToData): GeneratorsModification {
-  verifyGenerators(generators);
+const modification = (generators: Generators, toData = elementToData): GeneratorsModification => {
   const position = Cell(Optional.none<SugarElement>());
 
-  const nu = function (data: CellSpan) {
+  const nu = (data: CellSpan) => {
     switch (SugarNode.name(data.element)) {
       case 'col':
         return generators.col(data);
@@ -78,12 +76,12 @@ const modification = function (generators: Generators, toData = elementToData): 
     }
   };
 
-  const nuFrom = function (element: SugarElement) {
+  const nuFrom = (element: SugarElement) => {
     const data = toData(element);
     return nu(data);
   };
 
-  const add = function (element: SugarElement) {
+  const add = (element: SugarElement) => {
     const replacement = nuFrom(element);
     if (position.get().isNone()) {
       position.set(Optional.some(replacement));
@@ -93,10 +91,10 @@ const modification = function (generators: Generators, toData = elementToData): 
   };
 
   let recent = Optional.none<Recent>();
-  const getOrInit = function (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) {
-    return recent.fold(function () {
+  const getOrInit = (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) => {
+    return recent.fold(() => {
       return add(element);
-    }, function (p) {
+    }, (p) => {
       return comparator(element, p.item) ? p.replacement : add(element);
     });
   };
@@ -107,19 +105,18 @@ const modification = function (generators: Generators, toData = elementToData): 
   };
 };
 
-const transform = function <K extends keyof HTMLElementTagNameMap> (scope: string | null, tag: K) {
-  return function (generators: Generators): GeneratorsTransform {
+const transform = <K extends keyof HTMLElementTagNameMap> (scope: string | null, tag: K) => {
+  return (generators: Generators): GeneratorsTransform => {
     const position = Cell(Optional.none<SugarElement>());
-    verifyGenerators(generators);
     const list: Item[] = [];
 
-    const find = function (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) {
-      return Arr.find(list, function (x) {
+    const find = (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) => {
+      return Arr.find(list, (x) => {
         return comparator(x.item, element);
       });
     };
 
-    const makeNew = function (element: SugarElement) {
+    const makeNew = (element: SugarElement) => {
       const attrs: Record<string, string | number | boolean | null> = {
         scope
       };
@@ -134,12 +131,16 @@ const transform = function <K extends keyof HTMLElementTagNameMap> (scope: strin
       return cell;
     };
 
-    const replaceOrInit = function (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) {
-      return find(element, comparator).fold(function () {
-        return makeNew(element);
-      }, function (p) {
-        return comparator(element, p.item) ? p.sub : makeNew(element);
-      });
+    const replaceOrInit = (element: SugarElement, comparator: (a: SugarElement, b: SugarElement) => boolean) => {
+      if (SugarNode.name(element) === 'col') {
+        return element;
+      } else {
+        return find(element, comparator).fold(() => {
+          return makeNew(element);
+        }, (p) => {
+          return comparator(element, p.item) ? p.sub : makeNew(element);
+        });
+      }
     };
 
     return {
@@ -149,15 +150,26 @@ const transform = function <K extends keyof HTMLElementTagNameMap> (scope: strin
   };
 };
 
-const merging = function (generators: Generators) {
-  verifyGenerators(generators);
+const getScopeAttribute = (cell: SugarElement) =>
+  Attribute.getOpt(cell, 'scope').map(
+    (attribute) => attribute.substr(0, 3)
+    // Attribute can be col, colgroup, row, and rowgroup.
+    // As col and colgroup are to be treated as if they are the same, lob off everything after the first three characters and there is no difference.
+  );
+
+const merging = (generators: Generators): GeneratorsMerging => {
   const position = Cell(Optional.none<SugarElement>());
 
-  const combine = function (cell: SugarElement) {
+  const unmerge = (cell: SugarElement) => {
     if (position.get().isNone()) {
       position.set(Optional.some(cell));
     }
-    return function () {
+
+    const scope = getScopeAttribute(cell);
+
+    scope.each((attribute) => Attribute.set(cell, 'scope', attribute));
+
+    return () => {
       const raw = generators.cell({
         element: cell,
         colspan: 1,
@@ -166,12 +178,47 @@ const merging = function (generators: Generators) {
       // Remove any width calculations because they are no longer relevant.
       Css.remove(raw, 'width');
       Css.remove(cell, 'width');
+
+      scope.each((attribute) => Attribute.set(raw, 'scope', attribute));
+
       return raw;
     };
   };
 
+  const merge = (cells: SugarElement[]) => {
+    const getScopeProperty = () => {
+
+      const stringAttributes = Optionals.cat(
+        Arr.map(cells, getScopeAttribute)
+      );
+
+      if (stringAttributes.length === 0) {
+        return Optional.none<string>();
+      } else {
+        const baseScope = stringAttributes[0];
+        const scopes = [ 'row', 'col' ];
+
+        const isMixed = Arr.exists(stringAttributes, (attribute) => {
+          return attribute !== baseScope && Arr.contains(scopes, attribute);
+        });
+
+        return isMixed ? Optional.none<string>() : Optional.from(baseScope);
+      }
+    };
+
+    Css.remove(cells[0], 'width');
+
+    getScopeProperty().fold(
+      () => Attribute.remove(cells[0], 'scope'),
+      (attribute) => Attribute.set(cells[0], 'scope', attribute + 'group')
+    );
+
+    return Fun.constant(cells[0]);
+  };
+
   return {
-    combine,
+    unmerge,
+    merge,
     cursor: position.get
   };
 };

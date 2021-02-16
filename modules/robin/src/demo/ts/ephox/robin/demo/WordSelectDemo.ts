@@ -9,7 +9,7 @@ const editor = SugarElement.fromHtml('<div contenteditable="true" style="width: 
 
 Insert.append(ephoxUi, editor);
 
-const select = function (s: SugarElement, so: number, f: SugarElement, fo: number) {
+const select = (s: SugarElement, so: number, f: SugarElement, fo: number) => {
   Optional.from(window.getSelection()).each((selection) => {
     selection.removeAllRanges();
     const range = document.createRange();
@@ -21,7 +21,7 @@ const select = function (s: SugarElement, so: number, f: SugarElement, fo: numbe
   });
 };
 
-const getSelection = function () {
+const getSelection = () => {
   return Optional.from(window.getSelection()).map((selection) => {
     if (selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
@@ -40,11 +40,11 @@ const getSelection = function () {
   }).getOrNull();
 };
 
-DomEvent.bind(editor, 'click', function (_event) {
+DomEvent.bind(editor, 'click', (_event) => {
   const current = getSelection();
   if (current !== null && current.collapsed) {
     const wordRange = DomSmartSelect.word(current.startContainer, current.startOffset, Fun.never);
-    wordRange.each(function (wr) {
+    wordRange.each((wr) => {
       select(wr.startContainer, wr.startOffset, wr.endContainer, wr.endOffset);
     });
   }

@@ -25,18 +25,18 @@ import Tools from '../api/util/Tools';
 const each = Tools.each;
 const dom = DOMUtils.DOM;
 
-const parsedSelectorToHtml = function (ancestry, editor: Editor) {
+const parsedSelectorToHtml = (ancestry, editor: Editor) => {
   let elm, item, fragment;
   const schema = editor && editor.schema || Schema({});
 
-  const decorate = function (elm, item) {
+  const decorate = (elm, item) => {
     if (item.classes.length) {
       dom.addClass(elm, item.classes.join(' '));
     }
     dom.setAttribs(elm, item.attrs);
   };
 
-  const createElement = function (sItem) {
+  const createElement = (sItem) => {
     item = typeof sItem === 'string' ? {
       name: sItem,
       classes: [],
@@ -48,7 +48,7 @@ const parsedSelectorToHtml = function (ancestry, editor: Editor) {
     return elm;
   };
 
-  const getRequiredParent = function (elm, candidate) {
+  const getRequiredParent = (elm, candidate) => {
     const name = typeof elm !== 'string' ? elm.nodeName.toLowerCase() : elm;
     const elmRule = schema.getElementRule(name);
     const parentsRequired = elmRule && elmRule.parentsRequired;
@@ -60,7 +60,7 @@ const parsedSelectorToHtml = function (ancestry, editor: Editor) {
     }
   };
 
-  const wrapInHtml = function (elm, ancestry, siblings) {
+  const wrapInHtml = (elm, ancestry, siblings) => {
     let parent, parentCandidate;
     const ancestor = ancestry.length > 0 && ancestry[0];
     const ancestorName = ancestor && ancestor.name;
@@ -93,7 +93,7 @@ const parsedSelectorToHtml = function (ancestry, editor: Editor) {
         parent.appendChild(elm);
       }
 
-      Tools.each(siblings, function (sibling) {
+      Tools.each(siblings, (sibling) => {
         const siblingElm = createElement(sibling);
         parent.insertBefore(siblingElm, elm);
       });
@@ -113,11 +113,11 @@ const parsedSelectorToHtml = function (ancestry, editor: Editor) {
   }
 };
 
-const selectorToHtml = function (selector: string, editor?: Editor) {
+const selectorToHtml = (selector: string, editor?: Editor) => {
   return parsedSelectorToHtml(parseSelector(selector), editor);
 };
 
-const parseSelectorItem = function (item) {
+const parseSelectorItem = (item) => {
   let tagName;
   const obj: any = {
     classes: [],
@@ -128,7 +128,7 @@ const parseSelectorItem = function (item) {
 
   if (item !== '*') {
     // matching IDs, CLASSes, ATTRIBUTES and PSEUDOs
-    tagName = item.replace(/(?:([#\.]|::?)([\w\-]+)|(\[)([^\]]+)\]?)/g, function ($0, $1, $2, $3, $4) {
+    tagName = item.replace(/(?:([#\.]|::?)([\w\-]+)|(\[)([^\]]+)\]?)/g, ($0, $1, $2, $3, $4) => {
       switch ($1) {
         case '#':
           obj.attrs.id = $2;
@@ -161,7 +161,7 @@ const parseSelectorItem = function (item) {
   return obj;
 };
 
-const parseSelector = function (selector: string) {
+const parseSelector = (selector: string) => {
   if (!selector || typeof selector !== 'string') {
     return [];
   }
@@ -173,7 +173,7 @@ const parseSelector = function (selector: string) {
   selector = selector.replace(/\s*(~\+|~|\+|>)\s*/g, '$1');
 
   // split either on > or on space, but not the one inside brackets
-  return Tools.map(selector.split(/(?:>|\s+(?![^\[\]]+\]))/), function (item) {
+  return Tools.map(selector.split(/(?:>|\s+(?![^\[\]]+\]))/), (item) => {
     // process each sibling selector separately
     const siblings = Tools.map(item.split(/(?:~\+|~|\+)/), parseSelectorItem);
     const obj = siblings.pop(); // the last one is our real target
@@ -185,7 +185,7 @@ const parseSelector = function (selector: string) {
   }).reverse();
 };
 
-const getCssText = function (editor: Editor, format: any) {
+const getCssText = (editor: Editor, format: any) => {
   let name, previewFrag;
   let previewCss = '', parentFontSize;
 
@@ -197,7 +197,7 @@ const getCssText = function (editor: Editor, format: any) {
   }
 
   // Removes any variables since these can't be previewed
-  const removeVars = function (val): string {
+  const removeVars = (val): string => {
     return val.replace(/%(\w+)/g, '');
   };
 
@@ -238,7 +238,7 @@ const getCssText = function (editor: Editor, format: any) {
   const previewElm = dom.select(name, previewFrag)[0] || previewFrag.firstChild;
 
   // Add format styles to preview element
-  each(format.styles, function (value, name: string) {
+  each(format.styles, (value, name: string) => {
     const newValue = removeVars(value);
 
     if (newValue) {
@@ -247,7 +247,7 @@ const getCssText = function (editor: Editor, format: any) {
   });
 
   // Add attributes to preview element
-  each(format.attributes, function (value, name: string) {
+  each(format.attributes, (value, name: string) => {
     const newValue = removeVars(value);
 
     if (newValue) {
@@ -256,7 +256,7 @@ const getCssText = function (editor: Editor, format: any) {
   });
 
   // Add classes to preview element
-  each(format.classes, function (value) {
+  each(format.classes, (value) => {
     const newValue = removeVars(value);
 
     if (!dom.hasClass(previewElm, newValue)) {

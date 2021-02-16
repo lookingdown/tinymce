@@ -11,7 +11,7 @@ UnitTest.asynctest('browser.tinymce.plugins.table.TableCellPropsStyleTest', (suc
   Plugin();
   SilverTheme();
 
-  TinyLoader.setupLight(function (editor: Editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor: Editor, onSuccess, onFailure) => {
     const tinyApis = TinyApis(editor);
 
     Pipeline.async({},
@@ -31,8 +31,8 @@ UnitTest.asynctest('browser.tinymce.plugins.table.TableCellPropsStyleTest', (suc
       , onSuccess, onFailure);
   }, {
     plugins: 'table',
-    indent : false,
-    theme : 'silver',
+    indent: false,
+    theme: 'silver',
     base_url: '/project/tinymce/js/tinymce'
   }, success, failure );
 });

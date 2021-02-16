@@ -12,6 +12,12 @@ const sActionOn = <T>(selector: string, type: string): Step<T, T> =>
     type
   });
 
+const pActionOn = (selector: string, type: string): Promise<{}> =>
+  SeleniumAction.pPerform('/mouse', {
+    selector,
+    type
+  });
+
 const sMoveToOn = <T>(selector: string): Step<T, T> =>
   sActionOn<T>(selector, 'move');
 
@@ -24,7 +30,7 @@ const sUpOn = <T>(selector: string): Step<T, T> =>
 const sClickOn = <T>(selector: string): Step<T, T> =>
   sActionOn<T>(selector, 'click');
 
-const cAction = (action) =>
+const cAction = (action: string) =>
   Chain.fromChains([
     Chain.mapper((selector) => ({
       selector,
@@ -33,20 +39,32 @@ const cAction = (action) =>
     SeleniumAction.cPerform('/mouse')
   ]);
 
-const cClick = () =>
+const cClick = (): Chain<SugarElement<Element>, SugarElement<Element>> =>
   Chain.fromParent(Chain.mapper(Fun.identity), [
     Chain.fromChains([
-      Chain.mapper((elem: SugarElement<any>) => {
+      Chain.mapper((elem: SugarElement<Element>) => {
         const id = Id.generate('');
         Attribute.set(elem, BedrockIdAttribute, id);
         return `[${BedrockIdAttribute}="${id}"]`;
       }),
       cAction('click')
     ]),
-    Chain.op((elem: SugarElement<any>) => {
+    Chain.op((elem: SugarElement<Element>) => {
       Attribute.remove(elem, BedrockIdAttribute);
     })
   ]);
+
+const pClickOn = (selector: string): Promise<{}> =>
+  pActionOn(selector, 'click');
+
+const pUpOn = (selector: string): Promise<{}> =>
+  pActionOn(selector, 'up');
+
+const pDownOn = (selector: string): Promise<{}> =>
+  pActionOn(selector, 'down');
+
+const pMoveToOn = (selector: string): Promise<{}> =>
+  pActionOn(selector, 'click');
 
 export {
   sMoveToOn,
@@ -54,5 +72,10 @@ export {
   sUpOn,
   sClickOn,
   cClick,
-  BedrockIdAttribute
+  BedrockIdAttribute,
+
+  pClickOn,
+  pUpOn,
+  pDownOn,
+  pMoveToOn
 };

@@ -5,35 +5,35 @@ import { Compare, SugarElement, SugarText } from '@ephox/sugar';
 import * as DomExtract from 'ephox/phoenix/api/dom/DomExtract';
 import { Page } from 'ephox/phoenix/test/Page';
 
-UnitTest.test('DomExtractTest', function () {
+UnitTest.test('DomExtractTest', () => {
 
   // IMPORTANT: Otherwise CSS display does not work.
   const page = Page();
 
   const optimise = Fun.never;
 
-  (function () {
+  (() => {
     // Test extractTo
-    const check = function (eNode: SugarElement, eOffset: number, cNode: SugarElement, cOffset: number, predicate: (e: SugarElement) => boolean) {
+    const check = (eNode: SugarElement, eOffset: number, cNode: SugarElement, cOffset: number, predicate: (e: SugarElement) => boolean) => {
       const actual = DomExtract.extractTo(cNode, cOffset, predicate, optimise);
       Assert.eq('eq', true, Compare.eq(eNode, actual.element));
       Assert.eq('eq', eOffset, actual.offset);
     };
 
-    check(page.div1, 'First paragraphSecond here'.length + 1, page.t4, 1, function (element) {
+    check(page.div1, 'First paragraphSecond here'.length + 1, page.t4, 1, (element) => {
       return Compare.eq(element, page.div1);
     });
   })();
 
-  (function () {
+  (() => {
     // Test find.
-    const check = function (eNode: SugarElement, eOffset: number, pNode: SugarElement, pOffset: number) {
+    const check = (eNode: SugarElement, eOffset: number, pNode: SugarElement, pOffset: number) => {
       const actual = DomExtract.find(pNode, pOffset, optimise).getOrDie();
       Assert.eq('eq', true, Compare.eq(eNode, actual.element));
       Assert.eq('eq', eOffset, actual.offset);
     };
 
-    const checkNone = function (pNode: SugarElement, pOffset: number) {
+    const checkNone = (pNode: SugarElement, pOffset: number) => {
       KAssert.eqNone('eq', DomExtract.find(pNode, pOffset, optimise));
     };
 
@@ -45,9 +45,9 @@ UnitTest.test('DomExtractTest', function () {
     checkNone(page.p1, 16);
   })();
 
-  (function () {
+  (() => {
     // Test extract
-    const check = function (eNode: SugarElement, eOffset: number, cNode: SugarElement, cOffset: number) {
+    const check = (eNode: SugarElement, eOffset: number, cNode: SugarElement, cOffset: number) => {
       const actual = DomExtract.extract(cNode, cOffset, optimise);
       Assert.eq('eq', true, Compare.eq(eNode, actual.element));
       Assert.eq('eq', eOffset, actual.offset);
@@ -59,18 +59,18 @@ UnitTest.test('DomExtractTest', function () {
     check(page.s3, 0, page.t5, 0);
   })();
 
-  (function () {
+  (() => {
     // Test from
-    const check = function (expected: string, input: SugarElement) {
+    const check = (expected: string, input: SugarElement) => {
       const rawActual = DomExtract.from(input, optimise);
-      const actual = Arr.map(rawActual, function (x) {
-        return x.fold(function () {
+      const actual = Arr.map(rawActual, (x) => {
+        return x.fold(() => {
           return '\\w';
-        }, function () {
+        }, () => {
           return '-';
-        }, function (t) {
+        }, (t) => {
           return SugarText.get(t);
-        }, function (t) {
+        }, (t) => {
           return SugarText.get(t);
         });
       }).join('');

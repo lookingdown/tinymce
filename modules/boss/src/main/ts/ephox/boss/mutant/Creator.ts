@@ -2,24 +2,28 @@ import { Optional } from '@ephox/katamari';
 import { Gene } from '../api/Gene';
 import { TextGene } from '../api/TextGene';
 
-const isNu = function (item: Gene) {
+interface Seed {
+  readonly random: number;
+}
+
+const isNu = (item: Gene): boolean => {
   return item.id === 'nu_' + item.name || Optional.from(item.text).exists((text) => item.id === '?_' + text);
 };
 
-const seed = function () {
+const seed = (): Seed => {
   return {
     random: Math.random()
   };
 };
 
-const nu = function (name: string) {
+const nu = (name: string): Gene & Seed => {
   return {
     ...Gene('nu_' + name, name),
     ...seed()
   };
 };
 
-const clone = function (item: Gene): Gene {
+const clone = (item: Gene): Gene => {
   return {
     ...item,
     children: [],
@@ -27,7 +31,7 @@ const clone = function (item: Gene): Gene {
   };
 };
 
-const text = function (value: string): Gene {
+const text = (value: string): Gene => {
   return {
     ...TextGene('?_' + value, value),
     ...seed()

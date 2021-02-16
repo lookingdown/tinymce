@@ -16,12 +16,12 @@ const firstElement = (nodes: SugarElement<Node>[]): Optional<SugarElement<HTMLEl
 
 // Firefox has a bug where caption height is not included correctly in offset calculations of tables
 // this tries to compensate for that by detecting if that offsets are incorrect and then remove the height
-const getTableCaptionDeltaY = function (elm) {
+const getTableCaptionDeltaY = (elm) => {
   if (browser.isFirefox() && SugarNode.name(elm) === 'table') {
-    return firstElement(Traverse.children(elm)).filter(function (elm) {
+    return firstElement(Traverse.children(elm)).filter((elm) => {
       return SugarNode.name(elm) === 'caption';
-    }).bind(function (caption) {
-      return firstElement(Traverse.nextSiblings(caption)).map(function (body) {
+    }).bind((caption) => {
+      return firstElement(Traverse.nextSiblings(caption)).map((body) => {
         const bodyTop = body.dom.offsetTop;
         const captionTop = caption.dom.offsetTop;
         const captionHeight = caption.dom.offsetHeight;
@@ -35,7 +35,7 @@ const getTableCaptionDeltaY = function (elm) {
 
 const hasChild = (elm, child) => elm.children && Arr.contains(elm.children, child);
 
-const getPos = function (body, elm, rootElm) {
+const getPos = (body, elm, rootElm) => {
   let x = 0, y = 0, offsetParent;
   const doc = body.ownerDocument;
   let pos;

@@ -2,7 +2,7 @@ import { Assert, UnitTest } from '@ephox/bedrock-client';
 import fc from 'fast-check';
 import * as Resolve from 'ephox/katamari/api/Resolve';
 
-UnitTest.test('Resolve.namespace', function () {
+UnitTest.test('Resolve.namespace', () => {
   const survivor = 'i want to survive this namespacing';
   const token = 'i should be set as the [token] attribute on the namespace';
 
@@ -14,7 +14,7 @@ UnitTest.test('Resolve.namespace', function () {
     didgy: null
   };
 
-  const run = function (path, target) {
+  const run = (path: string, target: {}) => {
     const r = Resolve.namespace(path, target);
     r.token = token;
   };
@@ -31,7 +31,7 @@ UnitTest.test('Resolve.namespace', function () {
 });
 
 UnitTest.test('Resolve.resolve', () => {
-  const check = function (expected, path, scope) {
+  const check = (expected, path, scope) => {
     const actual = Resolve.resolve(path, scope);
     Assert.eq('eq', expected, actual);
   };
@@ -74,7 +74,7 @@ UnitTest.test('Checking that creating a namespace (forge) from an obj will enabl
     fc.array(fc.asciiString(1, 30), 1, 40),
     fc.asciiString(1, 30),
     fc.asciiString(1, 30),
-    function (dict, parts, field, newValue) {
+    (dict, parts, field, newValue) => {
       const created = Resolve.forge(parts, dict);
       created[field] = newValue;
       const resolved = Resolve.path(parts.concat([ field ]), dict);

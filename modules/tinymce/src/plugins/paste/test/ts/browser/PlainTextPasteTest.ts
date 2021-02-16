@@ -1,18 +1,18 @@
 import { Assertions, Chain, Guard, Log, Pipeline } from '@ephox/agar';
 import { UnitTest } from '@ephox/bedrock-client';
 import { Obj } from '@ephox/katamari';
-import { Editor as McEditor } from '@ephox/mcagar';
+import { McEditor } from '@ephox/mcagar';
 
 import PastePlugin from 'tinymce/plugins/paste/Plugin';
 import Theme from 'tinymce/themes/silver/Theme';
 
 import * as MockDataTransfer from '../module/test/MockDataTransfer';
 
-UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.paste.PlainTextPaste', (success, failure) => {
   Theme();
   PastePlugin();
 
-  const cCreateEditorFromSettings = function (settings, _html?) {
+  const cCreateEditorFromSettings = (settings, _html?) => {
     return Chain.control(
       McEditor.cFromSettings({
         ...settings,
@@ -23,16 +23,16 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, fai
     );
   };
 
-  const cRemoveEditor = function () {
+  const cRemoveEditor = () => {
     return Chain.control(
       McEditor.cRemove,
       Guard.addLogging('Remove editor')
     );
   };
 
-  const cClearEditor = function () {
+  const cClearEditor = () => {
     return Chain.control(
-      Chain.async(function (editor: any, next, _die) {
+      Chain.async((editor: any, next, _die) => {
         editor.setContent('');
         next(editor);
       }),
@@ -40,9 +40,9 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, fai
     );
   };
 
-  const cFireFakePasteEvent = function (data) {
+  const cFireFakePasteEvent = (data) => {
     return Chain.control(
-      Chain.async(function (editor: any, next, _die) {
+      Chain.async((editor: any, next, _die) => {
         editor.fire('paste', { clipboardData: MockDataTransfer.create(data) });
         next(editor);
       }),
@@ -50,9 +50,9 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, fai
     );
   };
 
-  const cAssertEditorContent = function (label, expected) {
+  const cAssertEditorContent = (label, expected) => {
     return Chain.control(
-      Chain.async(function (editor: any, next, _die) {
+      Chain.async((editor: any, next, _die) => {
         Assertions.assertHtml(label || 'Asserting editors content', expected, editor.getContent());
         next(editor);
       }),
@@ -60,10 +60,10 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, fai
     );
   };
 
-  const cAssertClipboardPaste = function (expected, data) {
+  const cAssertClipboardPaste = (expected, data) => {
     const chains = [];
 
-    Obj.each(data, function (data, label) {
+    Obj.each(data, (data, label) => {
       chains.push(
         cFireFakePasteEvent(data),
         Chain.control(
@@ -133,7 +133,5 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PlainTextPaste', (success, fai
       cAssertClipboardPaste(expectedWithoutRootBlock, pasteData),
       cRemoveEditor()
     ]))
-  ], function () {
-    success();
-  }, failure);
+  ], success, failure);
 });

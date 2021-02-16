@@ -6,19 +6,19 @@ import ListsPlugin from 'tinymce/plugins/lists/Plugin';
 import TablePlugin from 'tinymce/plugins/table/Plugin';
 import SilverTheme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('tinymce.plugins.table.IndentListsInTableTest', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.table.IndentListsInTableTest', (success, failure) => {
   SilverTheme();
   TablePlugin();
   ListsPlugin();
 
-  const sAssertTableInnerHTML = function (editor, expected) {
-    return Logger.t('Assert table InnerHTML ' + expected, Step.sync(function () {
+  const sAssertTableInnerHTML = (editor, expected) => {
+    return Logger.t('Assert table InnerHTML ' + expected, Step.sync(() => {
       const actual = editor.getBody().firstChild.innerHTML;
       Assert.eq('Does not have correct html', expected, actual);
     }));
   };
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     const tinyApis = TinyApis(editor);
     const tinyActions = TinyActions(editor);
 

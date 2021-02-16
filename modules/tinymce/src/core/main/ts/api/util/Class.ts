@@ -50,8 +50,8 @@ interface Class {
   extend <T extends Props<A>, A extends any[] = any[]>(props: T): ExtendedClassConstructor<T, A>;
 }
 
-const Class: Class = function () {
-};
+// eslint-disable-next-line @tinymce/prefer-fun
+const Class: Class = () => {};
 
 // Provides classical inheritance, based on code made by John Resig
 Class.extend = extendClass = function <T extends Props<A>, A extends any[]> (props: T): ExtendedClassConstructor<T, A> {
@@ -114,7 +114,7 @@ Class.extend = extendClass = function <T extends Props<A>, A extends any[]> (pro
 
   // Add mixins
   if (props.Mixins) {
-    each(props.Mixins, function (mixin) {
+    each(props.Mixins, (mixin) => {
       for (const name in mixin) {
         if (name !== 'init') {
           props[name] = mixin[name];
@@ -129,14 +129,14 @@ Class.extend = extendClass = function <T extends Props<A>, A extends any[]> (pro
 
   // Generate dummy methods
   if (props.Methods) {
-    each(props.Methods.split(','), function (name) {
+    each(props.Methods.split(','), (name) => {
       props[name] = dummy;
     });
   }
 
   // Generate property methods
   if (props.Properties) {
-    each(props.Properties.split(','), function (name) {
+    each(props.Properties.split(','), (name) => {
       const fieldName = '_' + name;
 
       props[name] = function (value) {
@@ -157,7 +157,7 @@ Class.extend = extendClass = function <T extends Props<A>, A extends any[]> (pro
 
   // Static functions
   if (props.Statics) {
-    each(props.Statics, function (func, name) {
+    each(props.Statics, (func, name) => {
       Class[name] = func;
     });
   }

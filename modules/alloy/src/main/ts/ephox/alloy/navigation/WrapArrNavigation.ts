@@ -1,9 +1,9 @@
 import { Num, Optional } from '@ephox/katamari';
 
-export type WrapArrNavigationOutcome = {
+export interface WrapArrNavigationOutcome {
   readonly row: number;
   readonly column: number;
-};
+}
 export type ArrNavigationFunc<A> = (values: A[], index: number, numRows: number, numCols: number) => Optional<A>;
 
 const withGrid = <A>(values: A[], index: number, numCols: number, f: (oldRow: number, oldColumn: number) => Optional<WrapArrNavigationOutcome>): Optional<A> => {
@@ -37,13 +37,17 @@ const cycleVertical = <A>(values: A[], index: number, numRows: number, numCols: 
   });
 });
 
-const cycleRight = <A>(values: A[], index: number, numRows: number, numCols: number) => cycleHorizontal(values, index, numRows, numCols, +1);
+const cycleRight = <A>(values: A[], index: number, numRows: number, numCols: number): Optional<A> =>
+  cycleHorizontal(values, index, numRows, numCols, +1);
 
-const cycleLeft = <A>(values: A[], index: number, numRows: number, numCols: number) => cycleHorizontal(values, index, numRows, numCols, -1);
+const cycleLeft = <A>(values: A[], index: number, numRows: number, numCols: number): Optional<A> =>
+  cycleHorizontal(values, index, numRows, numCols, -1);
 
-const cycleUp = <A>(values: A[], index: number, numRows: number, numCols: number) => cycleVertical(values, index, numRows, numCols, -1);
+const cycleUp = <A>(values: A[], index: number, numRows: number, numCols: number): Optional<A> =>
+  cycleVertical(values, index, numRows, numCols, -1);
 
-const cycleDown = <A>(values: A[], index: number, numRows: number, numCols: number) => cycleVertical(values, index, numRows, numCols, +1);
+const cycleDown = <A>(values: A[], index: number, numRows: number, numCols: number): Optional<A> =>
+  cycleVertical(values, index, numRows, numCols, +1);
 
 export {
   cycleDown,

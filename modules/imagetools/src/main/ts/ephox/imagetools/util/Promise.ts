@@ -34,7 +34,7 @@ interface PromisePolyfillConstructor extends PromiseConstructor {
 
   new <T>(executor: Executor<T>): PromisePolyfill<T>;
 
-  immediateFn? (handler: (...args: any[]) => void): void;
+  immediateFn?: (handler: (...args: any[]) => void) => void;
 }
 
 const promise = <T>(): PromisePolyfillConstructor => {
@@ -55,18 +55,18 @@ const promise = <T>(): PromisePolyfillConstructor => {
   // Use polyfill for setImmediate for performance gains
   const anyWindow = window as any;
   const asap = Promise.immediateFn || (typeof anyWindow.setImmediate === 'function' && anyWindow.setImmediate) ||
-    function (fn: (handler: (...args: any[]) => void) => void) { setTimeout(fn, 1); };
+    ((fn: (...args: any[]) => void) => setTimeout(fn, 1));
 
   // Polyfill for Function.prototype.bind
-  function bind(fn: Function, thisArg: any) {
-    return function () {
-      return fn.apply(thisArg, arguments);
+  const bind = (fn: Function, thisArg: any) => {
+    return (...args: any[]) => {
+      return fn.apply(thisArg, args);
     };
-  }
-
-  const isArray = Array.isArray || function (value) {
-    return Object.prototype.toString.call(value) === '[object Array]';
   };
+
+  const isArray = Array.isArray || ((value) => {
+    return Object.prototype.toString.call(value) === '[object Array]';
+  });
 
   function handle(this: PromisePolyfill<T>, deferred: Deferred<T>) {
     const me = this;
@@ -74,7 +74,7 @@ const promise = <T>(): PromisePolyfillConstructor => {
       this._deferreds.push(deferred);
       return;
     }
-    asap(function () {
+    asap(() => {
       const cb = me._state ? deferred.onFulfilled : deferred.onRejected;
       if (cb === null) {
         (me._state ? deferred.resolve : deferred.reject)(me._value);
@@ -107,7 +107,9 @@ const promise = <T>(): PromisePolyfillConstructor => {
       this._state = true;
       this._value = newValue;
       finale.call(this);
-    } catch (e) { reject.call(this, e); }
+    } catch (e) {
+      reject.call(this, e);
+    }
   }
 
   function reject(this: PromisePolyfill<T>, newValue: any) {
@@ -142,20 +144,20 @@ const promise = <T>(): PromisePolyfillConstructor => {
    *
    * Makes no guarantees about asynchrony.
    */
-  function doResolve<TResult1 = T, TResult2 = never>(
+  const doResolve = <TResult1 = T, TResult2 = never>(
     fn: Executor<T>,
     onFulfilled: Callback<T, TResult1>,
     onRejected: Callback<any, TResult2>
-  ) {
+  ) => {
     let done = false;
     try {
-      fn(function (value) {
+      fn((value) => {
         if (done) {
           return;
         }
         done = true;
         onFulfilled(value as T);
-      }, function (reason) {
+      }, (reason) => {
         if (done) {
           return;
         }
@@ -169,7 +171,7 @@ const promise = <T>(): PromisePolyfillConstructor => {
       done = true;
       onRejected(ex);
     }
-  }
+  };
 
   Promise.prototype.catch = function <TResult = never> (
     onRejected?: Callback<any, TResult> | null
@@ -182,25 +184,27 @@ const promise = <T>(): PromisePolyfillConstructor => {
     onRejected?: Callback<any, TResult2> | null
   ): PromisePolyfill<TResult1 | TResult2> {
     const me = this;
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       handle.call(me, new (Handler as any)(onFulfilled, onRejected, resolve, reject));
     });
   };
 
-  Promise.all = function <U> (...values: any[]): PromisePolyfill<any> {
+  Promise.all = (...values: any[]): PromisePolyfill<any> => {
     const args = Array.prototype.slice.call(values.length === 1 && isArray(values[0]) ? values[0] : values);
 
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       if (args.length === 0) {
         return resolve([]);
       }
       let remaining = args.length;
-      function res(i: number, val: any) {
+      const res = (i: number, val: any) => {
         try {
           if (val && (typeof val === 'object' || typeof val === 'function')) {
             const then = val.then;
             if (typeof then === 'function') {
-              then.call(val, function (val: any) { res(i, val); }, reject);
+              then.call(val, (val: any) => {
+                res(i, val);
+              }, reject);
               return;
             }
           }
@@ -211,31 +215,31 @@ const promise = <T>(): PromisePolyfillConstructor => {
         } catch (ex) {
           reject(ex);
         }
-      }
+      };
       for (let i = 0; i < args.length; i++) {
         res(i, args[i]);
       }
     });
   };
 
-  Promise.resolve = function <U> (value?: U | PromiseLike<U>): PromisePolyfill<U | void> {
+  Promise.resolve = <U> (value?: U | PromiseLike<U>): PromisePolyfill<U | void> => {
     if (value && typeof value === 'object' && (value as {}).constructor === Promise) {
       return value as PromisePolyfill<U | void>;
     }
 
-    return new Promise(function (resolve) {
+    return new Promise((resolve) => {
       resolve(value);
     });
   };
 
-  Promise.reject = function <U = never> (reason?: any): PromisePolyfill<U> {
-    return new Promise(function (resolve, reject) {
+  Promise.reject = <U = never> (reason?: any): PromisePolyfill<U> => {
+    return new Promise((resolve, reject) => {
       reject(reason);
     });
   };
 
-  Promise.race = function <U> (values: PromiseLike<U>[]): PromisePolyfill<U> {
-    return new Promise(function (resolve, reject) {
+  Promise.race = <U> (values: PromiseLike<U>[]): PromisePolyfill<U> => {
+    return new Promise((resolve, reject) => {
       for (const value of values) {
         value.then(resolve, reject);
       }

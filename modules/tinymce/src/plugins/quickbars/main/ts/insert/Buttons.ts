@@ -10,16 +10,16 @@ import * as Actions from './Actions';
 import * as Conversions from './Conversions';
 import * as Picker from './Picker';
 
-const setupButtons = function (editor: Editor) {
+const setupButtons = (editor: Editor) => {
   editor.ui.registry.addButton('quickimage', {
     icon: 'image',
     tooltip: 'Insert image',
-    onAction() {
-      Picker.pickFile(editor).then(function (files) {
+    onAction: () => {
+      Picker.pickFile(editor).then((files) => {
         if (files.length > 0) {
           const blob = files[0];
 
-          Conversions.blobToBase64(blob).then(function (base64) {
+          Conversions.blobToBase64(blob).then((base64) => {
             Actions.insertBlob(editor, base64, blob);
           });
         }
@@ -30,7 +30,7 @@ const setupButtons = function (editor: Editor) {
   editor.ui.registry.addButton('quicktable', {
     icon: 'table',
     tooltip: 'Insert table',
-    onAction() {
+    onAction: () => {
       // panel.hide();
       Actions.insertTable(editor, 2, 2);
     }

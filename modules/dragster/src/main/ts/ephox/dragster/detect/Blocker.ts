@@ -2,15 +2,15 @@ import { Attribute, Class, Css, Remove, SugarElement } from '@ephox/sugar';
 import * as Styles from '../style/Styles';
 
 export interface BlockerOptions {
-  layerClass: string;
+  readonly layerClass: string;
 }
 
 export interface Blocker {
-  element: () => SugarElement;
-  destroy: () => void;
+  readonly element: () => SugarElement<HTMLElement>;
+  readonly destroy: () => void;
 }
 
-export const Blocker = function (options: Partial<BlockerOptions>): Blocker {
+export const Blocker = (options: Partial<BlockerOptions>): Blocker => {
   const settings: BlockerOptions = {
     layerClass: Styles.resolve('blocker'),
     ...options
@@ -29,11 +29,11 @@ export const Blocker = function (options: Partial<BlockerOptions>): Blocker {
   Class.add(div, Styles.resolve('blocker'));
   Class.add(div, settings.layerClass);
 
-  const element = function () {
+  const element = () => {
     return div;
   };
 
-  const destroy = function () {
+  const destroy = () => {
     Remove.remove(div);
   };
 

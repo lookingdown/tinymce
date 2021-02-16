@@ -1,13 +1,13 @@
 import { Assertions, Chain, Guard, Log, Pipeline } from '@ephox/agar';
 import { UnitTest } from '@ephox/bedrock-client';
 import { Obj } from '@ephox/katamari';
-import { Editor as McEditor } from '@ephox/mcagar';
+import { McEditor } from '@ephox/mcagar';
 
 import { getPasteBinParent, PasteBin } from 'tinymce/plugins/paste/core/PasteBin';
 import PastePlugin from 'tinymce/plugins/paste/Plugin';
 import Theme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('tinymce.plugins.paste.browser.PasteBin', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.paste.PasteBin', (success, failure) => {
 
   Theme();
   PastePlugin();
@@ -54,7 +54,7 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PasteBin', (success, failure) 
     }
   ];
 
-  const cCreateEditorFromSettings = function (settings = {}, html?) {
+  const cCreateEditorFromSettings = (settings = {}, html?) => {
     return Chain.control(
       McEditor.cFromHtml(html, {
         ...settings,
@@ -67,25 +67,25 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PasteBin', (success, failure) 
     );
   };
 
-  const cCreateEditorFromHtml = function (html, settings) {
+  const cCreateEditorFromHtml = (html, settings) => {
     return Chain.control(
       cCreateEditorFromSettings(settings, html),
       Guard.addLogging(`Create editor using ${html}`)
     );
   };
 
-  const cRemoveEditor = function () {
+  const cRemoveEditor = () => {
     return Chain.control(
       McEditor.cRemove,
       Guard.addLogging('Remove Editor')
     );
   };
 
-  const cAssertCases = function (cases) {
+  const cAssertCases = (cases) => {
     return Chain.control(
-      Chain.op(function (editor: any) {
+      Chain.op((editor: any) => {
         const pasteBin = PasteBin(editor);
-        Obj.each(cases, function (c, i) {
+        Obj.each(cases, (c, i) => {
           getPasteBinParent(editor).appendChild(editor.dom.createFragment(c.content));
           Assertions.assertEq(c.label || 'Asserting paste bin case ' + i, c.result, pasteBin.getHtml());
           pasteBin.remove();
@@ -108,7 +108,5 @@ UnitTest.asynctest('tinymce.plugins.paste.browser.PasteBin', (success, failure) 
       cAssertCases(cases),
       cRemoveEditor()
     ]))
-  ], function () {
-    success();
-  }, failure);
+  ], success, failure);
 });

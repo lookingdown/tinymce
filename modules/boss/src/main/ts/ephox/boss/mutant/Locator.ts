@@ -3,20 +3,20 @@ import { Gene } from '../api/Gene';
 import * as Comparator from './Comparator';
 import * as Creator from './Creator';
 
-const byId = function (item: Gene, id: string): Optional<Gene> {
+const byId = (item: Gene, id: string): Optional<Gene> => {
   if (id === undefined) {
     throw new Error('Id value not specified for byId');
   }
   if (item.id !== undefined && item.id === id) {
     return Optional.some(item);
   } else {
-    return Arr.foldl(item.children || [], function (b, a) {
+    return Arr.foldl(item.children || [], (b, a) => {
       return byId(a, id).or(b);
     }, Optional.none<Gene>());
   }
 };
 
-const byItem = function (item: Gene, target: Gene): Optional<Gene> {
+const byItem = (item: Gene, target: Gene): Optional<Gene> => {
   const itemNu = Creator.isNu(item);
   const targetNu = Creator.isNu(target);
   const sameId = item.id !== undefined && item.id === target.id;
@@ -25,14 +25,14 @@ const byItem = function (item: Gene, target: Gene): Optional<Gene> {
   } else if (sameId && itemNu && targetNu && item.random === target.random) {
     return Optional.some(item);
   } else {
-    return Arr.foldl(item.children || [], function (b, a) {
+    return Arr.foldl(item.children || [], (b, a) => {
       return byItem(a, target).or(b);
     }, Optional.none());
   }
 };
 
-const indexIn = function (parent: Gene, item: Gene) {
-  return Arr.findIndex(parent.children, function (x) {
+const indexIn = (parent: Gene, item: Gene): Optional<number> => {
+  return Arr.findIndex(parent.children, (x) => {
     return Comparator.eq(x, item);
   });
 };

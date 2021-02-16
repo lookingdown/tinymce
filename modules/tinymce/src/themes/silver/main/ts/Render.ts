@@ -5,19 +5,20 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { AlloyComponent, AlloySpec, Behaviour, Gui, GuiFactory, Keying, Memento, Positioning, SimpleSpec, VerticalDir } from '@ephox/alloy';
-import { Arr, Obj, Optional, Result } from '@ephox/katamari';
+import { AlloyComponent, AlloyEvents, AlloySpec, Behaviour, Disabling, Gui, GuiFactory, Keying, Memento, Positioning, SimpleSpec, SystemEvents, VerticalDir } from '@ephox/alloy';
+import { Arr, Fun, Merger, Obj, Optional, Result } from '@ephox/katamari';
 import { PlatformDetection } from '@ephox/sand';
-import { Css } from '@ephox/sugar';
+import { Compare, Css, SugarBody } from '@ephox/sugar';
 import Editor from 'tinymce/core/api/Editor';
-import I18n from 'tinymce/core/api/util/I18n';
 import { EditorUiApi } from 'tinymce/core/api/ui/Ui';
+import I18n from 'tinymce/core/api/util/I18n';
 import * as Settings from './api/Settings';
 import * as Backstage from './backstage/Backstage';
 import * as ContextToolbar from './ContextToolbar';
 import * as Events from './Events';
 import * as Iframe from './modes/Iframe';
 import * as Inline from './modes/Inline';
+import * as ReadOnly from './ReadOnly';
 import * as FormatControls from './ui/core/FormatControls';
 import OuterContainer, { OuterContainerSketchSpec } from './ui/general/OuterContainer';
 import * as StaticHeader from './ui/header/StaticHeader';
@@ -41,7 +42,7 @@ export interface RenderInfo {
 export interface ModeRenderInfo {
   iframeContainer?: HTMLIFrameElement;
   editorContainer: HTMLElement;
-  api?: EditorUiApi;
+  api?: Partial<EditorUiApi>;
 }
 
 export interface UiChannels {
@@ -89,6 +90,7 @@ const setup = (editor: Editor): RenderInfo => {
   const touchPlatformClass = 'tox-platform-touch';
   const deviceClasses = isTouch ? [ touchPlatformClass ] : [];
   const isToolbarBottom = Settings.isToolbarLocationBottom(editor);
+  const uiContainer = Settings.getUiContainer(editor);
 
   const dirAttributes = I18n.isRtl() ? {
     attributes: {
@@ -108,18 +110,40 @@ const setup = (editor: Editor): RenderInfo => {
 
   const isHeaderDocked = () => header.isDocked(lazyHeader);
 
-  const sink = GuiFactory.build({
-    dom: {
-      tag: 'div',
-      classes: [ 'tox', 'tox-silver-sink', 'tox-tinymce-aux' ].concat(platformClasses).concat(deviceClasses),
-      ...dirAttributes
-    },
-    behaviours: Behaviour.derive([
-      Positioning.config({
-        useFixed: () => isHeaderDocked()
-      })
-    ])
-  });
+  const resizeUiMothership = () => {
+    Css.set(uiMothership.element, 'width', document.body.clientWidth + 'px');
+  };
+
+  const makeSinkDefinition = (): AlloySpec => {
+    // TINY-3321: When the body is using a grid layout, we need to ensure the sink width is manually set
+    const isGridUiContainer = Compare.eq(SugarBody.body(), uiContainer) && Css.get(uiContainer, 'display') === 'grid';
+
+    const sinkSpec = {
+      dom: {
+        tag: 'div',
+        classes: [ 'tox', 'tox-silver-sink', 'tox-tinymce-aux' ].concat(platformClasses).concat(deviceClasses),
+        ...dirAttributes
+      },
+      behaviours: Behaviour.derive([
+        Positioning.config({
+          useFixed: () => isHeaderDocked()
+        })
+      ])
+    };
+
+    const reactiveWidthSpec = {
+      dom: {
+        styles: { width: document.body.clientWidth + 'px' }
+      },
+      events: AlloyEvents.derive([
+        AlloyEvents.run(SystemEvents.windowResize(), resizeUiMothership)
+      ])
+    };
+
+    return Merger.deepMerge(sinkSpec, isGridUiContainer ? reactiveWidthSpec : {});
+  };
+
+  const sink = GuiFactory.build(makeSinkDefinition());
 
   const lazySink = () => Result.value<AlloyComponent, Error>(sink);
 
@@ -144,7 +168,7 @@ const setup = (editor: Editor): RenderInfo => {
       classes: [ 'tox-menubar' ]
     },
     backstage,
-    onEscape() {
+    onEscape: () => {
       editor.focus();
     }
   });
@@ -158,7 +182,7 @@ const setup = (editor: Editor): RenderInfo => {
     },
     getSink: lazySink,
     providers: backstage.shared.providers,
-    onEscape() {
+    onEscape: () => {
       editor.focus();
     },
     type: toolbarMode,
@@ -300,6 +324,10 @@ const setup = (editor: Editor): RenderInfo => {
       },
       components: containerComponents,
       behaviours: Behaviour.derive([
+        ReadOnly.receivingConfig(),
+        Disabling.config({
+          disableClass: 'tox-tinymce--disabled'
+        }),
         Keying.config({
           mode: 'cyclic',
           selector: '.tox-menubar, .tox-toolbar, .tox-toolbar__primary, .tox-toolbar__overflow--open, .tox-sidebar__overflow--open, .tox-statusbar__path, .tox-statusbar__wordcount, .tox-statusbar__branding a'
@@ -310,10 +338,10 @@ const setup = (editor: Editor): RenderInfo => {
 
   lazyOuterContainer = Optional.some(outerContainer);
 
-  editor.shortcuts.add('alt+F9', 'focus menubar', function () {
+  editor.shortcuts.add('alt+F9', 'focus menubar', () => {
     OuterContainer.focusMenubar(outerContainer);
   });
-  editor.shortcuts.add('alt+F10', 'focus toolbar', function () {
+  editor.shortcuts.add('alt+F10', 'focus toolbar', () => {
     OuterContainer.focusToolbar(outerContainer);
   });
 
@@ -336,7 +364,7 @@ const setup = (editor: Editor): RenderInfo => {
     const channels = {
       broadcastAll: uiMothership.broadcast,
       broadcastOn: uiMothership.broadcastOn,
-      register: () => {}
+      register: Fun.noop
     };
 
     return { channels };
@@ -364,7 +392,7 @@ const setup = (editor: Editor): RenderInfo => {
     return parsedHeight;
   };
 
-  const renderUI = function (): ModeRenderInfo {
+  const renderUI = (): ModeRenderInfo => {
     header.setup(editor, backstage.shared, lazyHeader);
     FormatControls.setup(editor, backstage);
     SilverContextMenu.setup(editor, lazySink, backstage);

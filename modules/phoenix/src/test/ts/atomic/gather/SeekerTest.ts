@@ -5,7 +5,7 @@ import { KAssert } from '@ephox/katamari-assertions';
 import * as Gather from 'ephox/phoenix/api/general/Gather';
 import * as Finder from 'ephox/phoenix/test/Finder';
 
-UnitTest.test('Seeker Test', function () {
+UnitTest.test('Seeker Test', () => {
   const some = Optional.some;
 
   const universe = TestUniverse(
@@ -39,21 +39,21 @@ UnitTest.test('Seeker Test', function () {
     ])
   );
 
-  const isRoot = function (item: Gene) {
+  const isRoot = (item: Gene) => {
     return item.id === 'root';
   };
 
-  const check = function (expected: Optional<string>, actual: Optional<Gene>) {
+  const check = (expected: Optional<string>, actual: Optional<Gene>) => {
     KAssert.eqOptional('eq', expected, actual.map((x) => x.id));
   };
 
-  const checkBefore = function (expected: Optional<string>, id: string) {
+  const checkBefore = (expected: Optional<string>, id: string) => {
     const item = Finder.get(universe, id);
     const actual = Gather.before(universe, item, isRoot);
     check(expected, actual);
   };
 
-  const checkAfter = function (expected: Optional<string>, id: string) {
+  const checkAfter = (expected: Optional<string>, id: string) => {
     const item = Finder.get(universe, id);
     const actual = Gather.after(universe, item, isRoot);
     check(expected, actual);

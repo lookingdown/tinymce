@@ -5,6 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
+import { Arr, Strings } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 import Tools from 'tinymce/core/api/util/Tools';
 import * as Settings from '../api/Settings';
@@ -27,53 +28,53 @@ const pasteHtml = (editor: Editor, html: string) => {
  * @private
  */
 
-const isAbsoluteUrl = function (url: string) {
+const isAbsoluteUrl = (url: string) => {
   return /^https?:\/\/[\w\?\-\/+=.&%@~#]+$/i.test(url);
 };
 
-const isImageUrl = function (url: string) {
-  return isAbsoluteUrl(url) && /.(gif|jpe?g|png)$/.test(url);
+const isImageUrl = (editor: Editor, url: string) => {
+  return isAbsoluteUrl(url) && Arr.exists(Settings.getAllowedImageFileTypes(editor), (type) => Strings.endsWith(url.toLowerCase(), `.${type.toLowerCase()}`));
 };
 
-const createImage = function (editor: Editor, url: string, pasteHtmlFn: typeof pasteHtml) {
-  editor.undoManager.extra(function () {
+const createImage = (editor: Editor, url: string, pasteHtmlFn: typeof pasteHtml) => {
+  editor.undoManager.extra(() => {
     pasteHtmlFn(editor, url);
-  }, function () {
+  }, () => {
     editor.insertContent('<img src="' + url + '">');
   });
 
   return true;
 };
 
-const createLink = function (editor: Editor, url: string, pasteHtmlFn: typeof pasteHtml) {
-  editor.undoManager.extra(function () {
+const createLink = (editor: Editor, url: string, pasteHtmlFn: typeof pasteHtml) => {
+  editor.undoManager.extra(() => {
     pasteHtmlFn(editor, url);
-  }, function () {
+  }, () => {
     editor.execCommand('mceInsertLink', false, url);
   });
 
   return true;
 };
 
-const linkSelection = function (editor: Editor, html: string, pasteHtmlFn: typeof pasteHtml) {
+const linkSelection = (editor: Editor, html: string, pasteHtmlFn: typeof pasteHtml) => {
   return editor.selection.isCollapsed() === false && isAbsoluteUrl(html) ? createLink(editor, html, pasteHtmlFn) : false;
 };
 
-const insertImage = function (editor: Editor, html: string, pasteHtmlFn: typeof pasteHtml) {
-  return isImageUrl(html) ? createImage(editor, html, pasteHtmlFn) : false;
+const insertImage = (editor: Editor, html: string, pasteHtmlFn: typeof pasteHtml) => {
+  return isImageUrl(editor, html) ? createImage(editor, html, pasteHtmlFn) : false;
 };
 
-const smartInsertContent = function (editor: Editor, html: string) {
+const smartInsertContent = (editor: Editor, html: string) => {
   Tools.each([
     linkSelection,
     insertImage,
     pasteHtml
-  ], function (action) {
+  ], (action) => {
     return action(editor, html, pasteHtml) !== true;
   });
 };
 
-const insertContent = function (editor: Editor, html: string, pasteAsText: boolean) {
+const insertContent = (editor: Editor, html: string, pasteAsText: boolean) => {
   if (pasteAsText || Settings.isSmartPasteEnabled(editor) === false) {
     pasteHtml(editor, html);
   } else {

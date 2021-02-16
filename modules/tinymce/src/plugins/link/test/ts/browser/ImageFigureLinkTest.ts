@@ -11,21 +11,21 @@ UnitTest.asynctest('browser.tinymce.plugins.link.ImageFigureLinkTest', (success,
   LinkPlugin();
   SilverTheme();
 
-  TinyLoader.setupLight(function (editor, onSuccess, onFailure) {
+  TinyLoader.setupLight((editor, onSuccess, onFailure) => {
     const api = TinyApis(editor);
     const ui = TinyUi(editor);
 
-    const sLinkTheSelection = function () {
+    const sLinkTheSelection = () => {
       return Logger.t('Link the selection', TestLinkUi.sInsertLink(ui, 'http://google.com'));
     };
 
-    const sUnlinkSelection = function () {
-      return Logger.t('Unlink the selection', Step.sync(function () {
+    const sUnlinkSelection = () => {
+      return Logger.t('Unlink the selection', Step.sync(() => {
         LinkPluginUtils.unlink(editor);
       }));
     };
 
-    const sAssertPresence = function (selector: Record<string, number>) {
+    const sAssertPresence = (selector: Record<string, number>) => {
       return Waiter.sTryUntil('Assert element is present',
         Assertions.sAssertPresence('Detect presence of the element', selector, TinyDom.fromDom(editor.getBody()))
       );

@@ -2,10 +2,22 @@ import { Objects } from '@ephox/boulder';
 import { Cell, Obj, Optional } from '@ephox/katamari';
 import { Compare, EventArgs, SugarElement } from '@ephox/sugar';
 
-import DelayedFunction from '../alien/DelayedFunction';
+import { DelayedFunction } from '../alien/DelayedFunction';
 import * as NativeEvents from '../api/events/NativeEvents';
 import * as SystemEvents from '../api/events/SystemEvents';
 import { GuiEventSettings } from './GuiEvents';
+
+type EventHandler = (event: EventArgs<Event>) => Optional<boolean>;
+
+export interface TouchHistoryData {
+  readonly x: number;
+  readonly y: number;
+  readonly target: SugarElement;
+}
+
+interface Monitor {
+  readonly fireIfReady: (event: EventArgs<Event>, type: string) => Optional<boolean>;
+}
 
 const SIGNIFICANT_MOVE = 5;
 
@@ -13,7 +25,9 @@ const LONGPRESS_DELAY = 400;
 
 const getTouch = (event: EventArgs<TouchEvent>): Optional<Touch> => {
   const raw = event.raw;
-  if (raw.touches === undefined || raw.touches.length !== 1) { return Optional.none(); }
+  if (raw.touches === undefined || raw.touches.length !== 1) {
+    return Optional.none();
+  }
   return Optional.some(raw.touches[0]);
 };
 
@@ -24,13 +38,7 @@ const isFarEnough = (touch: Touch, data: TouchHistoryData): boolean => {
   return distX > SIGNIFICANT_MOVE || distY > SIGNIFICANT_MOVE;
 };
 
-export interface TouchHistoryData {
-  x: number;
-  y: number;
-  target: SugarElement;
-}
-
-const monitor = (settings: GuiEventSettings) => {
+const monitor = (settings: GuiEventSettings): Monitor => {
   /* A tap event is a combination of touchstart and touchend on the same element
    * without a *significant* touchmove in between.
    */
@@ -65,7 +73,9 @@ const monitor = (settings: GuiEventSettings) => {
     longpress.cancel();
     getTouch(event).each((touch) => {
       startData.get().each((data) => {
-        if (isFarEnough(touch, data)) { startData.set(Optional.none()); }
+        if (isFarEnough(touch, data)) {
+          startData.set(Optional.none());
+        }
       });
     });
     return Optional.none();
@@ -86,13 +96,14 @@ const monitor = (settings: GuiEventSettings) => {
     });
   };
 
-  const handlers: Record<string, (event: EventArgs) => Optional<boolean>> = Objects.wrapAll([
+  const handlers: Record<string, EventHandler> = Objects.wrapAll([
     { key: NativeEvents.touchstart(), value: handleTouchstart },
     { key: NativeEvents.touchmove(), value: handleTouchmove },
     { key: NativeEvents.touchend(), value: handleTouchend }
-  ]);
+  ] as Array<{ key: string; value: EventHandler }>);
 
-  const fireIfReady = (event: EventArgs, type: string): Optional<boolean> => Obj.get(handlers, type).bind((handler) => handler(event));
+  const fireIfReady = (event: EventArgs<Event>, type: string): Optional<boolean> =>
+    Obj.get(handlers, type).bind((handler) => handler(event));
 
   return {
     fireIfReady

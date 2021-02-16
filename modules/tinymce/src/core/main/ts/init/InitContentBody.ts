@@ -11,7 +11,7 @@ import Annotator from '../api/Annotator';
 import DOMUtils from '../api/dom/DOMUtils';
 import EditorSelection from '../api/dom/Selection';
 import DomSerializer, { DomSerializerSettings } from '../api/dom/Serializer';
-import { StyleSheetLoader } from '../api/dom/StyleSheetLoader';
+import StyleSheetLoader from '../api/dom/StyleSheetLoader';
 import Editor from '../api/Editor';
 import EditorUpload from '../api/EditorUpload';
 import Env from '../api/Env';
@@ -23,6 +23,7 @@ import Schema from '../api/html/Schema';
 import * as Settings from '../api/Settings';
 import UndoManager from '../api/UndoManager';
 import Delay from '../api/util/Delay';
+import Promise from '../api/util/Promise';
 import Tools from '../api/util/Tools';
 import * as CaretFinder from '../caret/CaretFinder';
 import CaretPosition from '../caret/CaretPosition';
@@ -70,6 +71,7 @@ const mkParserSettings = (editor: Editor): DomParserSettings => {
   return removeUndefined<DomParserSettings>({
     allow_conditional_comments: settings.allow_conditional_comments,
     allow_html_data_urls: settings.allow_html_data_urls,
+    allow_svg_data_urls: settings.allow_svg_data_urls,
     allow_html_in_named_anchor: settings.allow_html_in_named_anchor,
     allow_script_urls: settings.allow_script_urls,
     allow_unsafe_link_target: settings.allow_unsafe_link_target,
@@ -134,11 +136,11 @@ const mkSerializerSettings = (editor: Editor): DomSerializerSettings => {
   };
 };
 
-const createParser = function (editor: Editor): DomParser {
+const createParser = (editor: Editor): DomParser => {
   const parser = DomParser(mkParserSettings(editor), editor.schema);
 
   // Convert src and href into data-mce-src, data-mce-href and data-mce-style
-  parser.addAttributeFilter('src,href,style,tabindex', function (nodes, name) {
+  parser.addAttributeFilter('src,href,style,tabindex', (nodes, name) => {
     let i = nodes.length, node: AstNode, value: string;
     const dom = editor.dom;
     const internalName = 'data-mce-' + name;
@@ -174,7 +176,7 @@ const createParser = function (editor: Editor): DomParser {
   });
 
   // Keep scripts from executing
-  parser.addNodeFilter('script', function (nodes: AstNode[]) {
+  parser.addNodeFilter('script', (nodes: AstNode[]) => {
     let i = nodes.length;
 
     while (i--) {
@@ -187,7 +189,7 @@ const createParser = function (editor: Editor): DomParser {
   });
 
   if (editor.settings.preserve_cdata) {
-    parser.addNodeFilter('#cdata', function (nodes: AstNode[]) {
+    parser.addNodeFilter('#cdata', (nodes: AstNode[]) => {
       let i = nodes.length;
 
       while (i--) {
@@ -199,7 +201,7 @@ const createParser = function (editor: Editor): DomParser {
     });
   }
 
-  parser.addNodeFilter('p,h1,h2,h3,h4,h5,h6,div', function (nodes: AstNode[]) {
+  parser.addNodeFilter('p,h1,h2,h3,h4,h5,h6,div', (nodes: AstNode[]) => {
     let i = nodes.length;
     const nonEmptyElements = editor.schema.getNonEmptyElements();
 
@@ -215,9 +217,9 @@ const createParser = function (editor: Editor): DomParser {
   return parser;
 };
 
-const autoFocus = function (editor: Editor) {
+const autoFocus = (editor: Editor) => {
   if (editor.settings.auto_focus) {
-    Delay.setEditorTimeout(editor, function () {
+    Delay.setEditorTimeout(editor, () => {
       let focusEditor;
 
       if (editor.settings.auto_focus === true) {
@@ -254,7 +256,7 @@ const moveSelectionToFirstCaretPosition = (editor: Editor) => {
   }
 };
 
-const initEditor = function (editor: Editor) {
+const initEditor = (editor: Editor) => {
   editor.bindPendingEventDelegates();
   editor.initialized = true;
   Events.fireInit(editor);
@@ -268,16 +270,43 @@ const initEditor = function (editor: Editor) {
 const getStyleSheetLoader = (editor: Editor): StyleSheetLoader =>
   editor.inline ? editor.ui.styleSheetLoader : editor.dom.styleSheetLoader;
 
+const makeStylesheetLoadingPromises = (editor: Editor, css: string[], framedFonts: string[]): Promise<unknown>[] => {
+  const promises = [
+    new Promise((resolve, reject) => getStyleSheetLoader(editor).loadAll(css, resolve, reject)),
+  ];
+
+  if (editor.inline) {
+    return promises;
+  } else {
+    return promises.concat([
+      new Promise((resolve, reject) => editor.ui.styleSheetLoader.loadAll(framedFonts, resolve, reject)),
+    ]);
+  }
+};
+
 const loadContentCss = (editor: Editor, css: string[]) => {
   const styleSheetLoader = getStyleSheetLoader(editor);
+  const fontCss = Settings.getFontCss(editor);
+
+  const removeCss = () => {
+    styleSheetLoader.unloadAll(css);
+
+    if (!editor.inline) {
+      editor.ui.styleSheetLoader.unloadAll(fontCss);
+    }
+  };
 
   const loaded = () => {
-    editor.on('remove', () => styleSheetLoader.unloadAll(css));
-    initEditor(editor);
+    if (editor.removed) {
+      removeCss();
+    } else {
+      editor.on('remove', removeCss);
+      initEditor(editor);
+    }
   };
 
   // Load all stylesheets
-  styleSheetLoader.loadAll(css, loaded, loaded);
+  Promise.all(makeStylesheetLoadingPromises(editor, css, fontCss)).then(loaded).catch(loaded);
 };
 
 const preInit = (editor: Editor, rtcMode: boolean) => {
@@ -298,16 +327,16 @@ const preInit = (editor: Editor, rtcMode: boolean) => {
   }
 
   if (settings.protect) {
-    editor.on('BeforeSetContent', function (e) {
-      Tools.each(settings.protect, function (pattern) {
-        e.content = e.content.replace(pattern, function (str) {
+    editor.on('BeforeSetContent', (e) => {
+      Tools.each(settings.protect, (pattern) => {
+        e.content = e.content.replace(pattern, (str) => {
           return '<!--mce:protected ' + escape(str) + '-->';
         });
       });
     });
   }
 
-  editor.on('SetContent', function () {
+  editor.on('SetContent', () => {
     editor.addVisual(editor.getBody());
   });
 
@@ -318,7 +347,7 @@ const preInit = (editor: Editor, rtcMode: boolean) => {
 
   editor.startContent = editor.getContent({ format: 'raw' });
 
-  editor.on('compositionstart compositionend', function (e) {
+  editor.on('compositionstart compositionend', (e) => {
     editor.composing = e.type === 'compositionstart';
   });
 
@@ -326,7 +355,7 @@ const preInit = (editor: Editor, rtcMode: boolean) => {
   if (editor.contentStyles.length > 0) {
     let contentCssText = '';
 
-    Tools.each(editor.contentStyles, function (style) {
+    Tools.each(editor.contentStyles, (style) => {
       contentCssText += style + '\r\n';
     });
 
@@ -341,7 +370,7 @@ const preInit = (editor: Editor, rtcMode: boolean) => {
   }
 };
 
-const initContentBody = function (editor: Editor, skipWrite?: boolean) {
+const initContentBody = (editor: Editor, skipWrite?: boolean) => {
   const settings = editor.settings;
   const targetElm = editor.getElement();
   let doc = editor.getDoc();
@@ -387,6 +416,8 @@ const initContentBody = function (editor: Editor, skipWrite?: boolean) {
   editor.schema = Schema(settings);
   editor.dom = DOMUtils(doc, {
     keep_values: true,
+    // Note: Don't bind here, as the binding is handled via the `url_converter_scope`
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     url_converter: editor.convertURL,
     url_converter_scope: editor,
     hex_colors: settings.force_hex_style_colors,
@@ -396,7 +427,7 @@ const initContentBody = function (editor: Editor, skipWrite?: boolean) {
     schema: editor.schema,
     contentCssCors: Settings.shouldUseContentCssCors(editor),
     referrerPolicy: Settings.getReferrerPolicy(editor),
-    onSetAttrib(e) {
+    onSetAttrib: (e) => {
       editor.fire('SetAttrib', e);
     }
   });
@@ -431,6 +462,9 @@ const initContentBody = function (editor: Editor, skipWrite?: boolean) {
     loadingRtc.then((rtcMode) => {
       editor.setProgressState(false);
       preInit(editor, rtcMode);
+    }, (err) => {
+      editor.notificationManager.open({ type: 'error', text: String(err) });
+      preInit(editor, true);
     });
   });
 };

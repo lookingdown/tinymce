@@ -16,16 +16,16 @@ interface Observable<T> {
 }
 
 /**
- * This mixin will add event binding logic to classes.
+ * This mixin adds event binding logic to classes. Adapts the EventDispatcher class.
  *
  * @mixin tinymce.util.Observable
  */
 
-const getEventDispatcher = function (obj): EventDispatcher<any> {
+const getEventDispatcher = (obj): EventDispatcher<any> => {
   if (!obj._eventDispatcher) {
     obj._eventDispatcher = new EventDispatcher({
       scope: obj,
-      toggleEvent(name, state) {
+      toggleEvent: (name, state) => {
         if (EventDispatcher.isNative(name) && obj.toggleNativeEvent) {
           obj.toggleNativeEvent(name, state);
         }

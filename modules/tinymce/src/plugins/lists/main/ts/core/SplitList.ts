@@ -12,9 +12,9 @@ import { createTextBlock } from './TextBlock';
 
 const DOM = DOMUtils.DOM;
 
-const splitList = function (editor, ul, li) {
-  const removeAndKeepBookmarks = function (targetNode) {
-    Tools.each(bookmarks, function (node) {
+const splitList = (editor, ul, li) => {
+  const removeAndKeepBookmarks = (targetNode) => {
+    Tools.each(bookmarks, (node) => {
       targetNode.parentNode.insertBefore(node, li.parentNode);
     });
 

@@ -15,7 +15,7 @@ $(
   '<p><img src="' + imgSrc + '" style="width: 20%">' +
   '<p><img src="' + imgSrc + '">' +
   '<p><img src="http://moxiecode.cachefly.net/tinymce/v9/images/logo.png">' +
-  '</textarea>',
+  '</textarea>'
 ).appendTo('#ephox-ui');
 
 tinymce.init({
@@ -43,11 +43,11 @@ tinymce.init({
   // imagetools_credentials_hosts: ['localhost'],
   // rtl_ui: true,
   toolbar: 'editimage undo redo | styleselect | alignleft aligncenter alignright alignjustify | link image | media | emoticons',
-  images_upload_handler(data, success, failure, progress) {
+  images_upload_handler: (data, success, failure, progress) => {
     console.log('blob upload [started]', 'id:', data.id(), 'filename:', data.filename());
     progress(0);
 
-    Delay.setTimeout(function () {
+    Delay.setTimeout(() => {
       console.log('blob upload [ended]', data.id());
       success(data.id() + '.png');
       progress(100);
@@ -55,26 +55,26 @@ tinymce.init({
   }
 });
 
-function send() {
-  tinymce.activeEditor.uploadImages(function () {
+const send = () => {
+  tinymce.activeEditor.uploadImages(() => {
     console.log('saving:', tinymce.activeEditor.getContent());
   });
-}
+};
 
-function upload() {
+const upload = () => {
   console.log('upload [started]');
 
-  tinymce.activeEditor.uploadImages(function (success) {
+  tinymce.activeEditor.uploadImages((success) => {
     console.log('upload [ended]', success);
   });
-}
+};
 
-function dump() {
+const dump = () => {
   const content = tinymce.activeEditor.getContent();
 
   $('#view').html(content);
   console.log(content);
-}
+};
 
 $('<button>send()</button>').appendTo('#ephox-ui').on('click', send);
 $('<button>upload()</button>').appendTo('#ephox-ui').on('click', upload);

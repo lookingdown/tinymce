@@ -54,11 +54,12 @@ const languageLoadError = (editor: Editor, url: string, name: string) => {
 
 const pluginInitError = (editor: Editor, name: string, err) => {
   const message = I18n.translate([ 'Failed to initialize plugin: {0}', name ]);
+  fireError(editor, 'PluginLoadError', { message });
   initError(message, err);
   displayError(editor, message);
 };
 
-const initError = function (message: string, ...x: any[]) {
+const initError = (message: string, ...x: any[]) => {
   const console = window.console;
   if (console) { // Skip test env
     if (console.error) {

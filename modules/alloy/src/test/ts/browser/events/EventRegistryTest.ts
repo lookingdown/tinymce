@@ -4,10 +4,10 @@ import { Arr, Fun, Result } from '@ephox/katamari';
 import { Attribute, Compare, Html, Insert, SelectorFilter, SugarElement, Truncate } from '@ephox/sugar';
 
 import * as DescribedHandler from 'ephox/alloy/events/DescribedHandler';
-import EventRegistry, { ElementAndHandler } from 'ephox/alloy/events/EventRegistry';
+import { ElementAndHandler, EventRegistry } from 'ephox/alloy/events/EventRegistry';
 import * as Tagger from 'ephox/alloy/registry/Tagger';
 
-type ExpectedType = { id?: string; handler: string; target?: string; purpose?: string };
+interface ExpectedType { id?: string; handler: string; target?: string; purpose?: string }
 
 UnitTest.asynctest('EventRegistryTest', (success, failure) => {
   const body = SugarElement.fromDom(document.body);
@@ -63,7 +63,13 @@ UnitTest.asynctest('EventRegistryTest', (success, failure) => {
       purpose: f.descHandler.purpose,
       id: f.id
     })).sort((f, g) => {
-      if (f.id < g.id) { return -1; } else if (f.id > g.id) { return +1; } else { return 0; }
+      if (f.id < g.id) {
+        return -1;
+      } else if (f.id > g.id) {
+        return +1;
+      } else {
+        return 0;
+      }
     });
 
     Assertions.assertEq(() => 'filter(' + type + ') = ' + JSON.stringify(expected), expected, raw);
@@ -149,5 +155,5 @@ UnitTest.asynctest('EventRegistryTest', (success, failure) => {
       { handler: 'event.only(extra-args)', target: 'comp-1' },
       'event.only', 'comp-5'
     )
-  ], () => { success(); }, failure);
+  ], success, failure);
 });

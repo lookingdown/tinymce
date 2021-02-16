@@ -11,7 +11,7 @@ import Editor from 'tinymce/core/api/Editor';
 
 import * as Util from '../core/Util';
 
-const createContainer = function () {
+const createContainer = () => {
   const container = SugarElement.fromTag('div');
 
   Css.setAll(container, {
@@ -28,11 +28,11 @@ const createContainer = function () {
   return container;
 };
 
-const get = function (editor: Editor, _container?) {
-  return editor.inline ? ResizeWire.body(Util.getBody(editor), createContainer()) : ResizeWire.only(SugarElement.fromDom(editor.getDoc()));
+const get = (editor: Editor, isResizable: (elm: SugarElement<Element>) => boolean) => {
+  return editor.inline ? ResizeWire.body(Util.getBody(editor), createContainer(), isResizable) : ResizeWire.only(SugarElement.fromDom(editor.getDoc()), isResizable);
 };
 
-const remove = function (editor: Editor, wire) {
+const remove = (editor: Editor, wire: ResizeWire) => {
   if (editor.inline) {
     Remove.remove(wire.parent());
   }

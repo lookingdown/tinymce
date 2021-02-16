@@ -9,10 +9,11 @@ export interface ContractCondition {
   validate: (value: any, key: string) => boolean;
 }
 
+type IdentityFn = <T>(obj: T) => T;
 type HandleFn = (required: string[], keys: string[]) => void;
 
 // Ensure that the object has all required fields. They must be functions.
-const base = function (handleUnsupported: HandleFn, required: string[]) {
+const base = (handleUnsupported: HandleFn, required: string[]) => {
   return baseWith(handleUnsupported, required, {
     validate: Type.isFunction,
     label: 'function'
@@ -20,7 +21,7 @@ const base = function (handleUnsupported: HandleFn, required: string[]) {
 };
 
 // Ensure that the object has all required fields. They must satisy predicates.
-const baseWith = function (handleUnsupported: HandleFn, required: string[], pred: ContractCondition) {
+const baseWith = (handleUnsupported: HandleFn, required: string[], pred: ContractCondition): IdentityFn => {
   if (required.length === 0) {
     throw new Error('You must specify at least one required field.');
   }
@@ -29,11 +30,11 @@ const baseWith = function (handleUnsupported: HandleFn, required: string[], pred
 
   BagUtils.checkDupes(required);
 
-  return function <T> (obj: T) {
+  return <T>(obj: T) => {
     const keys: string[] = Obj.keys(obj);
 
     // Ensure all required keys are present.
-    const allReqd = Arr.forall(required, function (req) {
+    const allReqd = Arr.forall(required, (req) => {
       return Arr.contains(keys, req);
     });
 
@@ -43,7 +44,7 @@ const baseWith = function (handleUnsupported: HandleFn, required: string[], pred
 
     handleUnsupported(required, keys);
 
-    const invalidKeys = Arr.filter(required, function (key) {
+    const invalidKeys = Arr.filter(required, (key) => {
       return !pred.validate(obj[key], key);
     });
 
@@ -55,8 +56,8 @@ const baseWith = function (handleUnsupported: HandleFn, required: string[], pred
   };
 };
 
-const handleExact = function (required: string[], keys: string[]) {
-  const unsupported = Arr.filter(keys, function (key) {
+const handleExact = (required: string[], keys: string[]) => {
+  const unsupported = Arr.filter(keys, (key) => {
     return !Arr.contains(required, key);
   });
 
@@ -67,6 +68,6 @@ const handleExact = function (required: string[], keys: string[]) {
 
 const allowExtra = Fun.noop;
 
-export const exactly = (required: string[]) => base(handleExact, required);
-export const ensure = (required: string[]) => base(allowExtra, required);
-export const ensureWith = (required: string[], condition: ContractCondition) => baseWith(allowExtra, required, condition);
+export const exactly = (required: string[]): IdentityFn => base(handleExact, required);
+export const ensure = (required: string[]): IdentityFn => base(allowExtra, required);
+export const ensureWith = (required: string[], condition: ContractCondition): IdentityFn => baseWith(allowExtra, required, condition);

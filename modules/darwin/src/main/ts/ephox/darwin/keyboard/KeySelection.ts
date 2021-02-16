@@ -7,11 +7,11 @@ import { Response } from '../selection/Response';
 import * as Util from '../selection/Util';
 
 // Based on a start and finish, select the appropriate box of cells
-const sync = function (container: SugarElement, isRoot: (element: SugarElement) => boolean, start: SugarElement, soffset: number, finish: SugarElement,
-                       foffset: number, selectRange: (container: SugarElement, boxes: SugarElement[], start: SugarElement, finish: SugarElement) => void) {
+const sync = (container: SugarElement, isRoot: (element: SugarElement) => boolean, start: SugarElement, soffset: number, finish: SugarElement,
+              foffset: number, selectRange: (container: SugarElement, boxes: SugarElement[], start: SugarElement, finish: SugarElement) => void): Optional<Response> => {
   if (!(Compare.eq(start, finish) && soffset === foffset)) {
-    return SelectorFind.closest(start, 'td,th', isRoot).bind(function (s) {
-      return SelectorFind.closest(finish, 'td,th', isRoot).bind(function (f) {
+    return SelectorFind.closest(start, 'td,th', isRoot).bind((s) => {
+      return SelectorFind.closest(finish, 'td,th', isRoot).bind((f) => {
         return detect(container, isRoot, s, f, selectRange);
       });
     });
@@ -21,10 +21,10 @@ const sync = function (container: SugarElement, isRoot: (element: SugarElement) 
 };
 
 // If the cells are different, and there is a rectangle to connect them, select the cells.
-const detect = function (container: SugarElement, isRoot: (element: SugarElement) => boolean, start: SugarElement, finish: SugarElement,
-                         selectRange: (container: SugarElement, boxes: SugarElement[], start: SugarElement, finish: SugarElement) => void) {
+const detect = (container: SugarElement, isRoot: (element: SugarElement) => boolean, start: SugarElement, finish: SugarElement,
+                selectRange: (container: SugarElement, boxes: SugarElement[], start: SugarElement, finish: SugarElement) => void): Optional<Response> => {
   if (!Compare.eq(start, finish)) {
-    return CellSelection.identify(start, finish, isRoot).bind(function (cellSel) {
+    return CellSelection.identify(start, finish, isRoot).bind((cellSel) => {
       const boxes = cellSel.boxes.getOr([]);
       if (boxes.length > 0) {
         selectRange(container, boxes, cellSel.start, cellSel.finish);
@@ -41,8 +41,8 @@ const detect = function (container: SugarElement, isRoot: (element: SugarElement
   }
 };
 
-const update = function (rows: number, columns: number, container: SugarElement, selected: SugarElement[], annotations: SelectionAnnotation) {
-  const updateSelection = function (newSels: IdentifiedExt) {
+const update = (rows: number, columns: number, container: SugarElement, selected: SugarElement[], annotations: SelectionAnnotation): Optional<SugarElement[]> => {
+  const updateSelection = (newSels: IdentifiedExt) => {
     annotations.clearBeforeUpdate(container);
     annotations.selectRange(container, newSels.boxes, newSels.start, newSels.finish);
     return newSels.boxes;

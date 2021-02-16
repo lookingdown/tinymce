@@ -6,7 +6,7 @@ import * as Walker from 'ephox/phoenix/gather/Walker';
 import { Walkers } from 'ephox/phoenix/gather/Walkers';
 import * as Finder from 'ephox/phoenix/test/Finder';
 
-UnitTest.test('WalkerTest', function () {
+UnitTest.test('WalkerTest', () => {
   const universe = TestUniverse(
     Gene('a', 'node', [
       Gene('b', 'node', []),
@@ -17,12 +17,12 @@ UnitTest.test('WalkerTest', function () {
     ])
   );
 
-  const checkNone = function (id: string, traverse: Transition, direction: Direction) {
+  const checkNone = (id: string, traverse: Transition, direction: Direction) => {
     const item = Finder.get(universe, id);
     KAssert.eqNone('eq', traverse(universe, item, direction));
   };
 
-  const check = function (expected: string, id: string, traverse: Transition, direction: Direction) {
+  const check = (expected: string, id: string, traverse: Transition, direction: Direction) => {
     const item = Finder.get(universe, id);
     const actual = traverse(universe, item, direction).map((x) => x.item.id);
     KAssert.eqSome('eq', expected, actual);

@@ -76,17 +76,21 @@ export default (): void => {
       stepSize: 40,
       snapStart: 35,
       snapToGrid: true,
-      onDragStart(_, thumb) { Toggling.on(thumb); },
-      onDragEnd(_, thumb) { Toggling.off(thumb); },
+      onDragStart: (_, thumb) => {
+        Toggling.on(thumb);
+      },
+      onDragEnd: (_, thumb) => {
+        Toggling.off(thumb);
+      },
 
-      onChange(_slider, thumb, value: SliderValue) {
+      onChange: (_slider, thumb, value: SliderValue) => {
         if (isValueY(value)) {
           Replacing.set(thumb, [
             GuiFactory.text(value.y.toString())
           ]);
         }
       },
-      onInit(_slider, thumb, _spectrum, value: SliderValue) {
+      onInit: (_slider, thumb, _spectrum, value: SliderValue) => {
         if (isValueY(value)) {
           Replacing.set(thumb, [
             GuiFactory.text(value.y.toString())
@@ -126,17 +130,26 @@ export default (): void => {
     })
   );
 
-  function isValueX(v: SliderValue): v is SliderValueX {
+  const isValueX = (v: SliderValue): v is SliderValueX => {
     return Type.isFunction((v as SliderValueX).x);
-  }
+  };
 
-  function isValueY(v: SliderValue): v is SliderValueY {
+  const isValueY = (v: SliderValue): v is SliderValueY => {
     return Type.isFunction((v as SliderValueY).y);
-  }
+  };
+
+  const getColor = (hue: number) => {
+    if (hue < 0) {
+      return 'black';
+    } else if (hue > 360) {
+      return 'white';
+    } else {
+      return 'hsl(' + hue + ', 100%, 50%)';
+    }
+  };
 
   const setColor = (thumb: AlloyComponent, hue: number) => {
-    const color = (hue < 0) ? 'black' : (hue > 360) ? 'white' : 'hsl(' + hue + ', 100%, 50%)';
-    Css.set(thumb.element, 'background', color);
+    Css.set(thumb.element, 'background', getColor(hue));
   };
 
   HtmlDisplay.section(
@@ -156,13 +169,13 @@ export default (): void => {
       },
       stepSize: 10,
 
-      onChange(_slider, thumb, value: SliderValue) {
+      onChange: (_slider, thumb, value: SliderValue) => {
         if (isValueX(value)) {
           setColor(thumb, value.x);
         }
       },
 
-      onInit(_slider, thumb, _spectrum, value: SliderValue) {
+      onInit: (_slider, thumb, _spectrum, value: SliderValue) => {
         if (isValueX(value)) {
           setColor(thumb, value.x);
         }
@@ -234,6 +247,8 @@ export default (): void => {
   const isTouch = platform.deviceType.isTouch();
 
   DomEvent.bind(body, 'click', () => {
-    if (!isTouch) { Keying.focusIn(slider1); }
+    if (!isTouch) {
+      Keying.focusIn(slider1);
+    }
   });
 };

@@ -12,7 +12,7 @@ import * as Styles from '../../style/Styles';
 import * as Rectangles from '../../util/Rectangles';
 import * as ResumeEditing from './ResumeEditing';
 
-export default function (win, frame) {
+export default (win, frame) => {
   // NOTE: This may be required for android also.
 
   /*
@@ -28,7 +28,7 @@ export default function (win, frame) {
 
   Insert.append(SugarElement.fromDom(doc.documentElement), container);
 
-  const onTouch = DomEvent.bind(container, 'touchstart', function (event) {
+  const onTouch = DomEvent.bind(container, 'touchstart', (event) => {
     // We preventDefault the event incase the touch is between 2 letters creating a new collapsed selection,
     // in this very specific case we just want to turn the fake cursor into a real cursor.  Remember that
     // touchstart may be used to dimiss popups too, so don't kill it completely, just prevent its
@@ -38,7 +38,7 @@ export default function (win, frame) {
     clear();
   });
 
-  const make = function (rectangle: RawRect) {
+  const make = (rectangle: RawRect) => {
     const span = SugarElement.fromTag('span');
     Classes.add(span, [ Styles.resolve('layer-editor'), Styles.resolve('unfocused-selection') ]);
     Css.setAll(span, {
@@ -50,23 +50,23 @@ export default function (win, frame) {
     return span;
   };
 
-  const update = function () {
+  const update = () => {
     clear();
     const rectangles = Rectangles.getRectangles(win);
     const spans = Arr.map(rectangles, make);
     InsertAll.append(container, spans);
   };
 
-  const clear = function () {
+  const clear = () => {
     Remove.empty(container);
   };
 
-  const destroy = function () {
+  const destroy = () => {
     onTouch.unbind();
     Remove.remove(container);
   };
 
-  const isActive = function () {
+  const isActive = () => {
     return Traverse.children(container).length > 0;
   };
 
@@ -76,4 +76,4 @@ export default function (win, frame) {
     destroy,
     clear
   };
-}
+};

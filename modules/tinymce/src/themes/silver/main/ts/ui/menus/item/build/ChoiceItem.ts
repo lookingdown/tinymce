@@ -7,7 +7,7 @@
 
 import { Disabling, Toggling } from '@ephox/alloy';
 import { Menu, Toolbar } from '@ephox/bridge';
-import { Merger, Optional } from '@ephox/katamari';
+import { Fun, Merger, Optional } from '@ephox/katamari';
 import { UiFactoryBackstageProviders } from 'tinymce/themes/silver/backstage/Backstage';
 import * as ItemClasses from '../ItemClasses';
 import ItemResponse from '../ItemResponse';
@@ -35,7 +35,7 @@ const renderChoiceItem = (
 
   const structure = renderItemStructure({
     presets,
-    textContent:  useText ? spec.text : Optional.none(),
+    textContent: useText ? spec.text : Optional.none(),
     htmlContent: Optional.none(),
     ariaLabel: spec.text,
     iconContent: spec.icon,
@@ -57,7 +57,7 @@ const renderChoiceItem = (
       onAction: (_api) => onItemValueHandler(spec.value),
       onSetup: (api) => {
         api.setActive(isSelected);
-        return () => {};
+        return Fun.noop;
       },
       triggersSubmenu: false,
       itemBehaviours: [ ]

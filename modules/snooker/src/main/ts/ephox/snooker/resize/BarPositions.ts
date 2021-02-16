@@ -27,51 +27,53 @@ const colInfo = (col: number, x: number): ColInfo => ({
   x
 });
 
-const rtlEdge = function (cell: SugarElement) {
+const rtlEdge = (cell: SugarElement): number => {
   const pos = SugarLocation.absolute(cell);
   return pos.left + Width.getOuter(cell);
 };
 
-const ltrEdge = function (cell: SugarElement) {
+const ltrEdge = (cell: SugarElement): number => {
   return SugarLocation.absolute(cell).left;
 };
 
-const getLeftEdge = function (index: number, cell: SugarElement) {
+const getLeftEdge = (index: number, cell: SugarElement): ColInfo => {
   return colInfo(index, ltrEdge(cell));
 };
 
-const getRightEdge = function (index: number, cell: SugarElement) {
+const getRightEdge = (index: number, cell: SugarElement): ColInfo => {
   return colInfo(index, rtlEdge(cell));
 };
 
-const getTop = function (cell: SugarElement) {
+const getTop = (cell: SugarElement): number => {
   return SugarLocation.absolute(cell).top;
 };
 
-const getTopEdge = function (index: number, cell: SugarElement) {
+const getTopEdge = (index: number, cell: SugarElement): RowInfo => {
   return rowInfo(index, getTop(cell));
 };
 
-const getBottomEdge = function (index: number, cell: SugarElement) {
+const getBottomEdge = (index: number, cell: SugarElement): RowInfo => {
   return rowInfo(index, getTop(cell) + Height.getOuter(cell));
 };
 
-const findPositions = function <T> (getInnerEdge: (idx: number, ele: SugarElement) => T, getOuterEdge: (idx: number, ele: SugarElement) => T, array: Optional<SugarElement>[]) {
-  if (array.length === 0 ) { return []; }
-  const lines = Arr.map(array.slice(1), function (cellOption, index) {
-    return cellOption.map(function (cell) {
+const findPositions = <T> (getInnerEdge: (idx: number, ele: SugarElement) => T, getOuterEdge: (idx: number, ele: SugarElement) => T, array: Optional<SugarElement>[]): Optional<T>[] => {
+  if (array.length === 0 ) {
+    return [];
+  }
+  const lines = Arr.map(array.slice(1), (cellOption, index) => {
+    return cellOption.map((cell) => {
       return getInnerEdge(index, cell);
     });
   });
 
-  const lastLine = array[array.length - 1].map(function (cell) {
+  const lastLine = array[array.length - 1].map((cell) => {
     return getOuterEdge(array.length - 1, cell);
   });
 
   return lines.concat([ lastLine ]);
 };
 
-const negate = function (step: number) {
+const negate = (step: number): number => {
   return -step;
 };
 

@@ -16,10 +16,10 @@ export interface ColorSwatchDialogData {
   colorpicker: string;
 }
 
-const getCurrentColor = function (editor: Editor, format) {
+const getCurrentColor = (editor: Editor, format) => {
   let color;
 
-  editor.dom.getParents(editor.selection.getStart(), function (elm) {
+  editor.dom.getParents(editor.selection.getStart(), (elm) => {
     let value;
 
     if ((value = elm.style[format === 'forecolor' ? 'color' : 'background-color'])) {
@@ -30,16 +30,16 @@ const getCurrentColor = function (editor: Editor, format) {
   return color;
 };
 
-const applyFormat = function (editor: Editor, format, value) {
-  editor.undoManager.transact(function () {
+const applyFormat = (editor: Editor, format, value) => {
+  editor.undoManager.transact(() => {
     editor.focus();
     editor.formatter.apply(format, { value });
     editor.nodeChanged();
   });
 };
 
-const removeFormat = function (editor: Editor, format) {
-  editor.undoManager.transact(function () {
+const removeFormat = (editor: Editor, format) => {
+  editor.undoManager.transact(() => {
     editor.focus();
     editor.formatter.remove(format, { value: null }, null, true);
     editor.nodeChanged();
@@ -47,18 +47,18 @@ const removeFormat = function (editor: Editor, format) {
 };
 
 const registerCommands = (editor: Editor) => {
-  editor.addCommand('mceApplyTextcolor', function (format, value) {
+  editor.addCommand('mceApplyTextcolor', (format, value) => {
     applyFormat(editor, format, value);
   });
 
-  editor.addCommand('mceRemoveTextcolor', function (format) {
+  editor.addCommand('mceRemoveTextcolor', (format) => {
     removeFormat(editor, format);
   });
 };
 
-const calcCols = (colors) => Math.max(5, Math.ceil(Math.sqrt(colors)));
+const calcCols = (colors: number) => Math.max(5, Math.ceil(Math.sqrt(colors)));
 
-const getColorCols = function (editor: Editor) {
+const getColorCols = (editor: Editor) => {
   const colors = Settings.getColors(editor);
   const defaultCols = calcCols(colors.length);
   return Settings.getColorCols(editor, defaultCols);
@@ -84,7 +84,7 @@ const getAdditionalColors = (hasCustom: boolean): Menu.ChoiceMenuItemSpec[] => {
   ] : [ remove ];
 };
 
-const applyColor = function (editor: Editor, format, value, onChoice: (v: string) => void) {
+const applyColor = (editor: Editor, format, value, onChoice: (v: string) => void) => {
   if (value === 'custom') {
     const dialog = colorPickerDialog(editor);
     dialog((colorOpt) => {
@@ -137,7 +137,7 @@ const registerTextColorButton = (editor: Editor, name: string, format: string, t
     onAction: (_splitButtonApi) => {
       // do something with last color
       if (lastColor.get() !== null) {
-        applyColor(editor, format, lastColor.get(), () => { });
+        applyColor(editor, format, lastColor.get(), Fun.noop);
       }
     },
     onItemAction: (_splitButtonApi, value) => {
@@ -163,7 +163,9 @@ const registerTextColorButton = (editor: Editor, name: string, format: string, t
 
       editor.on('TextColorChange', handler);
 
-      return () => { editor.off('TextColorChange', handler); };
+      return () => {
+        editor.off('TextColorChange', handler);
+      };
     }
   });
 };
@@ -235,7 +237,7 @@ const colorPickerDialog = (editor: Editor) => (callback, value: string) => {
     initialData,
     onAction,
     onSubmit: submit,
-    onClose: () => { },
+    onClose: Fun.noop,
     onCancel: () => {
       callback(Optional.none());
     }

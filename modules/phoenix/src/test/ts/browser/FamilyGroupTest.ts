@@ -5,16 +5,16 @@ import { SugarElement, SugarText } from '@ephox/sugar';
 import * as Family from 'ephox/phoenix/api/general/Family';
 import { TypedItem } from 'ephox/phoenix/api/Main';
 
-UnitTest.test('FamilyGroupTest', function () {
+UnitTest.test('FamilyGroupTest', () => {
   const universe = DomUniverse();
-  const toStr = function (subject: TypedItem<SugarElement, Document>) {
-    return subject.fold(function () {
+  const toStr = (subject: TypedItem<SugarElement, Document>) => {
+    return subject.fold(() => {
       return '|';
-    }, function () {
+    }, () => {
       return '/';
-    }, function (text) {
+    }, (text) => {
       return '"' + SugarText.get(text) + '"';
-    }, function (_text) {
+    }, (_text) => {
       return '\\';
     });
   };
@@ -22,9 +22,9 @@ UnitTest.test('FamilyGroupTest', function () {
   // Family.group is used to break a list of elements in a list of list of elements, where each sublist
   // is a section that is bounded by blocks.
 
-  const check = function (expected: string[][], input: SugarElement[]) {
+  const check = (expected: string[][], input: SugarElement[]) => {
     const rawActual = Family.group(universe, input, Fun.never as (e: SugarElement) => boolean);
-    const actual = Arr.map(rawActual, function (a) {
+    const actual = Arr.map(rawActual, (a) => {
       return Arr.map(a, toStr);
     });
     assert.eq(expected, actual);

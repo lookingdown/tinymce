@@ -17,6 +17,7 @@ import { NodeChange } from '../NodeChange';
 import SelectionOverrides from '../SelectionOverrides';
 import { UndoManager } from '../undo/UndoManagerTypes';
 import Quirks from '../util/Quirks';
+import * as VisualAids from '../view/VisualAids';
 import AddOnManager from './AddOnManager';
 import Annotator from './Annotator';
 import DomQuery, { DomQueryConstructor } from './dom/DomQuery';
@@ -41,12 +42,12 @@ import { EditorSettings, RawEditorSettings } from './SettingsTypes';
 import Shortcuts from './Shortcuts';
 import { Theme } from './ThemeManager';
 import { registry } from './ui/Registry';
+import { EditorUi } from './ui/Ui';
 import EventDispatcher, { NativeEventMap } from './util/EventDispatcher';
 import I18n, { TranslatedString, Untranslated } from './util/I18n';
 import Tools from './util/Tools';
 import URI from './util/URI';
 import WindowManager from './WindowManager';
-import { EditorUi } from './ui/Ui';
 
 /**
  * This class contains the core logic for a TinyMCE editor.
@@ -329,7 +330,10 @@ class Editor implements EditorObservable {
       registry: registry(),
       styleSheetLoader: undefined,
       show: Fun.noop,
-      hide: Fun.noop
+      hide: Fun.noop,
+      enable: Fun.noop,
+      disable: Fun.noop,
+      isDisabled: Fun.never
     };
 
     const self = this;
@@ -447,7 +451,7 @@ class Editor implements EditorObservable {
   /**
    * Checks that the plugin is in the editor configuration and can optionally check if the plugin has been loaded.
    * <br>
-   * <em>Added in TinyMCE 5.4</em>
+   * <em>Added in TinyMCE 5.5</em>
    *
    * @method hasPlugin
    * @param {String} name The name of the plugin, as specified for the TinyMCE `plugins` option.
@@ -796,7 +800,7 @@ class Editor implements EditorObservable {
 
       // Update hidden form element
       if ((form = DOM.getParent(self.id, 'form'))) {
-        each(form.elements, function (elm) {
+        each(form.elements, (elm) => {
           if ((elm as any).name === self.id) {
             (elm as any).value = html;
             return false;
@@ -834,8 +838,9 @@ class Editor implements EditorObservable {
    * // Sets the content of the activeEditor editor using the specified format
    * tinymce.activeEditor.setContent('<p>Some html</p>', {format: 'html'});
    */
-  public setContent (content: string, args?: EditorContent.SetContentArgs): string;
-  public setContent (content: AstNode, args?: EditorContent.SetContentArgs): AstNode;
+  public setContent(content: string, args?: EditorContent.SetContentArgs): string;
+  public setContent(content: AstNode, args?: EditorContent.SetContentArgs): AstNode;
+  public setContent(content: EditorContent.Content, args?: EditorContent.SetContentArgs): EditorContent.Content;
   public setContent(content: EditorContent.Content, args?: EditorContent.SetContentArgs): EditorContent.Content {
     return EditorContent.setContent(this, content, args);
   }
@@ -857,8 +862,8 @@ class Editor implements EditorObservable {
    * // Get content of a specific editor:
    * tinymce.get('content id').getContent()
    */
-  public getContent (args: { format: 'tree' } & EditorContent.GetContentArgs): AstNode;
-  public getContent (args?: EditorContent.GetContentArgs): string;
+  public getContent(args: { format: 'tree' } & EditorContent.GetContentArgs): AstNode;
+  public getContent(args?: EditorContent.GetContentArgs): string;
   public getContent(args?: EditorContent.GetContentArgs): EditorContent.Content {
     return EditorContent.getContent(this, args);
   }
@@ -1082,50 +1087,7 @@ class Editor implements EditorObservable {
    * @param {Element} elm Optional root element to loop though to find tables etc that needs the visual aid.
    */
   public addVisual(elm?: HTMLElement) {
-    const self = this;
-    const settings = self.settings;
-    const dom: DOMUtils = self.dom;
-    let cls;
-
-    elm = elm || self.getBody();
-
-    if (self.hasVisual === undefined) {
-      self.hasVisual = settings.visual;
-    }
-
-    each(dom.select('table,a', elm), function (elm) {
-      let value;
-
-      switch (elm.nodeName) {
-        case 'TABLE':
-          cls = settings.visual_table_class || 'mce-item-table';
-          value = dom.getAttrib(elm, 'border');
-
-          if ((!value || value === '0') && self.hasVisual) {
-            dom.addClass(elm, cls);
-          } else {
-            dom.removeClass(elm, cls);
-          }
-
-          return;
-
-        case 'A':
-          if (!dom.getAttrib(elm, 'href')) {
-            value = dom.getAttrib(elm, 'name') || elm.id;
-            cls = settings.visual_anchor_class || 'mce-item-anchor';
-
-            if (value && self.hasVisual) {
-              dom.addClass(elm, cls);
-            } else {
-              dom.removeClass(elm, cls);
-            }
-          }
-
-          return;
-      }
-    });
-
-    self.fire('VisualAid', { element: elm, hasVisual: self.hasVisual });
+    VisualAids.addVisual(this, elm);
   }
 
   /**

@@ -2,7 +2,7 @@ import { Saloon, Sherif, ShootingEvent } from './Types';
 
 declare const $: any;
 
-const create = function (): Sherif {
+const create = (): Sherif => {
   const container = $('<div />');
   container.css({
     float: 'left',
@@ -25,17 +25,17 @@ const create = function (): Sherif {
   caption.append(actions);
   container.append(img, caption);
 
-  const getElement = function () {
+  const getElement = () => {
     return container;
   };
 
-  const watch = function (establishment: Saloon) {
+  const watch = (establishment: Saloon) => {
     establishment.events.shooting.bind(shooting);
   };
 
-  const shooting = function (event: ShootingEvent) {
+  const shooting = (event: ShootingEvent) => {
     chaseButton.attr('disabled', false);
-    chaseButton.bind('click', function () {
+    chaseButton.bind('click', () => {
       chaseButton.detach();
       event.shooter.chase();
     });

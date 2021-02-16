@@ -5,7 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Optional } from '@ephox/katamari';
+import { Fun, Optional } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 import { InlineContent } from 'tinymce/core/api/ui/Ui';
 
@@ -13,7 +13,7 @@ import * as Settings from '../api/Settings';
 import * as Actions from '../core/Actions';
 import * as Utils from '../core/Utils';
 
-const setupButtons = function (editor: Editor) {
+const setupButtons = (editor: Editor) => {
   editor.ui.registry.addToggleButton('link', {
     icon: 'link',
     tooltip: 'Insert/edit link',
@@ -36,7 +36,7 @@ const setupButtons = function (editor: Editor) {
   });
 };
 
-const setupMenuItems = function (editor: Editor) {
+const setupMenuItems = (editor: Editor) => {
   editor.ui.registry.addMenuItem('openlink', {
     text: 'Open link',
     icon: 'new-tab',
@@ -59,7 +59,7 @@ const setupMenuItems = function (editor: Editor) {
   });
 };
 
-const setupContextMenu = function (editor: Editor) {
+const setupContextMenu = (editor: Editor) => {
   const inLink = 'link unlink openlink';
   const noLink = 'link';
   editor.ui.registry.addContextMenu('link', {
@@ -67,15 +67,15 @@ const setupContextMenu = function (editor: Editor) {
   });
 };
 
-const setupContextToolbars = function (editor: Editor) {
-  const collapseSelectionToEnd = function (editor: Editor) {
+const setupContextToolbars = (editor: Editor) => {
+  const collapseSelectionToEnd = (editor: Editor) => {
     editor.selection.collapse(false);
   };
 
   const onSetupLink = (buttonApi: InlineContent.ContextFormButtonInstanceApi) => {
     const node = editor.selection.getNode();
     buttonApi.setDisabled(!Utils.getAnchorElement(editor, node));
-    return () => { };
+    return Fun.noop;
   };
 
   editor.ui.registry.addContextForm('quicklink', {
@@ -107,7 +107,7 @@ const setupContextToolbars = function (editor: Editor) {
           const anchor = Utils.getAnchorElement(editor);
           const value = formApi.getValue();
           if (!anchor) {
-            const attachState = { href: value, attach: () => { } };
+            const attachState = { href: value, attach: Fun.noop };
             const onlyText = Utils.isOnlyTextSelected(editor);
             const text: Optional<string> = onlyText ? Optional.some(Utils.getAnchorText(editor.selection, anchor)).filter((t) => t.length > 0).or(Optional.from(value)) : Optional.none();
             Utils.link(editor, attachState, {

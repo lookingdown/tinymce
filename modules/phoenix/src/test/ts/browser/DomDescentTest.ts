@@ -4,7 +4,7 @@ import { Hierarchy, SugarElement } from '@ephox/sugar';
 import { SpotPoint } from 'ephox/phoenix/api/data/Types';
 import * as DomDescent from 'ephox/phoenix/api/dom/DomDescent';
 
-UnitTest.test('DomDescentTest', function () {
+UnitTest.test('DomDescentTest', () => {
 
   const root = SugarElement.fromHtml(
     '<div>\n' +
@@ -13,7 +13,7 @@ UnitTest.test('DomDescentTest', function () {
     '</div>'
   );
 
-  const toRef = function (v: number[], k: string) {
+  const toRef = (v: number[], k: string) => {
     return {
       element: Hierarchy.follow(root, v).getOrDie('Could not find path: ' + v + ' for key: ' + k),
       path: v
@@ -35,7 +35,7 @@ UnitTest.test('DomDescentTest', function () {
     offset: number;
   }
 
-  const check = function (expected: CheckItem, actual: SpotPoint<SugarElement>) {
+  const check = (expected: CheckItem, actual: SpotPoint<SugarElement>) => {
     const aPath = Hierarchy.path(root, actual.element).getOrDie('Could not extract path');
     assert.eq(expected.path, aPath);
     assert.eq(expected.offset, actual.offset);

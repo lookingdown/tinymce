@@ -11,16 +11,16 @@ const walkers = Gather.walkers();
 const left = walkers.left();
 const right = walkers.right();
 
-const breakToLeft = function (text: string) {
-  return WordUtil.leftBreak(text).map(function (index) {
-    return [ index + 1, text.length ] as [number, number];
+const breakToLeft = (text: string): Optional<[number, number]> => {
+  return WordUtil.leftBreak(text).map((index) => {
+    return [ index + 1, text.length ];
   });
 };
 
-const breakToRight = function (text: string) {
+const breakToRight = (text: string): Optional<[number, number]> => {
   // Will need to generalise the word breaks.
-  return WordUtil.rightBreak(text).map(function (index) {
-    return [ 0, index ] as [number, number];
+  return WordUtil.rightBreak(text).map((index) => {
+    return [ 0, index ];
   });
 };
 

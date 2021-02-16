@@ -1,11 +1,14 @@
 import { Assert, UnitTest } from '@ephox/bedrock-client';
 import fc from 'fast-check';
 import * as Arr from 'ephox/katamari/api/Arr';
+import * as Fun from 'ephox/katamari/api/Fun';
 
 const eqc = (x) => (a) => x === a;
-const never = () => false;
-const always = () => true;
-const bottom = () => { throw new Error('error'); };
+const never = Fun.never;
+const always = Fun.always;
+const bottom = () => {
+  throw new Error('error');
+};
 
 UnitTest.test('Arr.exists: unit test', () => {
   const check = (expected, input: any[], f) => {

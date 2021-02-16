@@ -1,8 +1,8 @@
 import { Assert, UnitTest } from '@ephox/bedrock-client';
 import * as StyleConversions from 'tinymce/themes/mobile/util/StyleConversions';
 
-UnitTest.test('Atomic Test: styles.StyleConversionsTest', function () {
-  const check = function (label, expected, input) {
+UnitTest.test('Atomic Test: styles.StyleConversionsTest', () => {
+  const check = (label, expected, input) => {
     const output = StyleConversions.expand(input);
     Assert.eq('StyleConversions.expand (' + label + ')', expected, output);
   };

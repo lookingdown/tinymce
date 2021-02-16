@@ -2,23 +2,23 @@ import { Arr } from '@ephox/katamari';
 import { DomStructure } from '@ephox/robin';
 import { Compare, CursorPosition, InsertAll, PredicateFind, Remove, SugarElement, SugarNode, SugarText, Traverse } from '@ephox/sugar';
 
-const merge = function (cells: SugarElement[]) {
-  const isBr = function (el: SugarElement) {
+const merge = (cells: SugarElement[]): void => {
+  const isBr = (el: SugarElement) => {
     return SugarNode.name(el) === 'br';
   };
 
-  const advancedBr = function (children: SugarElement[]) {
-    return Arr.forall(children, function (c) {
+  const advancedBr = (children: SugarElement[]) => {
+    return Arr.forall(children, (c) => {
       return isBr(c) || (SugarNode.isText(c) && SugarText.get(c).trim().length === 0);
     });
   };
 
-  const isListItem = function (el: SugarElement) {
+  const isListItem = (el: SugarElement) => {
     return SugarNode.name(el) === 'li' || PredicateFind.ancestor(el, DomStructure.isList).isSome();
   };
 
-  const siblingIsBlock = function (el: SugarElement) {
-    return Traverse.nextSibling(el).map(function (rightSibling) {
+  const siblingIsBlock = (el: SugarElement) => {
+    return Traverse.nextSibling(el).map((rightSibling) => {
       if (DomStructure.isBlock(rightSibling)) {
         return true;
       }
@@ -29,17 +29,17 @@ const merge = function (cells: SugarElement[]) {
     }).getOr(false);
   };
 
-  const markCell = function (cell: SugarElement) {
-    return CursorPosition.last(cell).bind(function (rightEdge) {
+  const markCell = (cell: SugarElement) => {
+    return CursorPosition.last(cell).bind((rightEdge) => {
       const rightSiblingIsBlock = siblingIsBlock(rightEdge);
-      return Traverse.parent(rightEdge).map(function (parent) {
+      return Traverse.parent(rightEdge).map((parent) => {
         return rightSiblingIsBlock === true || isListItem(parent) || isBr(rightEdge) || (DomStructure.isBlock(parent) && !Compare.eq(cell, parent)) ? [] : [ SugarElement.fromTag('br') ];
       });
     }).getOr([]);
   };
 
-  const markContent = function () {
-    const content = Arr.bind(cells, function (cell) {
+  const markContent = () => {
+    const content = Arr.bind(cells, (cell) => {
       const children = Traverse.children(cell);
       return advancedBr(children) ? [ ] : children.concat(markCell(cell));
     });

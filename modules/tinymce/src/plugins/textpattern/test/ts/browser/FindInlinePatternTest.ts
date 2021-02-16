@@ -10,7 +10,7 @@ import { InlinePattern, InlinePatternMatch } from 'tinymce/plugins/textpattern/c
 import { PathRange } from 'tinymce/plugins/textpattern/utils/PathRange';
 import Theme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('textpattern.browser.FindInlinePatternTest', (success, failure) => {
+UnitTest.asynctest('browser.tinymce.plugins.textpattern.FindInlinePatternTest', (success, failure) => {
   Theme();
 
   const mockEditor = {
@@ -27,7 +27,7 @@ UnitTest.asynctest('textpattern.browser.FindInlinePatternTest', (success, failur
 
   const inlinePatterns = Settings.getPatternSet(mockEditor as any).inlinePatterns;
 
-  const cGetInlinePattern = function (patterns: InlinePattern[], space: boolean = false) {
+  const cGetInlinePattern = (patterns: InlinePattern[], space: boolean = false) => {
     const asStr = (p: InlinePattern) => {
       if (p.type === 'inline-format') {
         return p.start + 'TEXT' + p.end + ' = ' + JSON.stringify(p.format);
@@ -38,7 +38,7 @@ UnitTest.asynctest('textpattern.browser.FindInlinePatternTest', (success, failur
     };
 
     return Chain.label('Get inline ' + Arr.map(patterns, asStr).join(', '),
-      Chain.mapper<Editor, InlinePatternMatch[]>(function (editor) {
+      Chain.mapper<Editor, InlinePatternMatch[]>((editor) => {
         return findPatterns(editor, patterns, space);
       })
     );
@@ -50,7 +50,7 @@ UnitTest.asynctest('textpattern.browser.FindInlinePatternTest', (success, failur
     endRng: PathRange;
   }
 
-  const cAssertPatterns = function (expectedMatches: ExpectedPatternMatch[]) {
+  const cAssertPatterns = (expectedMatches: ExpectedPatternMatch[]) => {
     return Chain.op<InlinePatternMatch[]>((actualMatches) => {
       Assertions.assertEq('Pattern count does not match', expectedMatches.length, actualMatches.length);
       for (let i = 0; i < expectedMatches.length; i++) {
@@ -73,7 +73,7 @@ UnitTest.asynctest('textpattern.browser.FindInlinePatternTest', (success, failur
     });
   };
 
-  const cAssertSimpleMatch = function (matchStart: string, matchEnd: string, formats: string[], startRng: PathRange, endRng: PathRange) {
+  const cAssertSimpleMatch = (matchStart: string, matchEnd: string, formats: string[], startRng: PathRange, endRng: PathRange) => {
     return cAssertPatterns([{ pattern: { start: matchStart, end: matchEnd, format: formats }, startRng, endRng }]);
   };
 

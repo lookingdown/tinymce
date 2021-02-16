@@ -5,6 +5,7 @@ import * as Assertions from './Assertions';
 import { Chain } from './Chain';
 import * as ChainSequence from './ChainSequence';
 import { Cleaner } from './Cleaner';
+import * as Clipboard from './Clipboard';
 import * as Cursors from './Cursors';
 import * as DragnDrop from './DragnDrop';
 import * as FileInput from './FileInput';
@@ -21,6 +22,7 @@ import * as Logger from './Logger';
 import { Monitor } from './Monitor';
 import * as Mouse from './Mouse';
 import { NamedChain } from './NamedChain';
+import * as PhantomSkipper from './PhantomSkipper';
 import { Pipeline } from './Pipeline';
 import * as PropertySteps from './PropertySteps';
 import * as RealClipboard from './RealClipboard';
@@ -41,6 +43,7 @@ export {
   Chain,
   ChainSequence,
   Cleaner,
+  Clipboard,
   Cursors,
   FocusTools,
   GeneralSteps,
@@ -55,6 +58,7 @@ export {
   Monitor,
   Mouse,
   NamedChain,
+  PhantomSkipper,
   Pipeline,
   PropertySteps,
   RealClipboard,

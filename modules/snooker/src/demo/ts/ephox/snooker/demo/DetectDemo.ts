@@ -1,4 +1,4 @@
-import { Obj, Optional, Optionals } from '@ephox/katamari';
+import { Fun, Obj, Optional, Optionals } from '@ephox/katamari';
 import { Attribute, Css, DomEvent, EventArgs, Insert, InsertAll, Ready, Replication, SelectorFind, SugarElement, SugarNode } from '@ephox/sugar';
 import { Generators } from 'ephox/snooker/api/Generators';
 import * as ResizeBehaviour from 'ephox/snooker/api/ResizeBehaviour';
@@ -8,7 +8,7 @@ import { TableResize } from 'ephox/snooker/api/TableResize';
 import { TableSize } from 'ephox/snooker/api/TableSize';
 import { RunOperationOutput, TargetElement, TargetSelection } from 'ephox/snooker/model/RunOperation';
 
-Ready.execute(function () {
+Ready.execute(() => {
 
   const tester = SugarElement.fromHtml<HTMLTableElement>(
     '<table border=1>' +
@@ -129,13 +129,15 @@ Ready.execute(function () {
   InsertAll.append(ephoxUi, [ ltrs, rtls ]);
 
   const lazyTableSize = (table: SugarElement<HTMLTableElement>) => TableSize.getTableSize(table);
-  const ltrManager = TableResize.create(ResizeWire.body(tester, ltrs), ResizeBehaviour.preserveTable(), lazyTableSize);
+  const isResizable = Fun.always;
+  const ltrManager = TableResize.create(ResizeWire.body(tester, ltrs, isResizable), ResizeBehaviour.preserveTable(), lazyTableSize);
   ltrManager.on();
-  const rtlManager = TableResize.create(ResizeWire.body(subject3, rtls), ResizeBehaviour.preserveTable(), lazyTableSize);
+  const rtlManager = TableResize.create(ResizeWire.body(subject3, rtls, isResizable), ResizeBehaviour.preserveTable(), lazyTableSize);
   rtlManager.on();
 
   // For firefox.
-  Ready.execute(function () {
+  // eslint-disable-next-line @tinymce/prefer-fun
+  Ready.execute(() => {
     // document.execCommand("enableInlineTableEditing", null, false);
     // document.execCommand("enableObjectResizing", false, "false");
   });
@@ -172,7 +174,7 @@ Ready.execute(function () {
   Insert.append(eraseColumn, SugarElement.fromText('Erase column'));
   Insert.append(ephoxUi, eraseColumn);
 
-  const makeButton = function (desc: string) {
+  const makeButton = (desc: string) => {
     const button = SugarElement.fromTag('button');
     Insert.append(button, SugarElement.fromText(desc));
     Insert.append(ephoxUi, button);
@@ -195,28 +197,34 @@ Ready.execute(function () {
       }
     });
 
-  const newCell: Generators['cell'] = function (prev) {
+  const newCell: Generators['cell'] = (prev) => {
     const td = SugarElement.fromTag('td');
     Insert.append(td, SugarElement.fromText('?'));
-    if (prev.colspan === 1) { Css.set(td, 'width', Css.get(prev.element, 'width')); }
-    if (prev.rowspan === 1) { Css.set(td, 'height', Css.get(prev.element, 'height')); }
+    if (prev.colspan === 1) {
+      Css.set(td, 'width', Css.get(prev.element, 'width'));
+    }
+    if (prev.rowspan === 1) {
+      Css.set(td, 'height', Css.get(prev.element, 'height'));
+    }
     return td;
   };
 
-  const gap: Generators['gap'] = function () {
+  const gap: Generators['gap'] = () => {
     const td = SugarElement.fromTag('td');
     Insert.append(td, SugarElement.fromText('?'));
     return td;
   };
 
-  const newRow: Generators['row'] = function () {
+  const newRow: Generators['row'] = () => {
     return SugarElement.fromTag('tr');
   };
 
-  const replace: Generators['replace'] = function (cell, tag, attrs) {
+  const replace: Generators['replace'] = (cell, tag, attrs) => {
     const replica = Replication.copy(cell, tag);
-    Obj.each(attrs, function (v, k) {
-      if (v !== null) { Attribute.set(replica, k, v); }
+    Obj.each(attrs, (v, k) => {
+      if (v !== null) {
+        Attribute.set(replica, k, v);
+      }
     });
     return replica;
   };
@@ -233,9 +241,9 @@ Ready.execute(function () {
     colgroup
   };
 
-  const runOperation = function (operation: (wire: ResizeWire, table: SugarElement, target: TargetElement & TargetSelection, generators: Generators, tableSize: TableSize) => Optional<RunOperationOutput>) {
-    return function (_event: EventArgs) {
-      detection().each(function (start) {
+  const runOperation = (operation: (wire: ResizeWire, table: SugarElement, target: TargetElement & TargetSelection, generators: Generators, tableSize: TableSize) => Optional<RunOperationOutput>) => {
+    return (_event: EventArgs) => {
+      detection().each((start) => {
         const target = {
           element: start,
           selection: [ start ]
@@ -244,7 +252,7 @@ Ready.execute(function () {
         // wire, table, target, generators, direction
         const table = SelectorFind.ancestor(start, 'table').getOrDie() as SugarElement<HTMLTableElement>;
         const tableSize = TableSize.getTableSize(table);
-        operation(ResizeWire.only(ephoxUi), table, target, generators, tableSize);
+        operation(ResizeWire.only(ephoxUi, isResizable), table, target, generators, tableSize);
       });
     };
   };

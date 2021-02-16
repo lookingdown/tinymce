@@ -3,7 +3,7 @@ import * as FieldPresence from 'ephox/boulder/api/FieldPresence';
 import * as FieldSchema from 'ephox/boulder/api/FieldSchema';
 import * as ValueSchema from 'ephox/boulder/api/ValueSchema';
 
-UnitTest.test('Atomic Test: api.TreeTest', function () {
+UnitTest.test('Atomic Test: api.TreeTest', () => {
   const schema = ValueSchema.objOf([
     FieldSchema.strict('value'),
     FieldSchema.defaulted('text', '?'),
@@ -11,13 +11,13 @@ UnitTest.test('Atomic Test: api.TreeTest', function () {
       'branches',
       'branches',
       FieldPresence.defaulted([ ]),
-      ValueSchema.thunkOf('recursive', function () {
+      ValueSchema.thunkOf('recursive', () => {
         return ValueSchema.arrOf(schema);
       })
     )
   ]);
 
-  const check = function (label, expected, input) {
+  const check = (label: string, expected, input) => {
     const actual = ValueSchema.asRawOrDie(label, schema, input);
     Assert.eq(label, expected, actual);
   };

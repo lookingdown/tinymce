@@ -2,7 +2,7 @@ import { Arr, Fun, Optional } from '@ephox/katamari';
 import { EventArgs, Situ, SugarElement } from '@ephox/sugar';
 import * as KeySelection from '../keyboard/KeySelection';
 import * as VerticalMovement from '../keyboard/VerticalMovement';
-import MouseSelection from '../mouse/MouseSelection';
+import { MouseSelection } from '../mouse/MouseSelection';
 import * as KeyDirection from '../navigation/KeyDirection';
 import * as CellSelection from '../selection/CellSelection';
 import { Response } from '../selection/Response';
@@ -15,9 +15,17 @@ interface RC {
   readonly cols: number;
 }
 
+export type MouseHandler = MouseSelection;
+export type ExternalHandler = (start: SugarElement<Node>, finish: SugarElement<Node>) => void;
+
+export interface KeyboardHandler {
+  readonly keydown: (event: EventArgs<KeyboardEvent>, start: SugarElement<Node>, soffset: number, finish: SugarElement<Node>, foffset: number, direction: typeof SelectionKeys.ltr) => Optional<Response>;
+  readonly keyup: (event: EventArgs<KeyboardEvent>, start: SugarElement<Node>, soffset: number, finish: SugarElement<Node>, foffset: number) => Optional<Response>;
+}
+
 const rc = (rows: number, cols: number): RC => ({ rows, cols });
 
-const mouse = function (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation) {
+const mouse = (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation): MouseHandler => {
   const bridge = WindowBridge(win);
 
   const handlers = MouseSelection(bridge, container, isRoot, annotations);
@@ -30,20 +38,20 @@ const mouse = function (win: Window, container: SugarElement, isRoot: (e: SugarE
   };
 };
 
-const keyboard = function (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation) {
+const keyboard = (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation): KeyboardHandler => {
   const bridge = WindowBridge(win);
 
-  const clearToNavigate = function () {
+  const clearToNavigate = () => {
     annotations.clear(container);
     return Optional.none<Response>();
   };
 
-  const keydown = function (event: EventArgs<KeyboardEvent>, start: SugarElement, soffset: number, finish: SugarElement, foffset: number, direction: typeof SelectionKeys.ltr) {
+  const keydown = (event: EventArgs<KeyboardEvent>, start: SugarElement, soffset: number, finish: SugarElement, foffset: number, direction: typeof SelectionKeys.ltr) => {
     const realEvent = event.raw;
     const keycode = realEvent.which;
     const shiftKey = realEvent.shiftKey === true;
 
-    const handler = CellSelection.retrieve(container, annotations.selectedSelector).fold(function () {
+    const handler = CellSelection.retrieve(container, annotations.selectedSelector).fold(() => {
       // Shift down should predict the movement and set the selection.
       if (SelectionKeys.isDown(keycode) && shiftKey) {
         return Fun.curry(VerticalMovement.select, bridge, container, isRoot, KeyDirection.down, finish, start, annotations.selectRange);
@@ -56,25 +64,25 @@ const keyboard = function (win: Window, container: SugarElement, isRoot: (e: Sug
       } else {
         return Optional.none;
       }
-    }, function (selected) {
+    }, (selected) => {
 
-      const update = function (attempts: RC[]) {
-        return function () {
-          const navigation = Arr.findMap(attempts, function (delta) {
+      const update = (attempts: RC[]) => {
+        return () => {
+          const navigation = Arr.findMap(attempts, (delta) => {
             return KeySelection.update(delta.rows, delta.cols, container, selected, annotations);
           });
 
           // Shift the selected rows and update the selection.
-          return navigation.fold(function () {
+          return navigation.fold(() => {
             // The cell selection went outside the table, so clear it and bridge from the first box to before/after
             // the table
-            return CellSelection.getEdges(container, annotations.firstSelectedSelector, annotations.lastSelectedSelector).map(function (edges) {
+            return CellSelection.getEdges(container, annotations.firstSelectedSelector, annotations.lastSelectedSelector).map((edges) => {
               const relative = SelectionKeys.isDown(keycode) || direction.isForward(keycode) ? Situ.after : Situ.before;
               bridge.setRelativeSelection(Situ.on(edges.first, 0), relative(edges.table));
               annotations.clear(container);
               return Response.create(Optional.none(), true);
             });
-          }, function (_) {
+          }, (_) => {
             return Optional.some(Response.create(Optional.none(), true));
           });
         };
@@ -98,8 +106,8 @@ const keyboard = function (win: Window, container: SugarElement, isRoot: (e: Sug
     return handler();
   };
 
-  const keyup = function (event: EventArgs<KeyboardEvent>, start: SugarElement, soffset: number, finish: SugarElement, foffset: number) {
-    return CellSelection.retrieve(container, annotations.selectedSelector).fold<Optional<Response>>(function () {
+  const keyup = (event: EventArgs<KeyboardEvent>, start: SugarElement, soffset: number, finish: SugarElement, foffset: number) => {
+    return CellSelection.retrieve(container, annotations.selectedSelector).fold<Optional<Response>>(() => {
       const realEvent = event.raw;
       const keycode = realEvent.which;
       const shiftKey = realEvent.shiftKey === true;
@@ -120,12 +128,12 @@ const keyboard = function (win: Window, container: SugarElement, isRoot: (e: Sug
   };
 };
 
-const external = (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation) => {
+const external = (win: Window, container: SugarElement, isRoot: (e: SugarElement) => boolean, annotations: SelectionAnnotation): ExternalHandler => {
   const bridge = WindowBridge(win);
 
   return (start: SugarElement, finish: SugarElement) => {
     annotations.clearBeforeUpdate(container);
-    CellSelection.identify(start, finish, isRoot).each(function (cellSel) {
+    CellSelection.identify(start, finish, isRoot).each((cellSel) => {
       const boxes = cellSel.boxes.getOr([]);
       annotations.selectRange(container, boxes, cellSel.start, cellSel.finish);
 

@@ -44,9 +44,6 @@ module.exports = function (grunt) {
     },
 
     eslint: {
-      options: {
-        configFile: '../../.eslintrc.json',
-      },
       target: [ 'src/**/*.ts' ]
     },
 
@@ -166,6 +163,13 @@ module.exports = function (grunt) {
       })
     ),
 
+    emojis: {
+      twemoji: {
+        base: '',
+        ext: '.png'
+      }
+    },
+
     uglify: Object.assign(
       {
         options: {
@@ -192,13 +196,17 @@ module.exports = function (grunt) {
             }
           },
           files: [
-            { src: 'src/plugins/emoticons/main/js/emojis.js', dest: 'js/tinymce/plugins/emoticons/js/emojis.js' }
+            { src: 'src/plugins/emoticons/main/js/emojis.js', dest: 'js/tinymce/plugins/emoticons/js/emojis.js' },
+            { src: 'src/plugins/emoticons/main/js/emojiimages.js', dest: 'js/tinymce/plugins/emoticons/js/emojiimages.js' }
           ]
         }
       },
       gruntUtils.generate(plugins, 'plugin', (name) => {
         var pluginExtras = {
-          emoticons: [ { src: 'src/plugins/emoticons/main/js/emojis.js', dest: 'js/tinymce/plugins/emoticons/js/emojis.min.js' } ]
+          emoticons: [
+            { src: 'src/plugins/emoticons/main/js/emojis.js', dest: 'js/tinymce/plugins/emoticons/js/emojis.min.js' },
+            { src: 'src/plugins/emoticons/main/js/emojiimages.js', dest: 'js/tinymce/plugins/emoticons/js/emojiimages.min.js' }
+          ]
         };
         return {
           files: [
@@ -556,7 +564,7 @@ module.exports = function (grunt) {
                 'url': 'https://github.com/tinymce/tinymce-dist.git'
               },
               'description': 'Web based JavaScript HTML WYSIWYG editor control.',
-              'author': 'Ephox Corporation',
+              'author': 'Tiny Technologies, Inc',
               'main': 'tinymce.js',
               'types': 'tinymce.d.ts',
               'license': 'LGPL-2.1',
@@ -645,15 +653,15 @@ module.exports = function (grunt) {
         options: {
           id: 'TinyMCE',
           version: packageData.version,
-          authors: 'Ephox Corp',
-          owners: 'Ephox Corp',
+          authors: 'Tiny Technologies, Inc',
+          owners: 'Tiny Technologies, Inc',
           description: 'The best WYSIWYG editor! TinyMCE is a platform independent web based Javascript HTML WYSIWYG editor ' +
-          'control released as Open Source under LGPL by Ephox Corp. TinyMCE has the ability to convert HTML ' +
+          'control released as Open Source under LGPL by Tiny Technologies, Inc. TinyMCE has the ability to convert HTML ' +
           'TEXTAREA fields or other HTML elements to editor instances. TinyMCE is very easy to integrate ' +
           'into other Content Management Systems.',
           releaseNotes: 'Release notes for my package.',
           summary: 'TinyMCE is a platform independent web based Javascript HTML WYSIWYG editor ' +
-          'control released as Open Source under LGPL by Ephox Corp.',
+          'control released as Open Source under LGPL by Tiny Technologies, Inc.',
           projectUrl: 'http://www.tinymce.com/',
           iconUrl: 'http://www.tinymce.com/favicon.ico',
           licenseUrl: 'http://www.tinymce.com/license',
@@ -693,8 +701,8 @@ module.exports = function (grunt) {
           id: 'TinyMCE.jQuery',
           title: 'TinyMCE.jQuery [Deprecated]',
           version: packageData.version,
-          authors: 'Ephox Corp',
-          owners: 'Ephox Corp',
+          authors: 'Tiny Technologies, Inc',
+          owners: 'Tiny Technologies, Inc',
           description: 'This package has been deprecated use https://www.nuget.org/packages/TinyMCE/',
           releaseNotes: 'This package has been deprecated use https://www.nuget.org/packages/TinyMCE/',
           summary: 'This package has been deprecated use https://www.nuget.org/packages/TinyMCE/',
@@ -870,12 +878,14 @@ module.exports = function (grunt) {
   });
   grunt.loadTasks('tools/tasks');
 
+  grunt.registerTask('emoji', ['emojis', 'uglify:emoticons-raw']);
+
   grunt.registerTask('prodBuild', [
     'shell:tsc',
     'eslint',
     'globals',
+    'emoji',
     'rollup',
-    'unicode',
     'concat',
     'copy',
     'uglify'
@@ -892,7 +902,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('dev', [
     'globals',
-    'unicode',
+    'emoji',
     // TODO: Make webpack use the oxide CSS directly
     // as well as making development easier, then we can update 'yarn dev' to run 'oxide-build' in parallel with 'tinymce-grunt dev'
     // that will save 2-3 seconds on incremental builds
@@ -900,8 +910,6 @@ module.exports = function (grunt) {
     'copy:content-skins',
     'copy:default-icons'
   ]);
-
-  grunt.registerTask('unicode', ['uglify:emoticons-raw']);
 
   grunt.registerTask('start', ['webpack-dev-server']);
 

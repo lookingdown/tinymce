@@ -5,10 +5,13 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Arr, Fun } from '@ephox/katamari';
+import { Arr, Fun, Obj } from '@ephox/katamari';
+import { TableLookup } from '@ephox/snooker';
+import { SugarElement } from '@ephox/sugar';
 import Editor from 'tinymce/core/api/Editor';
 import { Dialog } from 'tinymce/core/api/ui/Ui';
 import * as Styles from '../actions/Styles';
+import * as Events from '../api/Events';
 import { hasAdvancedRowTab } from '../api/Settings';
 import { switchSectionType } from '../core/TableSections';
 import * as Util from '../core/Util';
@@ -21,7 +24,6 @@ import * as RowDialogGeneralTab from './RowDialogGeneralTab';
 type RowData = Helpers.RowData;
 
 const updateSimpleProps = (modifier: DomModifier, data: RowData) => {
-  modifier.setAttrib('scope', data.scope);
   modifier.setAttrib('class', data.class);
   modifier.setStyle('height', Util.addPxSuffix(data.height));
 };
@@ -35,25 +37,40 @@ const updateAdvancedProps = (modifier: DomModifier, data: RowData) => {
 const applyRowData = (editor: Editor, rows: HTMLTableRowElement[], oldData: RowData, data: RowData) => {
   const isSingleRow = rows.length === 1;
 
-  Arr.each(rows, (rowElm) => {
-    // Switch row type
-    if (data.type !== Util.getNodeName(rowElm.parentNode)) {
-      switchSectionType(editor, rowElm, data.type);
-    }
+  const modifiedData = Obj.filter(data, (value, key) => oldData[key] !== value);
 
-    const modifier = isSingleRow ? DomModifier.normal(editor, rowElm) : DomModifier.ifTruthy(editor, rowElm);
+  if (Obj.size(modifiedData) > 0) {
+    Arr.each(rows, (rowElm) => {
+      // Switch row type
+      if (data.type !== Util.getNodeName(rowElm.parentNode)) {
+        switchSectionType(editor, rowElm, data.type);
+      }
 
-    updateSimpleProps(modifier, data);
+      const modifier = isSingleRow ? DomModifier.normal(editor, rowElm) : DomModifier.ifTruthy(editor, rowElm);
 
-    if (hasAdvancedRowTab(editor)) {
-      updateAdvancedProps(modifier, data);
-    }
+      updateSimpleProps(modifier, data);
 
-    if (data.align !== oldData.align) {
-      Styles.unApplyAlign(editor, rowElm);
-      Styles.applyAlign(editor, rowElm, data.align);
-    }
-  });
+      if (hasAdvancedRowTab(editor)) {
+        updateAdvancedProps(modifier, data);
+      }
+
+      if (data.align !== oldData.align) {
+        Styles.unApplyAlign(editor, rowElm);
+        Styles.applyAlign(editor, rowElm, data.align);
+      }
+    });
+
+    const typeModified = Obj.has(modifiedData, 'type');
+    // style modified if there's at least one other change apart from 'type'
+    const styleModified = typeModified ? Obj.size(modifiedData) > 1 : true;
+
+    TableLookup.table(SugarElement.fromDom(rows[0])).each(
+      (table) => Events.fireTableModified(editor, table.dom, {
+        structure: typeModified,
+        style: styleModified
+      })
+    );
+  }
 };
 
 const onSubmitRowForm = (editor: Editor, rows: HTMLTableRowElement[], oldData: RowData, api) => {

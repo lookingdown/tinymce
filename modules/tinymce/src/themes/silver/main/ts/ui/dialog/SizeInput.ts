@@ -55,7 +55,7 @@ export const renderSizeInput = (spec: SizeInputSpec, providersBackstage: UiFacto
     ],
     buttonBehaviours: Behaviour.derive([
       Disabling.config({
-        disabled: () => spec.disabled || providersBackstage.isReadOnly()
+        disabled: () => spec.disabled || providersBackstage.isDisabled()
       }),
       ReadOnly.receivingConfig(),
       Tabstopping.config({})
@@ -75,15 +75,15 @@ export const renderSizeInput = (spec: SizeInputSpec, providersBackstage: UiFacto
     inputClasses: [ 'tox-textfield' ],
     inputBehaviours: Behaviour.derive([
       Disabling.config({
-        disabled: () => spec.disabled || providersBackstage.isReadOnly()
+        disabled: () => spec.disabled || providersBackstage.isDisabled()
       }),
       ReadOnly.receivingConfig(),
       Tabstopping.config({}),
       AddEventsBehaviour.config('size-input-events', [
-        AlloyEvents.run(NativeEvents.focusin(), function (component, _simulatedEvent) {
+        AlloyEvents.run(NativeEvents.focusin(), (component, _simulatedEvent) => {
           AlloyTriggers.emitWith(component, ratioEvent, { isField1 });
         }),
-        AlloyEvents.run(NativeEvents.change(), function (component, _simulatedEvent) {
+        AlloyEvents.run(NativeEvents.change(), (component, _simulatedEvent) => {
           AlloyTriggers.emitWith(component, formChangeEvent, { name: spec.name });
         })
       ])
@@ -136,7 +136,7 @@ export const renderSizeInput = (spec: SizeInputSpec, providersBackstage: UiFacto
     markers: {
       lockClass: 'tox-locked'
     },
-    onLockedChange(current: AlloyComponent, other: AlloyComponent, _lock: AlloyComponent) {
+    onLockedChange: (current: AlloyComponent, other: AlloyComponent, _lock: AlloyComponent) => {
       parseSize(Representing.getValue(current)).each((size) => {
         converter(size).each((newSize) => {
           Representing.setValue(other, formatSize(newSize));
@@ -145,7 +145,7 @@ export const renderSizeInput = (spec: SizeInputSpec, providersBackstage: UiFacto
     },
     coupledFieldBehaviours: Behaviour.derive([
       Disabling.config({
-        disabled: () => spec.disabled || providersBackstage.isReadOnly(),
+        disabled: () => spec.disabled || providersBackstage.isDisabled(),
         onDisabled: (comp) => {
           AlloyFormCoupledInputs.getField1(comp).bind(AlloyFormField.getField).each(Disabling.disable);
           AlloyFormCoupledInputs.getField2(comp).bind(AlloyFormField.getField).each(Disabling.disable);
@@ -159,7 +159,7 @@ export const renderSizeInput = (spec: SizeInputSpec, providersBackstage: UiFacto
       }),
       ReadOnly.receivingConfig(),
       AddEventsBehaviour.config('size-input-events2', [
-        AlloyEvents.run<RatioEvent>(ratioEvent, function (component, simulatedEvent) {
+        AlloyEvents.run<RatioEvent>(ratioEvent, (component, simulatedEvent) => {
           const isField1 = simulatedEvent.event.isField1;
           const optCurrent = isField1 ? AlloyFormCoupledInputs.getField1(component) : AlloyFormCoupledInputs.getField2(component);
           const optOther = isField1 ? AlloyFormCoupledInputs.getField2(component) : AlloyFormCoupledInputs.getField1(component);

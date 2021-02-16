@@ -12,12 +12,12 @@ import * as InsertBlock from './InsertBlock';
 import * as InsertBr from './InsertBr';
 import * as NewLineAction from './NewLineAction';
 
-const insert = function (editor: Editor, evt?: EditorEvent<KeyboardEvent>) {
+const insert = (editor: Editor, evt?: EditorEvent<KeyboardEvent>) => {
   NewLineAction.getAction(editor, evt).fold(
-    function () {
+    () => {
       InsertBr.insert(editor, evt);
     },
-    function () {
+    () => {
       InsertBlock.insert(editor, evt);
     },
     Fun.noop

@@ -5,7 +5,7 @@ import { UiFactoryBackstage } from 'tinymce/themes/silver/backstage/Backstage';
 import { ApiUrlData } from 'tinymce/themes/silver/backstage/UrlInputBackstage';
 import TestProviders from './TestProviders';
 
-export default function (sink?: AlloyComponent): UiFactoryBackstage {
+export default (sink?: AlloyComponent): UiFactoryBackstage => {
   // NOTE: Non-sensical anchor
   const hotspotAnchorFn = (): HotspotAnchorSpec => ({
     anchor: 'hotspot',
@@ -38,14 +38,14 @@ export default function (sink?: AlloyComponent): UiFactoryBackstage {
       getSink: () => Result.value(sink)
     },
     urlinput: {
-      getHistory: () => [],
-      addToHistory: () => {},
-      getLinkInformation: () => Optional.none(),
-      getValidationHandler: () => Optional.none(),
+      getHistory: Fun.constant([]),
+      addToHistory: Fun.noop,
+      getLinkInformation: Optional.none,
+      getValidationHandler: Optional.none,
       getUrlPicker: (_filetype) => Optional.some((entry: ApiUrlData) => Future.pure(entry))
     },
     dialog: {
-      isDraggableModal: () => false
+      isDraggableModal: Fun.never
     }
   };
-}
+};

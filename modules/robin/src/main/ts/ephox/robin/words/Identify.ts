@@ -4,13 +4,13 @@ import { WordScope } from '../data/WordScope';
 import * as WordSanitiser from '../util/WordSanitiser';
 
 // Returns: [array of WordScope Struct] containing all words from string allText
-const words = function (allText: string) {
+const words = (allText: string): WordScope[] => {
   const pattern = Pattern.unsafetoken(Pattern.wordchar() + '+');
   const matches = Search.findall(allText, pattern);
   const len = allText.length;
 
   // FIX ... I may possibly index strings elsewhere.
-  return Arr.map(matches, function (x) {
+  return Arr.map(matches, (x) => {
     const start = x.start;
     const finish = x.finish;
     const text = allText.substring(start, finish);

@@ -5,6 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
+import { Type } from '@ephox/katamari';
 import { Compare, SugarElement } from '@ephox/sugar';
 import { Bookmark } from '../../bookmark/BookmarkTypes';
 import CaretPosition from '../../caret/CaretPosition';
@@ -41,11 +42,11 @@ import DomSerializer from './Serializer';
 
 const isNativeIeSelection = (rng: any): boolean => !!(rng).select;
 
-const isAttachedToDom = function (node: Node): boolean {
+const isAttachedToDom = (node: Node): boolean => {
   return !!(node && node.ownerDocument) && Compare.contains(SugarElement.fromDom(node.ownerDocument), SugarElement.fromDom(node));
 };
 
-const isValidRange = function (rng: Range) {
+const isValidRange = (rng: Range) => {
   if (!rng) {
     return false;
   } else if (isNativeIeSelection(rng)) { // Native IE range still produced by placeCaretAt
@@ -63,12 +64,17 @@ interface EditorSelection {
   serializer: DomSerializer;
   editor: Editor;
   collapse: (toStart?: boolean) => void;
-  setCursorLocation: (node?: Node, offset?: number) => void;
-  getContent (args: { format: 'tree' } & GetSelectionContent.GetSelectionContentArgs): AstNode;
-  getContent (args?: GetSelectionContent.GetSelectionContentArgs): string;
+  setCursorLocation: {
+    (node: Node, offset: number): void;
+    (): void;
+  };
+  getContent: {
+    (args: { format: 'tree' } & GetSelectionContent.GetSelectionContentArgs): AstNode;
+    (args?: GetSelectionContent.GetSelectionContentArgs): string;
+  };
   setContent: (content: string, args?: SetSelectionContent.SelectionSetContentArgs) => void;
   getBookmark: (type?: number, normalized?: boolean) => Bookmark;
-  moveToBookmark: (bookmark: Bookmark) => boolean;
+  moveToBookmark: (bookmark: Bookmark) => void;
   select: (node: Node, content?: boolean) => Node;
   isCollapsed: () => boolean;
   isForward: () => boolean;
@@ -76,7 +82,7 @@ interface EditorSelection {
   getNode: () => Element;
   getSel: () => Selection | null;
   setRng: (rng: Range, forward?: boolean) => void;
-  getRng: () => Range | null;
+  getRng: () => Range;
   getStart: (real?: boolean) => Element;
   getEnd: (real?: boolean) => Element;
   getSelectedBlocks: (startElm?: Element, endElm?: Element) => Element[];
@@ -108,7 +114,7 @@ interface EditorSelection {
  * @param {tinymce.dom.Serializer} serializer DOM serialization class to use for getContent.
  * @param {tinymce.Editor} editor Editor instance of the selection.
  */
-const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSerializer, editor: Editor): EditorSelection {
+const EditorSelection = (dom: DOMUtils, win: Window, serializer: DomSerializer, editor: Editor): EditorSelection => {
   let selectedRange: Range | null;
   let explicitRange: Range | null;
 
@@ -125,14 +131,14 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
   const setCursorLocation = (node?: Node, offset?: number) => {
     const rng = dom.createRng();
 
-    if (!node) {
-      moveEndPoint(dom, rng, editor.getBody(), true);
-      setRng(rng);
-    } else {
+    if (Type.isNonNullable(node) && Type.isNonNullable(offset)) {
       rng.setStart(node, offset);
       rng.setEnd(node, offset);
       setRng(rng);
       collapse(false);
+    } else {
+      moveEndPoint(dom, rng, editor.getBody(), true);
+      setRng(rng);
     }
   };
 
@@ -209,7 +215,6 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
    *
    * @method moveToBookmark
    * @param {Object} bookmark Bookmark to restore selection from.
-   * @return {Boolean} true/false if it was successful or not.
    * @example
    * // Stores a bookmark of the current selection
    * var bm = tinymce.activeEditor.selection.getBookmark();
@@ -219,7 +224,7 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
    * // Restore the selection bookmark
    * tinymce.activeEditor.selection.moveToBookmark(bm);
    */
-  const moveToBookmark = (bookmark: Bookmark): boolean => bookmarkManager.moveToBookmark(bookmark);
+  const moveToBookmark = (bookmark: Bookmark): void => bookmarkManager.moveToBookmark(bookmark);
 
   /**
    * Selects the specified element. This will place the start and end of the selection range around the element.
@@ -277,7 +282,7 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
    * @method getSel
    * @return {Selection} Internal browser selection object.
    */
-  const getSel = (): Selection | null => win.getSelection ? win.getSelection() : (<any> win.document).selection;
+  const getSel = (): Selection | null => win.getSelection ? win.getSelection() : (win.document as any).selection;
 
   /**
    * Returns the browsers internal range object.
@@ -287,10 +292,10 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
    * @see http://www.quirksmode.org/dom/range_intro.html
    * @see http://www.dotvoid.com/2001/03/using-the-range-object-in-mozilla/
    */
-  const getRng = (): Range | null => {
+  const getRng = (): Range => {
     let selection, rng, elm;
 
-    const tryCompareBoundaryPoints = function (how, sourceRange, destinationRange) {
+    const tryCompareBoundaryPoints = (how, sourceRange, destinationRange) => {
       try {
         return sourceRange.compareBoundaryPoints(how, destinationRange);
       } catch (ex) {
@@ -303,15 +308,7 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
       }
     };
 
-    if (!win) {
-      return null;
-    }
-
     const doc = win.document;
-
-    if (typeof doc === 'undefined' || doc === null) {
-      return null;
-    }
 
     if (editor.bookmark !== undefined && EditorFocus.hasFocus(editor) === false) {
       const bookmark = SelectionBookmark.getRng(editor);
@@ -503,7 +500,7 @@ const EditorSelection = function (dom: DOMUtils, win: Window, serializer: DomSer
     if (!MultiRange.hasMultipleRanges(sel) && hasAnyRanges(editor)) {
       const normRng = NormalizeRange.normalize(dom, rng);
 
-      normRng.each(function (normRng) {
+      normRng.each((normRng) => {
         setRng(normRng, isForward());
       });
 

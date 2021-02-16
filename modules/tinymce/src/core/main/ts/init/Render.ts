@@ -11,7 +11,7 @@ import { UrlObject } from '../api/AddOnManager';
 import DOMUtils from '../api/dom/DOMUtils';
 import EventUtils from '../api/dom/EventUtils';
 import ScriptLoader from '../api/dom/ScriptLoader';
-import { StyleSheetLoader } from '../api/dom/StyleSheetLoader';
+import StyleSheetLoader from '../api/dom/StyleSheetLoader';
 import Editor from '../api/Editor';
 import Env from '../api/Env';
 import IconManager from '../api/IconManager';
@@ -29,7 +29,7 @@ import * as Init from './Init';
 
 const DOM = DOMUtils.DOM;
 
-const hasSkipLoadPrefix = function (name) {
+const hasSkipLoadPrefix = (name) => {
   return name.charAt(0) === '-';
 };
 
@@ -46,7 +46,7 @@ const loadLanguage = (scriptLoader, editor: Editor) => {
   }
 };
 
-const loadTheme = function (scriptLoader: ScriptLoader, editor: Editor, suffix, callback) {
+const loadTheme = (scriptLoader: ScriptLoader, editor: Editor, suffix, callback) => {
   const theme = Settings.getTheme(editor);
 
   if (Type.isString(theme)) {
@@ -60,7 +60,7 @@ const loadTheme = function (scriptLoader: ScriptLoader, editor: Editor, suffix, 
       }
     }
 
-    scriptLoader.loadQueue(function () {
+    scriptLoader.loadQueue(() => {
       ThemeManager.waitFor(theme, callback);
     });
   } else {
@@ -116,7 +116,7 @@ const loadPlugins = (editor: Editor, suffix: string) => {
 
         const dependencies = PluginManager.dependencies(plugin);
 
-        Tools.each(dependencies, function (depPlugin) {
+        Tools.each(dependencies, (depPlugin) => {
           const defaultSettings = {
             prefix: 'plugins/',
             resource: depPlugin,
@@ -143,19 +143,19 @@ const loadPlugins = (editor: Editor, suffix: string) => {
   });
 };
 
-const loadScripts = function (editor: Editor, suffix: string) {
+const loadScripts = (editor: Editor, suffix: string) => {
   const scriptLoader = ScriptLoader.ScriptLoader;
 
-  loadTheme(scriptLoader, editor, suffix, function () {
+  loadTheme(scriptLoader, editor, suffix, () => {
     loadLanguage(scriptLoader, editor);
     loadIcons(scriptLoader, editor, suffix);
     loadPlugins(editor, suffix);
 
-    scriptLoader.loadQueue(function () {
+    scriptLoader.loadQueue(() => {
       if (!editor.removed) {
         Init.init(editor);
       }
-    }, editor, function () {
+    }, editor, () => {
       if (!editor.removed) {
         Init.init(editor);
       }
@@ -169,13 +169,13 @@ const getStyleSheetLoader = (element: SugarElement<Element>, editor: Editor): St
     referrerPolicy: Settings.getReferrerPolicy(editor)
   });
 
-const render = function (editor: Editor) {
+const render = (editor: Editor) => {
   const id = editor.id;
 
   // The user might have bundled multiple language packs so we need to switch the active code to the user specified language
   I18n.setCode(Settings.getLanguageCode(editor));
 
-  const readyHandler = function () {
+  const readyHandler = () => {
     DOM.unbind(window, 'ready', readyHandler);
     editor.render();
   };
@@ -228,21 +228,21 @@ const render = function (editor: Editor) {
     }
 
     // Pass submit/reset from form to editor instance
-    editor.formEventDelegate = function (e) {
+    editor.formEventDelegate = (e) => {
       editor.fire(e.type, e);
     };
 
     DOM.bind(form, 'submit reset', editor.formEventDelegate);
 
     // Reset contents in editor when the form is reset
-    editor.on('reset', function () {
+    editor.on('reset', () => {
       editor.resetContent();
     });
 
     // Check page uses id="submit" or name="submit" for it's submit button
     if (Settings.shouldPatchSubmit(editor) && !form.submit.nodeType && !form.submit.length && !form._mceOldSubmit) {
       form._mceOldSubmit = form.submit;
-      form.submit = function () {
+      form.submit = () => {
         editor.editorManager.triggerSave();
         editor.setDirty(false);
 
@@ -255,7 +255,7 @@ const render = function (editor: Editor) {
   editor.notificationManager = NotificationManager(editor);
 
   if (Settings.isEncodingXml(editor)) {
-    editor.on('GetContent', function (e) {
+    editor.on('GetContent', (e) => {
       if (e.save) {
         e.content = DOM.encode(e.content);
       }
@@ -263,7 +263,7 @@ const render = function (editor: Editor) {
   }
 
   if (Settings.shouldAddFormSubmitTrigger(editor)) {
-    editor.on('submit', function () {
+    editor.on('submit', () => {
       if (editor.initialized) {
         editor.save();
       }
@@ -271,7 +271,7 @@ const render = function (editor: Editor) {
   }
 
   if (Settings.shouldAddUnloadTrigger(editor)) {
-    editor._beforeUnload = function () {
+    editor._beforeUnload = () => {
       if (editor.initialized && !editor.destroyed && !editor.isHidden()) {
         editor.save({ format: 'raw', no_events: true, set_dirty: false });
       }

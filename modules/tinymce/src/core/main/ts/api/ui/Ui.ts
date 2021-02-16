@@ -9,13 +9,16 @@ import {
   PublicDialog as Dialog, PublicInlineContent as InlineContent, PublicMenu as Menu, PublicSidebar as Sidebar, PublicToolbar as Toolbar,
   Registry as BridgeRegistry
 } from '@ephox/bridge';
-import { StyleSheetLoader } from '../dom/StyleSheetLoader';
+import StyleSheetLoader from '../dom/StyleSheetLoader';
 
 type Registry = BridgeRegistry.Registry;
 
 export interface EditorUiApi {
   show: () => void;
   hide: () => void;
+  enable: () => void;
+  disable: () => void;
+  isDisabled: () => boolean;
 }
 
 export interface EditorUi extends EditorUiApi {

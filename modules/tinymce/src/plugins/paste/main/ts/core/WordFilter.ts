@@ -25,18 +25,18 @@ import * as Utils from './Utils';
 /**
  * Checks if the specified content is from any of the following sources: MS Word/Office 365/Google docs.
  */
-function isWordContent(content) {
+const isWordContent = (content) => {
   return (
     (/<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^']*\bmso-|w:WordDocument/i).test(content) ||
     (/class="OutlineElement/).test(content) ||
     (/id="?docs\-internal\-guid\-/.test(content))
   );
-}
+};
 
 /**
  * Checks if the specified text starts with "1. " or "a. " etc.
  */
-function isNumericList(text) {
+const isNumericList = (text) => {
   let found;
 
   const patterns = [
@@ -51,7 +51,7 @@ function isNumericList(text) {
 
   text = text.replace(/^[\u00a0 ]+/, '');
 
-  Tools.each(patterns, function (pattern) {
+  Tools.each(patterns, (pattern) => {
     if (pattern.test(text)) {
       found = true;
       return false;
@@ -59,21 +59,21 @@ function isNumericList(text) {
   });
 
   return found;
-}
+};
 
-function isBulletList(text) {
+const isBulletList = (text) => {
   return /^[\s\u00a0]*[\u2022\u00b7\u00a7\u25CF]\s*/.test(text);
-}
+};
 
 /**
  * Converts fake bullet and numbered lists to real semantic OL/UL.
  *
  * @param {tinymce.html.Node} node Root node to convert children of.
  */
-function convertFakeListsToProperLists(node) {
+const convertFakeListsToProperLists = (node) => {
   let currentListNode, prevListNode, lastLevel = 1;
 
-  function getText(node) {
+  const getText = (node) => {
     let txt = '';
 
     if (node.type === 3) {
@@ -87,9 +87,9 @@ function convertFakeListsToProperLists(node) {
     }
 
     return txt;
-  }
+  };
 
-  function trimListStart(node, regExp) {
+  const trimListStart = (node, regExp) => {
     if (node.type === 3) {
       if (regExp.test(node.value)) {
         node.value = node.value.replace(regExp, '');
@@ -106,9 +106,9 @@ function convertFakeListsToProperLists(node) {
     }
 
     return true;
-  }
+  };
 
-  function removeIgnoredNodes(node) {
+  const removeIgnoredNodes = (node) => {
     if (node._listIgnore) {
       node.remove();
       return;
@@ -119,9 +119,9 @@ function convertFakeListsToProperLists(node) {
         removeIgnoredNodes(node);
       } while ((node = node.next));
     }
-  }
+  };
 
-  function convertParagraphToLi(paragraphNode, listName, start?) {
+  const convertParagraphToLi = (paragraphNode, listName, start?) => {
     const level = paragraphNode._listLevel || lastLevel;
 
     // Handle list nesting
@@ -165,7 +165,7 @@ function convertFakeListsToProperLists(node) {
     trimListStart(paragraphNode, /^\u00a0+/);
     trimListStart(paragraphNode, /^\s*([\u2022\u00b7\u00a7\u25CF]|\w+\.)/);
     trimListStart(paragraphNode, /^\u00a0+/);
-  }
+  };
 
   // Build a list of all root level elements before we start
   // altering them in the loop below.
@@ -224,13 +224,13 @@ function convertFakeListsToProperLists(node) {
       currentListNode = null;
     }
   }
-}
+};
 
-function filterStyles(editor: Editor, validStyles, node, styleValue) {
+const filterStyles = (editor: Editor, validStyles, node, styleValue) => {
   let outputStyles = {}, matches;
   const styles = editor.dom.parseStyle(styleValue);
 
-  Tools.each(styles, function (value, name) {
+  Tools.each(styles, (value, name) => {
     // Convert various MS styles to W3C styles
     switch (name) {
       case 'mso-list':
@@ -319,9 +319,9 @@ function filterStyles(editor: Editor, validStyles, node, styleValue) {
   }
 
   return null;
-}
+};
 
-const filterWordContent = function (editor: Editor, content: string) {
+const filterWordContent = (editor: Editor, content: string) => {
   let validStyles;
 
   const retainStyleProperties = Settings.getRetainStyleProps(editor);
@@ -353,7 +353,7 @@ const filterWordContent = function (editor: Editor, content: string) {
     // Convert <span style="mso-spacerun:yes">___</span> to string of alternating
     // breaking/non-breaking spaces of same length
     [ /<span\s+style\s*=\s*"\s*mso-spacerun\s*:\s*yes\s*;?\s*"\s*>([\s\u00a0]*)<\/span>/gi,
-      function (str, spaces) {
+      (str, spaces) => {
         return (spaces.length > 0) ?
           spaces.replace(/./, ' ').slice(Math.floor(spaces.length / 2)).split('').join(Unicode.nbsp) : '';
       }
@@ -370,7 +370,7 @@ const filterWordContent = function (editor: Editor, content: string) {
 
   // Add style/class attribute to all element rules since the user might have removed them from
   // paste_word_valid_elements config option and we need to check them for properties
-  Tools.each(schema.elements, function (rule) {
+  Tools.each(schema.elements, (rule) => {
     /* eslint dot-notation:0*/
     if (!rule.attributes.class) {
       rule.attributes.class = {};
@@ -387,7 +387,7 @@ const filterWordContent = function (editor: Editor, content: string) {
   const domParser = DomParser({}, schema);
 
   // Filter styles to remove "mso" specific styles and convert some of them
-  domParser.addAttributeFilter('style', function (nodes) {
+  domParser.addAttributeFilter('style', (nodes) => {
     let i = nodes.length, node;
 
     while (i--) {
@@ -402,7 +402,7 @@ const filterWordContent = function (editor: Editor, content: string) {
   });
 
   // Check the class attribute for comments or del items and remove those
-  domParser.addAttributeFilter('class', function (nodes) {
+  domParser.addAttributeFilter('class', (nodes) => {
     let i = nodes.length, node, className;
 
     while (i--) {
@@ -418,7 +418,7 @@ const filterWordContent = function (editor: Editor, content: string) {
   });
 
   // Remove all del elements since we don't want the track changes code in the editor
-  domParser.addNodeFilter('del', function (nodes) {
+  domParser.addNodeFilter('del', (nodes) => {
     let i = nodes.length;
 
     while (i--) {
@@ -427,7 +427,7 @@ const filterWordContent = function (editor: Editor, content: string) {
   });
 
   // Keep some of the links and anchors
-  domParser.addNodeFilter('a', function (nodes) {
+  domParser.addNodeFilter('a', (nodes) => {
     let i = nodes.length, node, href, name;
 
     while (i--) {
@@ -480,7 +480,7 @@ const filterWordContent = function (editor: Editor, content: string) {
   return content;
 };
 
-const preProcess = function (editor: Editor, content) {
+const preProcess = (editor: Editor, content) => {
   return Settings.shouldUseDefaultFilters(editor) ? filterWordContent(editor, content) : content;
 };
 

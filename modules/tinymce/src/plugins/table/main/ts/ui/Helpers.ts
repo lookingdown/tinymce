@@ -20,6 +20,50 @@ import * as Util from '../core/Util';
  * @private
  */
 
+// Note: Need to use a types here, as types are iterable whereas interfaces are not
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type TableData = {
+  height: string;
+  width: string;
+  cellspacing: string;
+  cellpadding: string;
+  caption: boolean;
+  class?: string;
+  align: string;
+  border: string;
+  cols?: string;
+  rows?: string;
+  borderstyle?: string;
+  bordercolor?: string;
+  backgroundcolor?: string;
+};
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type RowData = {
+  height: string;
+  class: string;
+  align: string;
+  type: string;
+  borderstyle?: string;
+  bordercolor?: string;
+  backgroundcolor?: string;
+};
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type CellData = {
+  width: string;
+  height: string;
+  scope: string;
+  celltype: 'td' | 'th';
+  class: string;
+  halign: string;
+  valign: string;
+  borderwidth?: string;
+  borderstyle?: string;
+  bordercolor?: string;
+  backgroundcolor?: string;
+};
+
 interface ClassListValue {
   title?: string;
   text?: string;
@@ -153,22 +197,6 @@ const getAlignment = (formats: string[], formatName: string, editor: Editor, elm
 const getHAlignment = Fun.curry(getAlignment, [ 'left', 'center', 'right' ], 'align');
 const getVAlignment = Fun.curry(getAlignment, [ 'top', 'middle', 'bottom' ], 'valign');
 
-export interface TableData {
-  height: string;
-  width: string;
-  cellspacing: string;
-  cellpadding: string;
-  caption: boolean;
-  class?: string;
-  align: string;
-  border: string;
-  cols?: string;
-  rows?: string;
-  borderstyle?: string;
-  bordercolor?: string;
-  backgroundcolor?: string;
-}
-
 const extractDataFromSettings = (editor: Editor, hasAdvTableTab: boolean): TableData => {
   const style = getDefaultStyles(editor);
   const attrs = getDefaultAttributes(editor);
@@ -250,22 +278,10 @@ const extractDataFromTableElement = (editor: Editor, elm: Element, hasAdvTableTa
   };
 };
 
-export interface RowData {
-  height: string;
-  scope: string;
-  class: string;
-  align: string;
-  type: string;
-  borderstyle?: string;
-  bordercolor?: string;
-  backgroundcolor?: string;
-}
-
 const extractDataFromRowElement = (editor: Editor, elm: HTMLTableRowElement, hasAdvancedRowTab: boolean): RowData => {
   const dom = editor.dom;
   return {
     height: dom.getStyle(elm, 'height') || dom.getAttrib(elm, 'height'),
-    scope: dom.getAttrib(elm, 'scope'),
     class: dom.getAttrib(elm, 'class', ''),
     type: getRowType(editor, elm),
     align: getHAlignment(editor, elm),
@@ -273,21 +289,7 @@ const extractDataFromRowElement = (editor: Editor, elm: HTMLTableRowElement, has
   };
 };
 
-export interface CellData {
-  width: string;
-  height: string;
-  scope: string;
-  celltype: string;
-  class: string;
-  halign: string;
-  valign: string;
-  borderwidth?: string;
-  borderstyle?: string;
-  bordercolor?: string;
-  backgroundcolor?: string;
-}
-
-const extractDataFromCellElement = (editor: Editor, cell: HTMLTableDataCellElement, hasAdvancedCellTab: boolean, column: Optional<HTMLTableColElement>): CellData => {
+const extractDataFromCellElement = (editor: Editor, cell: HTMLTableCellElement, hasAdvancedCellTab: boolean, column: Optional<HTMLTableColElement>): CellData => {
   const dom = editor.dom;
   const colElm = column.getOr(cell);
 
@@ -297,7 +299,7 @@ const extractDataFromCellElement = (editor: Editor, cell: HTMLTableDataCellEleme
     width: getStyle(colElm, 'width'),
     height: getStyle(cell, 'height'),
     scope: dom.getAttrib(cell, 'scope'),
-    celltype: Util.getNodeName(cell),
+    celltype: Util.getNodeName(cell) as 'td' | 'th',
     class: dom.getAttrib(cell, 'class', ''),
     halign: getHAlignment(editor, cell),
     valign: getVAlignment(editor, cell),

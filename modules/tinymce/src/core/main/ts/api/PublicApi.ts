@@ -18,7 +18,7 @@ import RangeUtils from './dom/RangeUtils';
 import ScriptLoader from './dom/ScriptLoader';
 import EditorSelection from './dom/Selection';
 import DomSerializer, { DomSerializerSettings } from './dom/Serializer';
-import { StyleSheetLoader } from './dom/StyleSheetLoader';
+import StyleSheetLoader from './dom/StyleSheetLoader';
 import TextSeeker from './dom/TextSeeker';
 import DomTreeWalker from './dom/TreeWalker';
 import Editor from './Editor';
@@ -27,7 +27,7 @@ import EditorManager from './EditorManager';
 import EditorObservable from './EditorObservable';
 import Env from './Env';
 import * as Events from './EventTypes';
-import * as FormatTypes from './fmt/Format';
+import * as Formats from './fmt/Format';
 import FocusManager from './FocusManager';
 import Formatter from './Formatter';
 import Rect, { GeomRect } from './geom/Rect';
@@ -63,19 +63,6 @@ import URI from './util/URI';
 import VK from './util/VK';
 import XHR, { XHRSettings } from './util/XHR';
 import WindowManager from './WindowManager';
-
-type Formats = {
-  Formats: FormatTypes.Formats;
-  Format: FormatTypes.Format;
-  ApplyFormat: FormatTypes.ApplyFormat;
-  BlockFormat: FormatTypes.BlockFormat;
-  InlineFormat: FormatTypes.InlineFormat;
-  SelectorFormat: FormatTypes.SelectorFormat;
-  RemoveFormat: FormatTypes.RemoveFormat;
-  RemoveBlockFormat: FormatTypes.RemoveBlockFormat;
-  RemoveInlineFormat: FormatTypes.RemoveInlineFormat;
-  RemoveSelectorFormat: FormatTypes.RemoveSelectorFormat;
-};
 
 export default tinymce;
 export {

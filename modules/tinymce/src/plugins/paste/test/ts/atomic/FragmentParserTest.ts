@@ -1,8 +1,8 @@
 import { Assert, UnitTest } from '@ephox/bedrock-client';
 import * as FragmentParser from 'tinymce/plugins/paste/core/FragmentParser';
 
-UnitTest.test('atomic.tinymce.plugins.paste.FragmentParserTest', function () {
-  const testGetFragmentInfo = function () {
+UnitTest.test('atomic.tinymce.plugins.paste.FragmentParserTest', () => {
+  const testGetFragmentInfo = () => {
     Assert.eq(
       'Should be the input string and context body',
       {
@@ -82,7 +82,7 @@ UnitTest.test('atomic.tinymce.plugins.paste.FragmentParserTest', function () {
     );
   };
 
-  const testGetFragmentHtml = function () {
+  const testGetFragmentHtml = () => {
     Assert.eq(
       'Should be the input string',
       'abc',

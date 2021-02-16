@@ -3,17 +3,17 @@ import { Arr } from '@ephox/katamari';
 import { Css, Insert, Remove, SugarBody, SugarElement } from '@ephox/sugar';
 import * as ResizeBehaviour from 'ephox/snooker/api/ResizeBehaviour';
 import { TableSize } from 'ephox/snooker/api/TableSize';
-import * as Deltas from 'ephox/snooker/calc/Deltas';
 import { Warehouse } from 'ephox/snooker/api/Warehouse';
+import * as Deltas from 'ephox/snooker/calc/Deltas';
 
-UnitTest.test('ResizeTest', function () {
+UnitTest.test('ResizeTest', () => {
   const resizing = ResizeBehaviour.preserveTable();
 
   const boundBox = '<div style="width: 800px; height: 600px; display: block;"></div>';
   const box = SugarElement.fromHtml<HTMLDivElement>(boundBox);
   Insert.append(SugarBody.body(), box);
 
-  const percentTablePercentCellsTest = function () {
+  const percentTablePercentCellsTest = () => {
     const delta = 200;
 
     const table = SugarElement.fromHtml<HTMLTableElement>(`<table style="border-collapse: collapse; width: 100%;">
@@ -62,7 +62,7 @@ UnitTest.test('ResizeTest', function () {
     Remove.remove(table);
   };
 
-  const percentTablePixelCellsTest = function () {
+  const percentTablePixelCellsTest = () => {
     const delta = 200;
 
     const table = SugarElement.fromHtml<HTMLTableElement>(`<table style="border-collapse: collapse; width: 100%;">
@@ -120,7 +120,7 @@ UnitTest.test('ResizeTest', function () {
     Remove.remove(table);
   };
 
-  const pixelTablePixelCellsTest = function () {
+  const pixelTablePixelCellsTest = () => {
     const delta = 200;
 
     const table = SugarElement.fromHtml<HTMLTableElement>(`<table style="border-collapse: collapse; width: 800px;">
@@ -165,7 +165,7 @@ UnitTest.test('ResizeTest', function () {
     Remove.remove(table);
   };
 
-  const pixelTablePercentCellsTest = function () {
+  const pixelTablePercentCellsTest = () => {
     const delta = 200;
 
     const table = SugarElement.fromHtml<HTMLTableElement>(`<table style="border-collapse: collapse; width: 800px;">

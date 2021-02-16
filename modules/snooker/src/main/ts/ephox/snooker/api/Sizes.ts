@@ -11,40 +11,40 @@ import { Warehouse } from './Warehouse';
 
 type BarPositions<A> = BarPositions.BarPositions<A>;
 
-const redistributeToW = function (newWidths: string[], cells: DetailExt[], unit: string) {
-  Arr.each(cells, function (cell) {
+const redistributeToW = (newWidths: string[], cells: DetailExt[], unit: string): void => {
+  Arr.each(cells, (cell) => {
     const widths = newWidths.slice(cell.column, cell.colspan + cell.column);
     const w = Redistribution.sum(widths, CellUtils.minWidth());
     Css.set(cell.element, 'width', w + unit);
   });
 };
 
-const redistributeToColumns = (newWidths: string[], columns: Column[], unit: string) => {
+const redistributeToColumns = (newWidths: string[], columns: Column[], unit: string): void => {
   Arr.each(columns, (column, index: number) => {
     const width = Redistribution.sum([ newWidths[index] ], CellUtils.minWidth());
     Css.set(column.element, 'width', width + unit);
   });
 };
 
-const redistributeToH = function <T> (newHeights: string[], rows: RowData<T>[], cells: DetailExt[], unit: string) {
-  Arr.each(cells, function (cell) {
+const redistributeToH = <T> (newHeights: string[], rows: RowData<T>[], cells: DetailExt[], unit: string): void => {
+  Arr.each(cells, (cell) => {
     const heights = newHeights.slice(cell.row, cell.rowspan + cell.row);
     const h = Redistribution.sum(heights, CellUtils.minHeight());
     Css.set(cell.element, 'height', h + unit);
   });
 
-  Arr.each(rows, function (row, i) {
+  Arr.each(rows, (row, i) => {
     Css.set(row.element, 'height', newHeights[i]);
   });
 };
 
-const getUnit = function (newSize: string) {
+const getUnit = (newSize: string): 'px' | '%' => {
   return Redistribution.validate(newSize).fold(Fun.constant('px'), Fun.constant('px'), Fun.constant('%'));
 };
 
 // Procedure to resize table dimensions to optWidth x optHeight and redistribute cell and row dimensions.
 // Updates CSS of the table, rows, and cells.
-const redistribute = (table: SugarElement, optWidth: Optional<string>, optHeight: Optional<string>, tableSize: TableSize) => {
+const redistribute = (table: SugarElement, optWidth: Optional<string>, optHeight: Optional<string>, tableSize: TableSize): void => {
   const warehouse = Warehouse.fromTable(table);
   const rows = warehouse.all;
   const cells = Warehouse.justCells(warehouse);
@@ -53,7 +53,7 @@ const redistribute = (table: SugarElement, optWidth: Optional<string>, optHeight
   optWidth.each((newWidth) => {
     const widthUnit = getUnit(newWidth);
     const totalWidth = Width.get(table);
-    const oldWidths = ColumnSizes.getRawWidths(warehouse, tableSize);
+    const oldWidths = ColumnSizes.getRawWidths(warehouse, table, tableSize);
     const nuWidths = Redistribution.redistribute(oldWidths, totalWidth, newWidth);
 
     if (Warehouse.hasColumns(warehouse)) {
@@ -68,7 +68,7 @@ const redistribute = (table: SugarElement, optWidth: Optional<string>, optHeight
   optHeight.each((newHeight) => {
     const hUnit = getUnit(newHeight);
     const totalHeight = Height.get(table);
-    const oldHeights = ColumnSizes.getRawHeights(warehouse, BarPositions.height);
+    const oldHeights = ColumnSizes.getRawHeights(warehouse, table, BarPositions.height);
     const nuHeights = Redistribution.redistribute(oldHeights, totalHeight, newHeight);
     redistributeToH(nuHeights, rows, cells, hUnit);
     Css.set(table, 'height', newHeight);

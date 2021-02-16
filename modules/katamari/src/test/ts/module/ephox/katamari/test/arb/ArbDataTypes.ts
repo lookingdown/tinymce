@@ -1,4 +1,5 @@
 import fc from 'fast-check';
+import * as Fun from 'ephox/katamari/api/Fun';
 import { Future } from 'ephox/katamari/api/Future';
 import { Optional } from 'ephox/katamari/api/Optional';
 import { Result } from 'ephox/katamari/api/Result';
@@ -14,12 +15,12 @@ export const arbResultValue = <A, E> (arbA: Arbitrary<A>): Arbitrary<Result<A, E
 export const arbResult = <A, E> (arbA: Arbitrary<A>, arbE: Arbitrary<E>): Arbitrary<Result<A, E>> =>
   fc.oneof(arbResultError<A, E>(arbE), arbResultValue<A, E>(arbA));
 
-export const arbOptionalNone = <T> () => fc.constant(Optional.none());
-export const arbOptionalSome = <T> (at: Arbitrary<T>) => at.map(Optional.some);
+export const arbOptionalNone = <T> (): Arbitrary<Optional<T>> => fc.constant(Optional.none<T>());
+export const arbOptionalSome = <T> (at: Arbitrary<T>): Arbitrary<Optional<T>> => at.map(Optional.some);
 
-export const arbOptional = <T> (at: Arbitrary<T>) => fc.oneof(arbOptionalNone(), arbOptionalSome(at));
+export const arbOptional = <T> (at: Arbitrary<T>): Arbitrary<Optional<T>> => fc.oneof(arbOptionalNone<T>(), arbOptionalSome(at));
 
-export const arbNegativeInteger = () => fc.integer(Number.MIN_SAFE_INTEGER, -1);
+export const arbNegativeInteger = (): Arbitrary<number> => fc.integer(Number.MIN_SAFE_INTEGER, -1);
 
 export const arbFutureNow = <A> (arbA: Arbitrary<A>): Arbitrary<Future<A>> =>
   arbA.map(Future.pure);
@@ -32,7 +33,7 @@ export const arbFutureSoon = <A> (arbA: Arbitrary<A>): Arbitrary<Future<A>> =>
   }));
 
 export const arbFutureNever = <A> (): Arbitrary<Future<A>> =>
-  fc.constant(Future.nu(() => {}));
+  fc.constant(Future.nu(Fun.noop));
 
 export const arbFutureNowOrSoon = <A> (arbA: Arbitrary<A>): Arbitrary<Future<A>> =>
   fc.oneof(arbFutureNow(arbA), arbFutureSoon(arbA));

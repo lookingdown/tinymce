@@ -4,28 +4,28 @@ import { Arr } from '@ephox/katamari';
 import { Hierarchy, Insert, InsertAll, Remove, Replication, SugarBody, SugarElement } from '@ephox/sugar';
 import * as LeftBlock from 'ephox/robin/api/general/LeftBlock';
 
-UnitTest.test('LeftBlockTest', function () {
+UnitTest.test('LeftBlockTest', () => {
   const universe = DomUniverse();
 
   const editor = SugarElement.fromTag('div');
 
-  const reset = function () {
+  const reset = () => {
     editor.dom.innerHTML = '<p>alpha<span>cat</span><b>hello<i>word</i>hi</b>there</p>';
   };
 
-  const setup = function () {
+  const setup = () => {
     Insert.append(SugarBody.body(), editor);
   };
 
-  const cleanup = function () {
+  const cleanup = () => {
     Remove.remove(editor);
   };
 
-  const check = function (expected: string, path: number[], method: <E, D>(universe: Universe<E, D>, item: E) => E[]) {
+  const check = (expected: string, path: number[], method: <E, D>(universe: Universe<E, D>, item: E) => E[]) => {
     reset();
     const ele = Hierarchy.follow(editor, path);
     assert.eq(true, ele.isSome(), 'Could not find element at path: ' + path);
-    ele.each(function (start) {
+    ele.each((start) => {
       const group = method(universe, start);
       const clones = Arr.map(group, Replication.deep);
       const div = SugarElement.fromTag('div');
@@ -48,7 +48,7 @@ UnitTest.test('LeftBlockTest', function () {
     { expected: 'alphacathellowordhi', path: [ 0, 2, 2 ], method: LeftBlock.all },
     { expected: 'alpha<span>cat</span><b>hello<i>word</i>hi</b>there', path: [ 0, 3 ], method: LeftBlock.top },
     { expected: 'alphacathellowordhithere', path: [ 0, 3 ], method: LeftBlock.all }
-  ], function (item) {
+  ], (item) => {
     check(item.expected, item.path, item.method);
   });
 

@@ -20,7 +20,7 @@ import * as PlatformEditor from './PlatformEditor';
 
 type IosApi = IosSetup.IosApi;
 
-const create = function (platform, mask) {
+const create = (platform, mask) => {
   const meta = MetaViewport.tag();
 
   const priorState = Singleton.value();
@@ -29,10 +29,10 @@ const create = function (platform, mask) {
   const iosApi = Singleton.api<IosApi>();
   const iosEvents = Singleton.api();
 
-  const enter = function () {
+  const enter = () => {
     mask.hide();
     const doc = SugarElement.fromDom(document);
-    PlatformEditor.getActiveApi(platform.editor).each(function (editorApi) {
+    PlatformEditor.getActiveApi(platform.editor).each((editorApi) => {
       // TODO: Orientation changes.
       // orientation = Orientation.onChange();
 
@@ -73,7 +73,7 @@ const create = function (platform, mask) {
         })
       );
 
-      iosApi.run(function (api) {
+      iosApi.run((api) => {
         api.syncHeight();
       });
 
@@ -83,25 +83,25 @@ const create = function (platform, mask) {
     });
   };
 
-  const exit = function () {
+  const exit = () => {
     meta.restore();
     iosEvents.clear();
     iosApi.clear();
 
     mask.show();
 
-    priorState.on(function (s: any) {
-      s.socketHeight.each(function (h) {
+    priorState.on((s: any) => {
+      s.socketHeight.each((h) => {
         Css.set(platform.socket, 'height', h);
       });
-      s.iframeHeight.each(function (h) {
+      s.iframeHeight.each((h) => {
         Css.set(platform.editor.getFrame(), 'height', h);
       });
       document.body.scrollTop = s.scrollTop;
     });
     priorState.clear();
 
-    scrollEvents.on(function (s: any) {
+    scrollEvents.on((s: any) => {
       s.exclusives.unbind();
     });
     scrollEvents.clear();
@@ -117,14 +117,14 @@ const create = function (platform, mask) {
     // still even once exited.
     Focus.blur(platform.editor.getFrame());
 
-    PlatformEditor.getActiveApi(platform.editor).each(function (editorApi) {
+    PlatformEditor.getActiveApi(platform.editor).each((editorApi) => {
       editorApi.clearSelection();
     });
   };
 
   // dropup
-  const refreshStructure = function () {
-    iosApi.run(function (api) {
+  const refreshStructure = () => {
+    iosApi.run((api) => {
       api.refreshStructure();
     });
   };

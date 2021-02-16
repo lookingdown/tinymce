@@ -2,11 +2,11 @@ import { Assert, UnitTest } from '@ephox/bedrock-client';
 import fc from 'fast-check';
 import * as Strings from 'ephox/katamari/api/Strings';
 
-UnitTest.test('ensureTrailing: unit tests', function () {
-  function check(expected, str, suffix) {
+UnitTest.test('ensureTrailing: unit tests', () => {
+  const check = (expected: string, str: string, suffix: string) => {
     const actual = Strings.ensureTrailing(str, suffix);
     Assert.eq('ensureTrailing', expected, actual);
-  }
+  };
 
   check('', '', '');
   check('a', 'a', 'a');
@@ -20,7 +20,7 @@ UnitTest.test('ensureTrailing is identity if string already ends with suffix', (
   fc.assert(fc.property(
     fc.string(),
     fc.string(),
-    function (prefix, suffix) {
+    (prefix, suffix) => {
       const s = prefix + suffix;
       Assert.eq('id', s, Strings.ensureTrailing(s, suffix));
     }));

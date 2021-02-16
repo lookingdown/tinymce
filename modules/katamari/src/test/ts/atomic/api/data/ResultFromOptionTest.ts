@@ -2,13 +2,13 @@ import { Assert, UnitTest } from '@ephox/bedrock-client';
 import { Optional } from 'ephox/katamari/api/Optional';
 import { Result } from 'ephox/katamari/api/Result';
 
-UnitTest.test('Result.fromOption tests', function () {
+UnitTest.test('Result.fromOption tests', () => {
   const extractError = <T, E>(result: Result<T, E>): Optional<E> => result.fold(
     (e) => Optional.some(e),
     () => Optional.none()
   );
 
-  const testSanity = function () {
+  const testSanity = () => {
     const err = Result.fromOption(Optional.none(), 'err');
     Assert.eq('eq', 'err', extractError(err).getOrDie('Could not get error value'));
 

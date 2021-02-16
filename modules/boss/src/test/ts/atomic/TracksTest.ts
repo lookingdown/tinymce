@@ -3,7 +3,7 @@ import { Optional } from '@ephox/katamari';
 import { Gene } from 'ephox/boss/api/Gene';
 import * as Tracks from 'ephox/boss/mutant/Tracks';
 
-UnitTest.test('TracksTest', function () {
+UnitTest.test('TracksTest', () => {
   const family = Gene('A', '.', [
     Gene('B', '.'),
     Gene('C', '.', [
@@ -23,7 +23,7 @@ UnitTest.test('TracksTest', function () {
   const e = result.children[1].children[0].children[0];
   const f = result.children[1].children[1];
 
-  const p = function (item: Gene) {
+  const p = (item: Gene) => {
     return item.parent.getOrDie('Expected to have parent').id;
   };
 

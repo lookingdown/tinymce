@@ -29,8 +29,12 @@ const createRow = (columns: number, rowHeaders: number, columnHeaders: number, r
   for (let j = 0; j < columns; j++) {
 
     const td = rowIndex < rowHeaders || j < columnHeaders ? tableHeaderCell() : tableCell();
-    if (j < columnHeaders) { Attribute.set(td, 'scope', 'row'); }
-    if (rowIndex < rowHeaders) { Attribute.set(td, 'scope', 'col'); }
+    if (j < columnHeaders) {
+      Attribute.set(td, 'scope', 'row');
+    }
+    if (rowIndex < rowHeaders) {
+      Attribute.set(td, 'scope', 'col');
+    }
 
     // Note, this is a placeholder so that the cells have height. The unicode character didn't work in IE10.
     Insert.append(td, SugarElement.fromTag('br'));
@@ -52,7 +56,7 @@ const createGroupRow = (columns: number) => {
 const createRows = (rows: number, columns: number, rowHeaders: number, columnHeaders: number) =>
   Arr.range(rows, (r) => createRow(columns, rowHeaders, columnHeaders, r));
 
-const render = (rows: number, columns: number, rowHeaders: number, columnHeaders: number, headerType: string, renderOpts: RenderOptions = DefaultRenderOptions) => {
+const render = (rows: number, columns: number, rowHeaders: number, columnHeaders: number, headerType: string, renderOpts: RenderOptions = DefaultRenderOptions): SugarElement<HTMLTableElement> => {
   const table = SugarElement.fromTag('table');
   const rowHeadersGoInThead = headerType !== 'cells';
 

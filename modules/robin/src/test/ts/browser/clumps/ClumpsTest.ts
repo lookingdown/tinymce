@@ -4,11 +4,11 @@ import { Arr } from '@ephox/katamari';
 import { Compare, Hierarchy, Insert, Remove, SugarBody, SugarElement } from '@ephox/sugar';
 import * as Clumps from 'ephox/robin/clumps/Clumps';
 
-UnitTest.test('ClumpsTest', function () {
+UnitTest.test('ClumpsTest', () => {
   /* The purpose of this test is to take a large section of html and test dividing it into
    * inline clumps
    */
-  const find = function (path: number[]) {
+  const find = (path: number[]) => {
     return Hierarchy.follow(container, path).getOrDie('Could not find the path: ' + path.join(','));
   };
 
@@ -23,7 +23,7 @@ UnitTest.test('ClumpsTest', function () {
 
   Insert.append(body, container);
 
-  const isRoot = function (elem: SugarElement) {
+  const isRoot = (elem: SugarElement) => {
     return Compare.eq(elem, container);
   };
 
@@ -32,10 +32,10 @@ UnitTest.test('ClumpsTest', function () {
     end: number[];
   }
 
-  const check = function (expected: Expected[], start: number[], soffset: number, finish: number[], foffset: number) {
+  const check = (expected: Expected[], start: number[], soffset: number, finish: number[], foffset: number) => {
     const actual = Clumps.collect(DomUniverse(), isRoot, find(start), soffset, find(finish), foffset);
     assert.eq(expected.length, actual.length, 'The length of Clumps was different. Expected: ' + expected.length + ', actual: ' + actual.length);
-    Arr.each(expected, function (exp, i) {
+    Arr.each(expected, (exp, i) => {
       const act = actual[i];
       assert.eq(true, Compare.eq(find(exp.start), act.start));
       assert.eq(true, Compare.eq(find(exp.end), act.finish));

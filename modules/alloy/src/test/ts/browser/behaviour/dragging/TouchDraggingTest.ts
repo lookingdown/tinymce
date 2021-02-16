@@ -1,6 +1,6 @@
 import { Chain, Guard, NamedChain, Touch, UiFinder } from '@ephox/agar';
 import { UnitTest } from '@ephox/bedrock-client';
-import { Optional, Result } from '@ephox/katamari';
+import { Fun, Optional, Result } from '@ephox/katamari';
 import { PlatformDetection } from '@ephox/sand';
 import { Css, Scroll, SugarPosition } from '@ephox/sugar';
 
@@ -19,7 +19,7 @@ UnitTest.asynctest('TouchDraggingTest', (success, failure) => {
   PlatformDetection.override({
     deviceType: {
       ...origPlatform.deviceType,
-      isTouch: () => true
+      isTouch: Fun.always
     }
   });
 
@@ -38,15 +38,13 @@ UnitTest.asynctest('TouchDraggingTest', (success, failure) => {
           mode: 'touch',
           blockerClass: 'test-blocker',
           snaps: {
-            getSnapPoints() {
-              return [
-                Dragging.snap({
-                  sensor: DragCoord.fixed(300, 10),
-                  range: SugarPosition(1000, 30),
-                  output: DragCoord.fixed(Optional.none<number>(), Optional.some(10))
-                })
-              ];
-            },
+            getSnapPoints: () => [
+              Dragging.snap({
+                sensor: DragCoord.fixed(300, 10),
+                range: SugarPosition(1000, 30),
+                output: DragCoord.fixed(Optional.none<number>(), Optional.some(10))
+              })
+            ],
             leftAttr: 'data-snap-left',
             topAttr: 'data-snap-top'
           },

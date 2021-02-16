@@ -6,13 +6,15 @@
  */
 
 import { Selections } from '@ephox/darwin';
-import { Arr, Fun, Optional } from '@ephox/katamari';
+import { Arr, Fun, Obj, Optional } from '@ephox/katamari';
 import { TableLookup, Warehouse } from '@ephox/snooker';
 import { Compare, SugarElement } from '@ephox/sugar';
 import Editor from 'tinymce/core/api/Editor';
 import { Dialog } from 'tinymce/core/api/ui/Ui';
 import * as Styles from '../actions/Styles';
+import * as Events from '../api/Events';
 import { hasAdvancedCellTab } from '../api/Settings';
+import { switchCellType } from '../core/TableSections';
 import * as Util from '../core/Util';
 import * as TableSelection from '../selection/TableSelection';
 import * as CellDialogGeneralTab from './CellDialogGeneralTab';
@@ -69,16 +71,23 @@ const updateAdvancedProps = (modifier: DomModifier, data: CellData) => {
 // how as part of this, it doesn't remove any original alignment before
 // applying any specified alignment.
 
-const applyCellData = (editor: Editor, cells: SugarElement<HTMLTableCellElement>[], data: CellData) => {
-  const dom = editor.dom;
+const applyCellData = (editor: Editor, cells: SugarElement<HTMLTableCellElement>[], oldData: CellData, data: CellData) => {
   const isSingleCell = cells.length === 1;
 
-  if (cells.length >= 1) {
-    getSelectedCells(cells).each((selectedCells) =>
+  const modifiedData = Obj.filter(data, (value, key) => oldData[key] !== value);
+
+  if (Obj.size(modifiedData) > 0 && cells.length >= 1) {
+    /*
+      Retrieve the table before the cells are modified
+      as there is a case where cells are replaced and
+      the reference will be lost when trying to fire events.
+    */
+    const tableOpt = TableLookup.table(cells[0]);
+
+    getSelectedCells(cells).each((selectedCells) => {
       Arr.each(selectedCells, (item) => {
         // Switch cell type if applicable
-        const cellElement = item.element;
-        const cellElm = data.celltype && Util.getNodeName(cellElement) !== data.celltype ? (dom.rename(cellElement, data.celltype) as HTMLTableCellElement) : cellElement;
+        const cellElm = switchCellType(editor, item.element, data.celltype);
         const modifier = isSingleCell ? DomModifier.normal(editor, cellElm) : DomModifier.ifTruthy(editor, cellElm);
         const colModifier = item.column.map((col) =>
           isSingleCell ? DomModifier.normal(editor, col) : DomModifier.ifTruthy(editor, col)
@@ -105,16 +114,27 @@ const applyCellData = (editor: Editor, cells: SugarElement<HTMLTableCellElement>
         if (data.valign) {
           Styles.applyVAlign(editor, cellElm, data.valign);
         }
-      }));
+      });
+    });
+
+    // style modified if there's at least one other change apart from 'celltype' and 'scope'
+    const styleModified = Obj.size(Obj.filter(modifiedData, (_value, key) => key !== 'scope' && key !== 'celltype')) > 0;
+
+    tableOpt.each(
+      (table) => Events.fireTableModified(editor, table.dom, {
+        structure: Obj.has(modifiedData, 'celltype'),
+        style: styleModified,
+      })
+    );
   }
 };
 
-const onSubmitCellForm = (editor: Editor, cells: SugarElement<HTMLTableCellElement>[], api) => {
+const onSubmitCellForm = (editor: Editor, cells: SugarElement<HTMLTableCellElement>[], oldData: CellData, api) => {
   const data: CellData = api.getData();
   api.close();
 
   editor.undoManager.transact(() => {
-    applyCellData(editor, cells, data);
+    applyCellData(editor, cells, oldData, data);
     editor.focus();
   });
 };
@@ -178,7 +198,7 @@ const open = (editor: Editor, selections: Selections) => {
       }
     ],
     initialData: data,
-    onSubmit: Fun.curry(onSubmitCellForm, editor, cells)
+    onSubmit: Fun.curry(onSubmitCellForm, editor, cells, data)
   });
 };
 

@@ -40,21 +40,17 @@ interface InternalTemplate {
   };
 }
 
-type DialogData = {
+interface DialogData {
   template: string;
   preview: string;
-};
+}
 
 type UpdateDialogCallback = (dialogApi: Dialog.DialogInstanceApi<DialogData>, template: InternalTemplate, previewHtml: string) => void;
 
 const getPreviewContent = (editor: Editor, html: string) => {
   if (html.indexOf('<html>') === -1) {
     let contentCssEntries = '';
-
     const contentStyle = Settings.getContentStyle(editor);
-    if (contentStyle) {
-      contentCssEntries += '<style type="text/css">' + contentStyle + '</style>';
-    }
 
     const cors = Settings.shouldUseContentCssCors(editor) ? ' crossorigin="anonymous"' : '';
 
@@ -63,6 +59,10 @@ const getPreviewContent = (editor: Editor, html: string) => {
         editor.documentBaseURI.toAbsolute(url) +
         '"' + cors + '>';
     });
+
+    if (contentStyle) {
+      contentCssEntries += '<style type="text/css">' + contentStyle + '</style>';
+    }
 
     const bodyClass = Settings.getBodyClass(editor);
 
@@ -139,7 +139,7 @@ const open = (editor: Editor, templateList: ExternalTemplate[]) => {
   const getTemplateContent = (t: InternalTemplate) => new Promise<string>((resolve, reject) => {
     t.value.url.fold(() => resolve(t.value.content.getOr('')), (url) => XHR.send({
       url,
-      success(html: string) {
+      success: (html: string) => {
         resolve(html);
       },
       error: (e) => {

@@ -35,7 +35,7 @@ const fireEvents = (editor: Editor, table) => {
 
 const isPercentage = (width: string) => Type.isString(width) && width.indexOf('%') !== -1;
 
-const insert = (editor: Editor, columns: number, rows: number, colHeaders: number, rowHeaders: number): HTMLElement => {
+const insert = (editor: Editor, columns: number, rows: number, colHeaders: number, rowHeaders: number): HTMLTableElement => {
   const defaultStyles = getDefaultStyles(editor);
   const options: TableRender.RenderOptions = {
     styles: defaultStyles,
@@ -43,12 +43,17 @@ const insert = (editor: Editor, columns: number, rows: number, colHeaders: numbe
     colGroups: useColumnGroup(editor)
   };
 
-  const table = TableRender.render(rows, columns, rowHeaders, colHeaders, getTableHeaderType(editor), options);
-  Attribute.set(table, 'data-mce-id', '__mce');
+  // Don't create an undo level when inserting the base table HTML otherwise we can end up with 2 undo levels
+  editor.undoManager.ignore(() => {
+    const table = TableRender.render(rows, columns, rowHeaders, colHeaders, getTableHeaderType(editor), options);
+    Attribute.set(table, 'data-mce-id', '__mce');
 
-  const html = Html.getOuter(table);
-  editor.insertContent(html);
+    const html = Html.getOuter(table);
+    editor.insertContent(html);
+    editor.addVisual();
+  });
 
+  // Enforce the sizing mode of the table
   return SelectorFind.descendant<HTMLTableElement>(Util.getBody(editor), 'table[data-mce-id="__mce"]').map((table) => {
     if (isPixelsForced(editor)) {
       enforcePixels(editor, table);

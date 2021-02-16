@@ -101,10 +101,11 @@ const setupDemo = () => {
   const backstage: UiFactoryBackstage = {
     shared: {
       providers: {
-        icons: () => <Record<string, string>> {},
-        menuItems: () => <Record<string, any>> {},
+        icons: (): Record<string, any> => ({}),
+        menuItems: (): Record<string, any> => ({}),
         translate: I18n.translate,
-        isReadOnly: () => false
+        isDisabled: Fun.never,
+        getSetting: (_settingName: string, defaultVal: any) => defaultVal
       },
       interpreter: (x) => x,
       getSink: () => Result.value(sink),

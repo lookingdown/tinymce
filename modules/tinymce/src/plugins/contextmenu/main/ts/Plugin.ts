@@ -7,9 +7,9 @@
 
 import PluginManager from 'tinymce/core/api/PluginManager';
 
-export default function () {
-  PluginManager.add('contextmenu', function () {
+export default () => {
+  PluginManager.add('contextmenu', () => {
     // eslint-disable-next-line no-console
     console.warn('Context menu plugin is now built in to the core editor, please remove it from your editor configuration');
   });
-}
+};

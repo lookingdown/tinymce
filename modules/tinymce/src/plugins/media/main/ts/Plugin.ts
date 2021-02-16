@@ -13,8 +13,8 @@ import * as ResolveName from './core/ResolveName';
 import * as Selection from './core/Selection';
 import * as Buttons from './ui/Buttons';
 
-export default function () {
-  PluginManager.add('media', function (editor) {
+export default () => {
+  PluginManager.add('media', (editor) => {
     Commands.register(editor);
     Buttons.register(editor);
     ResolveName.setup(editor);
@@ -22,4 +22,4 @@ export default function () {
     Selection.setup(editor);
     return Api.get(editor);
   });
-}
+};

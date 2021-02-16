@@ -26,7 +26,7 @@ import { getSelectionStartCellOrCaption } from './selection/TableSelection';
 import * as Buttons from './ui/Buttons';
 import * as MenuItems from './ui/MenuItems';
 
-function Plugin(editor: Editor) {
+const Plugin = (editor: Editor) => {
   const selections = Selections(() => Util.getBody(editor), () => getSelectionStartCellOrCaption(Util.getSelectionStart(editor)), ephemera.selectedSelector);
   const selectionTargets = getSelectionTargets(editor, selections);
   const resizeHandler = getResizeHandler(editor);
@@ -42,25 +42,25 @@ function Plugin(editor: Editor) {
   Buttons.addButtons(editor, selectionTargets, clipboard);
   Buttons.addToolbars(editor);
 
-  editor.on('PreInit', function () {
+  editor.on('PreInit', () => {
     editor.serializer.addTempAttr(ephemera.firstSelected);
     editor.serializer.addTempAttr(ephemera.lastSelected);
     TableFormats.registerFormats(editor);
   });
 
   if (hasTabNavigation(editor)) {
-    editor.on('keydown', function (e: KeyboardEvent) {
+    editor.on('keydown', (e: KeyboardEvent) => {
       TabContext.handle(e, editor, actions);
     });
   }
 
-  editor.on('remove', function () {
+  editor.on('remove', () => {
     resizeHandler.destroy();
   });
 
   return getApi(editor, clipboard, resizeHandler, selectionTargets);
-}
+};
 
-export default function () {
+export default () => {
   PluginManager.add('table', Plugin);
-}
+};

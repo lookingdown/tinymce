@@ -5,7 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Obj, Strings } from '@ephox/katamari';
+import { Arr, Fun, Strings, Type } from '@ephox/katamari';
 import { Base64Extract, extractBase64DataUris, restoreDataUris } from '../../html/Base64Uris';
 import Tools from '../util/Tools';
 import Entities from './Entities';
@@ -65,19 +65,19 @@ export interface SaxParserSettings {
   self_closing_elements?: Record<string, {}>;
   validate?: boolean;
 
-  cdata? (text: string): void;
-  comment? (text: string): void;
-  doctype? (text: string): void;
-  end? (name: string): void;
-  pi? (name: string, text: string): void;
-  start? (name: string, attrs: AttrList, empty: boolean): void;
-  text? (text: string, raw?: boolean): void;
+  cdata?: (text: string) => void;
+  comment?: (text: string) => void;
+  doctype?: (text: string) => void;
+  end?: (name: string) => void;
+  pi?: (name: string, text: string) => void;
+  start?: (name: string, attrs: AttrList, empty: boolean) => void;
+  text?: (text: string, raw?: boolean) => void;
 }
 
 export type ParserFormat = 'html' | 'xhtml' | 'xml';
 
 interface SaxParser {
-  parse (html: string, format?: ParserFormat): void;
+  parse: (html: string, format?: ParserFormat) => void;
 }
 
 const enum ParsingMode {
@@ -97,13 +97,21 @@ const enum MatchType {
   Attribute = 9
 }
 
+const safeSvgDataUrlElements = [ 'img', 'video' ];
+
 const isValidPrefixAttrName = (name: string): boolean => name.indexOf('data-') === 0 || name.indexOf('aria-') === 0;
 
-const isInvalidUri = (settings: SaxParserSettings, uri: string) => {
+const blockSvgDataUris = (allowSvgDataUrls: boolean | undefined, tagName: string) => {
+  // Only allow SVGs by default on images/videos since the browser won't execute scripts on those elements
+  const allowed = Type.isNullable(allowSvgDataUrls) ? Arr.contains(safeSvgDataUrlElements, tagName) : allowSvgDataUrls;
+  return !allowed;
+};
+
+const isInvalidUri = (settings: SaxParserSettings, uri: string, tagName: string) => {
   if (settings.allow_html_data_urls) {
     return false;
   } else if (/^data:image\//i.test(uri)) {
-    return settings.allow_svg_data_urls === false && /^data:image\/svg\+xml/i.test(uri);
+    return blockSvgDataUris(settings.allow_svg_data_urls, tagName) && /^data:image\/svg\+xml/i.test(uri);
   } else {
     return /^data:/i.test(uri);
   }
@@ -124,7 +132,7 @@ const findEndTagIndex = (schema: Schema, html: string, startIndex: number): numb
   let count = 1, index, matches;
 
   const shortEndedElements = schema.getShortEndedElements();
-  const tokenRegExp = /<([!?\/])?([A-Za-z0-9\-_\:\.]+)((?:\s+[^"\'>]+(?:(?:"[^"]*")|(?:\'[^\']*\')|[^>]*))*|\/|\s+)>/g;
+  const tokenRegExp = /<([!?\/])?([A-Za-z0-9\-_:.]+)(\s(?:[^'">]+(?:"[^"]*"|'[^']*'))*[^"'>]*(?:"[^">]*|'[^'>]*)?|\s*|\/)>/g;
   tokenRegExp.lastIndex = index = startIndex;
 
   while ((matches = tokenRegExp.exec(html))) {
@@ -160,7 +168,7 @@ const findCommentEndIndex = (html: string, isBogus: boolean, startIndex: number 
       const endIndex = lcHtml.indexOf('>', startIndex);
       return endIndex !== -1 ? endIndex : lcHtml.length;
     } else {
-      const endCommentRegexp = /--!?>/;
+      const endCommentRegexp = /--!?>/g;
       endCommentRegexp.lastIndex = startIndex;
       const match = endCommentRegexp.exec(html);
       return match ? match.index + match[0].length : lcHtml.length;
@@ -189,30 +197,28 @@ const checkBogusAttribute = (regExp: RegExp, attrString: string): string | null 
  * @param {Object} settings Name/value collection of settings. comment, cdata, text, start and end are callbacks.
  * @param {tinymce.html.Schema} schema HTML Schema class to use when parsing.
  */
-function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
-  const noop = function () { };
-
+const SaxParser = (settings?: SaxParserSettings, schema = Schema()): SaxParser => {
   settings = settings || {};
 
   if (settings.fix_self_closing !== false) {
     settings.fix_self_closing = true;
   }
 
-  const comment = settings.comment ? settings.comment : noop;
-  const cdata = settings.cdata ? settings.cdata : noop;
-  const text = settings.text ? settings.text : noop;
-  const start = settings.start ? settings.start : noop;
-  const end = settings.end ? settings.end : noop;
-  const pi = settings.pi ? settings.pi : noop;
-  const doctype = settings.doctype ? settings.doctype : noop;
+  const comment = settings.comment ? settings.comment : Fun.noop;
+  const cdata = settings.cdata ? settings.cdata : Fun.noop;
+  const text = settings.text ? settings.text : Fun.noop;
+  const start = settings.start ? settings.start : Fun.noop;
+  const end = settings.end ? settings.end : Fun.noop;
+  const pi = settings.pi ? settings.pi : Fun.noop;
+  const doctype = settings.doctype ? settings.doctype : Fun.noop;
 
   const parseInternal = (base64Extract: Base64Extract, format: ParserFormat = 'html') => {
     const html = base64Extract.html;
-    let matches, index = 0, value, endRegExp;
+    let matches: RegExpExecArray, index = 0, value, endRegExp;
     const stack = [];
     let attrList, i, textData, name;
     let isInternalElement, isShortEnded;
-    let elementRule, isValidElement, attr, attribsValue, validAttributesMap, validAttributePatterns;
+    let elementRule, isValidElement, attr, attribsValue: string, validAttributesMap, validAttributePatterns;
     let attributesRequired, attributesDefault, attributesForced;
     let anyAttributesRequired, attrValue, idCount = 0;
     const decode = Entities.decode;
@@ -267,7 +273,7 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
       comment(restoreDataUris(value, base64Extract));
     };
 
-    const processAttr = (value: string) => Obj.get(base64Extract.uris, value).getOr(value);
+    const processAttr = (value: string) => restoreDataUris(value, base64Extract);
 
     const processMalformedComment = (value: string, startIndex: number) => {
       const startTag = value || '';
@@ -282,7 +288,7 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
       return endIndex + 1;
     };
 
-    const parseAttribute = (match: string, name: string, value?: string, val2?: string, val3?: string) => {
+    const parseAttribute = (tagName: string, name: string, value?: string, val2?: string, val3?: string) => {
       let attrRule, i;
       const trimRegExp = /[\s\u0000-\u001F]+/g;
 
@@ -336,7 +342,7 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
           return;
         }
 
-        if (isInvalidUri(settings, uri)) {
+        if (isInvalidUri(settings, uri, tagName)) {
           return;
         }
       }
@@ -362,7 +368,7 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
       '(?:!(--)?)|' + // Start malformed comment
       '(?:\\?([^\\s\\/<>]+) ?([\\w\\W]*?)[?/]>)|' + // PI
       '(?:\\/([A-Za-z][A-Za-z0-9\\-_\\:\\.]*)>)|' + // End element
-      `(?:([A-Za-z][A-Za-z0-9\\-_\\:\\.]*)((?:\\s+[^"'>]+(?:(?:"[^"]*")|(?:'[^']*')|[^>]*))*|\\/|\\s+)>)` + // Start element
+      `(?:([A-Za-z][A-Za-z0-9\\-_:.]*)(\\s(?:[^'">]+(?:"[^"]*"|'[^']*'))*[^"'>]*(?:"[^">]*|'[^'>]*)?|\\s*|\\/)>)` + // Start element
       ')', 'g');
 
     const attrRegExp = /([\w:\-]+)(?:\s*=\s*(?:(?:\"((?:[^\"])*)\")|(?:\'((?:[^\'])*)\')|([^>\s]+)))?/g;
@@ -451,7 +457,10 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
             attrList = [];
             attrList.map = {};
 
-            attribsValue.replace(attrRegExp, parseAttribute);
+            attribsValue.replace(attrRegExp, (match, name, val, val2, val3) => {
+              parseAttribute(value, name, val, val2, val3);
+              return '';
+            });
           } else {
             attrList = [];
             attrList.map = {};
@@ -639,10 +648,8 @@ function SaxParser(settings?: SaxParserSettings, schema = Schema()): SaxParser {
   return {
     parse
   };
-}
+};
 
-namespace SaxParser {
-  export const findEndTag = findEndTagIndex;
-}
+SaxParser.findEndTag = findEndTagIndex;
 
 export default SaxParser;

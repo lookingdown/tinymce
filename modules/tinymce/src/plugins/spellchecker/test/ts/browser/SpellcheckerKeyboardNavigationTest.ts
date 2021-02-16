@@ -8,18 +8,18 @@ import * as Settings from 'tinymce/plugins/spellchecker/api/Settings';
 import SpellcheckerPlugin from 'tinymce/plugins/spellchecker/Plugin';
 import SilverTheme from 'tinymce/themes/silver/Theme';
 
-UnitTest.asynctest('browser.tinymce.plugins.spellchecker.SpellcheckerTest', function (success, failure) {
+UnitTest.asynctest('browser.tinymce.plugins.spellchecker.SpellcheckerTest', (success, failure) => {
 
   SilverTheme();
   SpellcheckerPlugin();
 
-  const sTestDefaultLanguage = function (editor) {
-    return Step.sync(function () {
+  const sTestDefaultLanguage = (editor) => {
+    return Step.sync(() => {
       Assert.eq('should be same', Settings.getLanguage(editor), 'en');
     });
   };
 
-  TinyLoader.setup(function (editor, onSuccess, onFailure) {
+  TinyLoader.setup((editor, onSuccess, onFailure) => {
     const doc = SugarElement.fromDom(document);
 
     const sPressTab = Keyboard.sKeydown(doc, Keys.tab(), {});
@@ -65,7 +65,7 @@ UnitTest.asynctest('browser.tinymce.plugins.spellchecker.SpellcheckerTest', func
     toolbar: 'spellchecker',
     base_url: '/project/tinymce/js/tinymce',
     statusbar: false,
-    spellchecker_callback(method, _text, success, _failure) {
+    spellchecker_callback: (method, _text, success, _failure) => {
       if (method === 'spellcheck') {
         success({ words: {
           helo: [ 'hello' ],

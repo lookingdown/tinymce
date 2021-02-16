@@ -6,11 +6,11 @@
  */
 
 import DOMUtils from '../api/dom/DOMUtils';
-import { Formats, FormatVars } from '../api/fmt/Format';
 import Tools from '../api/util/Tools';
 import * as NodeType from '../dom/NodeType';
+import { Formats, FormatVars } from './FormatTypes';
 
-const get = function (dom: DOMUtils) {
+const get = (dom: DOMUtils) => {
   const formats: Formats = {
     valigntop: [
       { selector: 'td,th', styles: { verticalAlign: 'top' }}
@@ -147,7 +147,8 @@ const get = function (dom: DOMUtils) {
 
     strikethrough: [
       { inline: 'span', styles: { textDecoration: 'line-through' }, exact: true },
-      { inline: 'strike', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
+      { inline: 'strike', remove: 'all', preserve_attributes: [ 'class', 'style' ] },
+      { inline: 's', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
     ],
 
     forecolor: { inline: 'span', styles: { color: '%value' }, links: true, remove_similar: true, clear_child_styles: true },
@@ -163,11 +164,11 @@ const get = function (dom: DOMUtils) {
 
     link: {
       inline: 'a', selector: 'a', remove: 'all', split: true, deep: true,
-      onmatch(node, _fmt, _itemName) {
+      onmatch: (node, _fmt, _itemName) => {
         return NodeType.isElement(node) && node.hasAttribute('href');
       },
 
-      onformat(elm, _fmt, vars?: FormatVars) {
+      onformat: (elm, _fmt, vars?: FormatVars) => {
         Tools.each(vars, (value, key) => {
           dom.setAttrib(elm, key, value);
         });
@@ -176,7 +177,7 @@ const get = function (dom: DOMUtils) {
 
     removeformat: [
       {
-        selector: 'b,strong,em,i,font,u,strike,sub,sup,dfn,code,samp,kbd,var,cite,mark,q,del,ins',
+        selector: 'b,strong,em,i,font,u,strike,s,sub,sup,dfn,code,samp,kbd,var,cite,mark,q,del,ins',
         remove: 'all',
         split: true,
         expand: false,
@@ -188,7 +189,7 @@ const get = function (dom: DOMUtils) {
     ]
   };
 
-  Tools.each('p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp'.split(/\s/), function (name) {
+  Tools.each('p h1 h2 h3 h4 h5 h6 div address pre div dt dd samp'.split(/\s/), (name) => {
     formats[name] = { block: name, remove: 'all' };
   });
 

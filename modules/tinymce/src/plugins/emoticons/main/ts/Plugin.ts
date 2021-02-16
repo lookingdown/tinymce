@@ -6,9 +6,10 @@
  */
 
 import PluginManager from 'tinymce/core/api/PluginManager';
+
 import * as Settings from './api/Settings';
 import { initDatabase } from './core/EmojiDatabase';
-
+import * as Filters from './core/Filters';
 import * as Autocompletion from './ui/Autocompletion';
 import * as Buttons from './ui/Buttons';
 
@@ -19,8 +20,8 @@ import * as Buttons from './ui/Buttons';
  * @private
  */
 
-export default function () {
-  PluginManager.add('emoticons', function (editor, pluginUrl) {
+export default () => {
+  PluginManager.add('emoticons', (editor, pluginUrl) => {
     const databaseUrl = Settings.getEmoticonDatabaseUrl(editor, pluginUrl);
     const databaseId = Settings.getEmoticonDatabaseId(editor);
 
@@ -28,5 +29,6 @@ export default function () {
 
     Buttons.register(editor, database);
     Autocompletion.init(editor, database);
+    Filters.setup(editor);
   });
-}
+};

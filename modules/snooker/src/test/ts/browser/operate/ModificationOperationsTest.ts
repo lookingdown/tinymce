@@ -1,3 +1,4 @@
+import { Assertions } from '@ephox/agar';
 import { assert, UnitTest } from '@ephox/bedrock-client';
 import { Arr, Fun } from '@ephox/katamari';
 import { Html, SugarElement, SugarNode } from '@ephox/sugar';
@@ -6,24 +7,24 @@ import * as Structs from 'ephox/snooker/api/Structs';
 import * as ModificationOperations from 'ephox/snooker/operate/ModificationOperations';
 import BrowserTestGenerator from 'ephox/snooker/test/BrowserTestGenerator';
 
-UnitTest.test('ModificationOperationsTest', function () {
+UnitTest.test('ModificationOperationsTest', () => {
   const r = Structs.rowcells;
   const en = (content: string, isNew: boolean) => {
     const elem = SugarElement.fromTag('td');
     Html.set(elem, content);
-    return Structs.elementnew(elem, isNew);
+    return Structs.elementnew(elem, isNew, false);
   };
-  const mapToStructGrid = function (grid: Structs.ElementNew[][]) {
-    return Arr.map(grid, function (row) {
+  const mapToStructGrid = (grid: Structs.ElementNew[][]) => {
+    return Arr.map(grid, (row) => {
       return Structs.rowcells(row, 'tbody');
     });
   };
 
-  const assertGrids = function (expected: Structs.RowCells[], actual: Structs.RowCells[]) {
+  const assertGrids = (expected: Structs.RowCells[], actual: Structs.RowCells[]) => {
     assert.eq(expected.length, actual.length);
-    Arr.each(expected, function (row, i) {
-      Arr.each(row.cells, function (cell, j) {
-        assert.eq(cell.element, actual[i].cells[j].element);
+    Arr.each(expected, (row, i) => {
+      Arr.each(row.cells, (cell, j) => {
+        Assertions.assertHtml('Expected elements to have the same HTML', Html.getOuter(cell.element), Html.getOuter(actual[i].cells[j].element));
         assert.eq(cell.isNew, actual[i].cells[j].isNew);
       });
       assert.eq(row.section, actual[i].section);
@@ -33,13 +34,13 @@ UnitTest.test('ModificationOperationsTest', function () {
   const compare = (a: SugarElement, b: SugarElement) => SugarNode.name(a) === SugarNode.name(b) && Html.get(a) === Html.get(b);
 
   // Test basic insert column
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], example: number, index: number) {
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], example: number, index: number) => {
       const actual = ModificationOperations.insertColumnAt(grid, index, example, compare, Generators.modification(BrowserTestGenerator()).getOrInit);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], example: number, index: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], example: number, index: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, example, index);
@@ -127,13 +128,13 @@ UnitTest.test('ModificationOperationsTest', function () {
   })();
 
   // Test basic insert row
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], example: number, index: number) {
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], example: number, index: number) => {
       const actual = ModificationOperations.insertRowAt(grid, index, example, compare, Generators.modification(BrowserTestGenerator()).getOrInit);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], example: number, index: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], example: number, index: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, example, index);
@@ -179,13 +180,13 @@ UnitTest.test('ModificationOperationsTest', function () {
   })();
 
   // Test basic delete column
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], index: number) {
-      const actual = ModificationOperations.deleteColumnsAt(grid, index, index);
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], index: number) => {
+      const actual = ModificationOperations.deleteColumnsAt(grid, [ index ]);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], index: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], index: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, index);
@@ -213,14 +214,49 @@ UnitTest.test('ModificationOperationsTest', function () {
       ], 1);
   })();
 
+  // Test delete multiple columns
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], indexes: number[]) => {
+      const actual = ModificationOperations.deleteColumnsAt(grid, indexes);
+      assertGrids(expected, actual);
+    };
+
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], indexes: number[]) => {
+      const structExpected = mapToStructGrid(expected);
+      const structGrid = mapToStructGrid(grid);
+      check(structExpected, structGrid, indexes);
+    };
+
+    checkBody([], [[ en('a', false), en('b', false) ]], [ 0, 1 ]);
+    checkBody([[ en('b', false) ]], [[ en('a', false), en('b', false), en('c', false) ]], [ 0, 2 ]);
+    checkBody(
+      [
+        [ en('a', false), en('c', false) ],
+        [ en('c', false), en('c', false) ]
+      ],
+      [
+        [ en('a', false), en('b', false), en('c', false) ],
+        [ en('c', false), en('c', false), en('c', false) ]
+      ], [ 1 ]);
+    check(
+      [
+        r([ en('a', false) ], 'thead'),
+        r([ en('c', false) ], 'tbody')
+      ],
+      [
+        r([ en('a', false), en('b', false), en('c', false) ], 'thead'),
+        r([ en('c', false), en('c', false), en('c', false) ], 'tbody')
+      ], [ 1, 2 ]);
+  })();
+
   // Test basic delete row
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], index: number) {
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], index: number) => {
       const actual = ModificationOperations.deleteRowsAt(grid, index, index);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], index: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], index: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, index);
@@ -251,13 +287,13 @@ UnitTest.test('ModificationOperationsTest', function () {
       ], 1);
   })();
 
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], exRow: number, exCol: number) {
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], exRow: number, exCol: number) => {
       const actual = ModificationOperations.splitCellIntoColumns(grid, exRow, exCol, Fun.tripleEquals, Generators.modification(BrowserTestGenerator()).getOrInit);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], exRow: number, exCol: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], exRow: number, exCol: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, exRow, exCol);
@@ -448,13 +484,13 @@ UnitTest.test('ModificationOperationsTest', function () {
     );
   })();
 
-  (function () {
-    const check = function (expected: Structs.RowCells[], grid: Structs.RowCells[], exRow: number, exCol: number) {
+  (() => {
+    const check = (expected: Structs.RowCells[], grid: Structs.RowCells[], exRow: number, exCol: number) => {
       const actual = ModificationOperations.splitCellIntoRows(grid, exRow, exCol, Fun.tripleEquals, Generators.modification(BrowserTestGenerator()).getOrInit);
       assertGrids(expected, actual);
     };
 
-    const checkBody = function (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], exRow: number, exCol: number) {
+    const checkBody = (expected: Structs.ElementNew[][], grid: Structs.ElementNew[][], exRow: number, exCol: number) => {
       const structExpected = mapToStructGrid(expected);
       const structGrid = mapToStructGrid(grid);
       check(structExpected, structGrid, exRow, exCol);

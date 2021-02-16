@@ -1,5 +1,7 @@
-import { Chain, GeneralSteps, Step } from '@ephox/agar';
 import { Cell, Optional } from '@ephox/katamari';
+import { Chain } from '../api/Chain';
+import * as GeneralSteps from '../api/GeneralSteps';
+import { Step } from '../api/Step';
 import { createFileList } from './FileList';
 
 interface Props {
@@ -29,6 +31,7 @@ const createChangeEvent = (win: Window): Event => {
 const cPatchInputElement = (files: File[]) => Chain.op<any>(() => {
   const currentProps = {
     files: Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'files'),
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     click: HTMLInputElement.prototype.click
   };
 
@@ -62,7 +65,11 @@ const cRunOnPatchedFileInput = (files: File[], chain: Chain<any, any>): Chain<an
   cUnpatchInputElement
 ]);
 
+const pRunOnPatchedFileInput = (files: File[], action: () => Promise<void>): Promise<void > =>
+  Chain.toPromise(cRunOnPatchedFileInput(files, Chain.fromPromise(action)))(undefined);
+
 export {
   sRunOnPatchedFileInput,
-  cRunOnPatchedFileInput
+  cRunOnPatchedFileInput,
+  pRunOnPatchedFileInput
 };

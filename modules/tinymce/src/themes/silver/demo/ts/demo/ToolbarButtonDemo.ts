@@ -1,11 +1,12 @@
 /* eslint-disable no-console */
+import { Fun } from '@ephox/katamari';
 import Editor from 'tinymce/core/api/Editor';
 
 import * as MockDemo from './MockDemo';
 
 declare let tinymce: any;
 
-export default function () {
+export default () => {
   const DemoState2 = MockDemo.mockFeatureState();
   const generateButton = (editor: Editor, buttonType: 'button', name, num) => {
     const names = [];
@@ -14,7 +15,7 @@ export default function () {
       editor.ui.registry.addButton(`${name}-${i}`, {
         type: buttonType,
         icon: `*-${i}-*`,
-        onAction(_comp) {
+        onAction: (_api) => {
           console.log(`${name} ${i} button clicked`);
         }
       });
@@ -38,8 +39,8 @@ export default function () {
       'autosave' // Required to prevent users losing content when they press back
     ],
 
-    setup(ed: Editor) {
-      ed.on('skinLoaded', function () {
+    setup: (ed: Editor) => {
+      ed.on('skinLoaded', () => {
         // Notification fields for equality: type, text, progressBar, timeout
         ed.notificationManager.open({
           text: 'You will not see this because the mobile theme has no notifications',
@@ -54,7 +55,7 @@ export default function () {
         icon: 'bold',
         // ariaLabel: 'aria says icon button',
         disabled: true,
-        onAction(_comp) {
+        onAction: (_api) => {
           console.log('basic-button-2 click, basic-icon');
         }
       });
@@ -63,7 +64,7 @@ export default function () {
         type: 'button',
         icon: 'checkmark',
         // ariaLabel: 'aria says icon button',
-        onAction(_comp) {
+        onAction: (_api) => {
           console.log('basic-button-2 click, basic-icon');
         }
       });
@@ -72,18 +73,18 @@ export default function () {
         type: 'togglebutton',
         icon: 'italic',
         // ariaLabel: 'aria speaks icon button toggle',
-        onSetup: (comp) => {
+        onSetup: (api) => {
           // debugger;
           // TODO: TS narrowing, when config toggling = true
           // then the comp interface should include comp.toggleOn otherwise it should complain
           const state = DemoState2.get();
           console.log(state);
-          comp.setActive(state);
-          return () => { };
+          api.setActive(state);
+          return Fun.noop;
         },
-        onAction(comp) {
+        onAction: (api) => {
           DemoState2.toggle();
-          comp.setActive(DemoState2.get());
+          api.setActive(DemoState2.get());
           console.log('button with Toggle click - current state is: ' + DemoState2.get());
         }
       });
@@ -92,4 +93,4 @@ export default function () {
 
     }
   });
-}
+};

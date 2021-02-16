@@ -85,18 +85,21 @@ class ScriptLoader {
     const dom = DOM;
     let elm;
 
-    // Execute callback when script is loaded
-    const done = function () {
+    const cleanup = () => {
       dom.remove(id);
-
       if (elm) {
-        elm.onreadystatechange = elm.onload = elm = null;
+        elm.onerror = elm.onload = elm = null;
       }
+    };
 
+    // Execute callback when script is loaded
+    const done = () => {
+      cleanup();
       success();
     };
 
-    const error = function () {
+    const error = () => {
+      cleanup();
 
       // We can't mark it as done if there is a load error since
       // A) We don't want to produce 404 errors on the server and
@@ -170,10 +173,10 @@ class ScriptLoader {
    */
   public add(url: string, success?: () => void, scope?: any, failure?: () => void) {
     const state = this.states[url];
+    this.queue.push(url);
 
     // Add url to load queue
     if (state === undefined) {
-      this.queue.push(url);
       this.states[url] = QUEUED;
     }
 
@@ -226,9 +229,9 @@ class ScriptLoader {
     const self = this;
     const failures = [];
 
-    const execCallbacks = function (name, url) {
+    const execCallbacks = (name, url) => {
       // Execute URL callback functions
-      each(self.scriptLoadedCallbacks[url], function (callback) {
+      each(self.scriptLoadedCallbacks[url], (callback) => {
         if (Type.isFunction(callback[name])) {
           callback[name].call(callback.scope);
         }
@@ -243,14 +246,14 @@ class ScriptLoader {
       scope: scope || this
     });
 
-    const loadScripts = function () {
+    const loadScripts = () => {
       const loadingScripts = grep(scripts);
 
       // Current scripts has been handled
       scripts.length = 0;
 
       // Load scripts that needs to be loaded
-      each(loadingScripts, function (url) {
+      each(loadingScripts, (url) => {
         // Script is already loaded then execute script callbacks directly
         if (self.states[url] === LOADED) {
           execCallbacks('success', url);
@@ -267,7 +270,7 @@ class ScriptLoader {
           self.states[url] = LOADING;
           self.loading++;
 
-          self.loadScript(url, function () {
+          self.loadScript(url, () => {
             self.states[url] = LOADED;
             self.loading--;
 
@@ -275,7 +278,7 @@ class ScriptLoader {
 
             // Load more scripts if they where added by the recently loaded script
             loadScripts();
-          }, function () {
+          }, () => {
             self.states[url] = FAILED;
             self.loading--;
 
@@ -294,7 +297,7 @@ class ScriptLoader {
         const notifyCallbacks = self.queueLoadedCallbacks.slice(0);
         self.queueLoadedCallbacks.length = 0;
 
-        each(notifyCallbacks, function (callback) {
+        each(notifyCallbacks, (callback) => {
           if (failures.length === 0) {
             if (Type.isFunction(callback.success)) {
               callback.success.call(callback.scope);

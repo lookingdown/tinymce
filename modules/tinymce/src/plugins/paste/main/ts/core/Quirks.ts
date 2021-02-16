@@ -21,17 +21,17 @@ import * as WordFilter from './WordFilter';
  * @private
  */
 
-function addPreProcessFilter(editor: Editor, filterFunc) {
-  editor.on('PastePreProcess', function (e) {
+const addPreProcessFilter = (editor: Editor, filterFunc) => {
+  editor.on('PastePreProcess', (e) => {
     e.content = filterFunc(editor, e.content, e.internal, e.wordContent);
   });
-}
+};
 
-function addPostProcessFilter(editor: Editor, filterFunc) {
-  editor.on('PastePostProcess', function (e) {
+const addPostProcessFilter = (editor: Editor, filterFunc) => {
+  editor.on('PastePostProcess', (e) => {
     filterFunc(editor, e.node);
   });
-}
+};
 
 /**
  * Removes BR elements after block elements. IE9 has a nasty bug where it puts a BR element after each
@@ -43,7 +43,7 @@ function addPostProcessFilter(editor: Editor, filterFunc) {
  * Becomes:
  *  <p>a</p><p>b</p>
  */
-function removeExplorerBrElementsAfterBlocks(editor: Editor, html: string) {
+const removeExplorerBrElementsAfterBlocks = (editor: Editor, html: string) => {
   // Only filter word specific content
   if (!WordFilter.isWordContent(html)) {
     return html;
@@ -52,7 +52,7 @@ function removeExplorerBrElementsAfterBlocks(editor: Editor, html: string) {
   // Produce block regexp based on the block elements in schema
   const blockElements = [];
 
-  Tools.each(editor.schema.getBlockElements(), function (block: Element, blockName: string) {
+  Tools.each(editor.schema.getBlockElements(), (block: Element, blockName: string) => {
     blockElements.push(blockName);
   });
 
@@ -74,7 +74,7 @@ function removeExplorerBrElementsAfterBlocks(editor: Editor, html: string) {
   ]);
 
   return html;
-}
+};
 
 /**
  * WebKit has a nasty bug where the all computed styles gets added to style attributes when copy/pasting contents.
@@ -85,7 +85,7 @@ function removeExplorerBrElementsAfterBlocks(editor: Editor, html: string) {
  *  paste_webkit_styles: "all", // Keep all of them
  *  paste_webkit_styles: "font-weight color" // Keep specific ones
  */
-function removeWebKitStyles(editor: Editor, content: string, internal: boolean, isWordHtml: boolean) {
+const removeWebKitStyles = (editor: Editor, content: string, internal: boolean, isWordHtml: boolean) => {
   // WordFilter has already processed styles at this point and internal doesn't need any processing
   if (isWordHtml || internal) {
     return content;
@@ -107,7 +107,7 @@ function removeWebKitStyles(editor: Editor, content: string, internal: boolean, 
   if (webKitStyles) {
     const dom = editor.dom, node = editor.selection.getNode();
 
-    content = content.replace(/(<[^>]+) style="([^"]*)"([^>]*>)/gi, function (all, before, value, after) {
+    content = content.replace(/(<[^>]+) style="([^"]*)"([^>]*>)/gi, (all, before, value, after) => {
       const inputStyles = dom.parseStyle(dom.decode(value));
       let outputStyles = {};
 
@@ -141,20 +141,20 @@ function removeWebKitStyles(editor: Editor, content: string, internal: boolean, 
   }
 
   // Keep internal styles
-  content = content.replace(/(<[^>]+) data-mce-style="([^"]+)"([^>]*>)/gi, function (all, before, value, after) {
+  content = content.replace(/(<[^>]+) data-mce-style="([^"]+)"([^>]*>)/gi, (all, before, value, after) => {
     return before + ' style="' + value + '"' + after;
   });
 
   return content;
-}
+};
 
-function removeUnderlineAndFontInAnchor(editor: Editor, root: Element) {
-  editor.$('a', root).find('font,u').each(function (i, node) {
+const removeUnderlineAndFontInAnchor = (editor: Editor, root: Element) => {
+  editor.$('a', root).find('font,u').each((i, node) => {
     editor.dom.remove(node, true);
   });
-}
+};
 
-const setup = function (editor: Editor) {
+const setup = (editor: Editor) => {
   if (Env.webkit) {
     addPreProcessFilter(editor, removeWebKitStyles);
   }

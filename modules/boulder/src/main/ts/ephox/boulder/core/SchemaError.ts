@@ -1,7 +1,12 @@
 import { SimpleResult } from '../alien/SimpleResult';
 import { formatObj } from '../format/PrettyPrinter';
 
-const nu = function (path, getErrorInfo) {
+export interface SchemaError {
+  readonly path: string[];
+  readonly getErrorInfo: () => string;
+}
+
+const nu = <T>(path: string[], getErrorInfo: () => string): SimpleResult<SchemaError[], T> => {
   return SimpleResult.serror([{
     path,
     // This is lazy so that it isn't calculated unnecessarily
@@ -9,35 +14,37 @@ const nu = function (path, getErrorInfo) {
   }]);
 };
 
-const missingStrict = function (path, key, obj) {
-  return nu(path, function () {
+const missingStrict = <T>(path: string[], key: string, obj: any): SimpleResult<SchemaError[], T> => {
+  return nu(path, () => {
     return 'Could not find valid *strict* value for "' + key + '" in ' + formatObj(obj);
   });
 };
 
-const missingKey = function (path, key) {
-  return nu(path, function () {
+const missingKey = <T>(path: string[], key: string): SimpleResult<SchemaError[], T> => {
+  return nu(path, () => {
     return 'Choice schema did not contain choice key: "' + key + '"';
   });
 };
 
-const missingBranch = function (path, branches, branch) {
-  return nu(path, function () {
+const missingBranch = <T>(path: string[], branches: Record<string, any>, branch: string): SimpleResult<SchemaError[], T> => {
+  return nu(path, () => {
     return 'The chosen schema: "' + branch + '" did not exist in branches: ' + formatObj(branches);
   });
 };
 
-const unsupportedFields = function (path, unsupported) {
-  return nu(path, function () {
+const unsupportedFields = <T>(path: string[], unsupported: string[]): SimpleResult<SchemaError[], T> => {
+  return nu(path, () => {
     return 'There are unsupported fields: [' + unsupported.join(', ') + '] specified';
   });
 };
 
-const custom = function (path, err) {
-  return nu(path, function () { return err; });
+const custom = <T>(path: string[], err: string): SimpleResult<SchemaError[], T> => {
+  return nu(path, () => {
+    return err;
+  });
 };
 
-const toString = function (error) {
+const toString = (error: SchemaError): string => {
   return 'Failed path: (' + error.path.join(' > ') + ')\n' + error.getErrorInfo();
 };
 

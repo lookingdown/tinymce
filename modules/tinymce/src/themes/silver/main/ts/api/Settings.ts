@@ -5,7 +5,7 @@
  * For commercial licenses see https://www.tiny.cloud/
  */
 
-import { Arr, Obj, Optional, Type } from '@ephox/katamari';
+import { Arr, Fun, Obj, Optional, Type } from '@ephox/katamari';
 import { SelectorFind, SugarBody, SugarElement, SugarShadowDom } from '@ephox/sugar';
 import DOMUtils from 'tinymce/core/api/dom/DOMUtils';
 import Editor from 'tinymce/core/api/Editor';
@@ -17,7 +17,7 @@ export interface ToolbarGroupSetting {
   items: string[];
 }
 
-const getSkinUrl = function (editor: Editor): string {
+const getSkinUrl = (editor: Editor): string => {
   const skin = editor.getParam('skin');
   let skinUrl = editor.getParam('skin_url');
 
@@ -75,7 +75,7 @@ const isMultipleToolbars = (editor: Editor): boolean => getMultipleToolbarsSetti
     const toolbar = editor.getParam('toolbar', [], 'string[]');
     return toolbar.length > 0;
   },
-  () => true
+  Fun.always
 );
 
 export enum ToolbarMode {

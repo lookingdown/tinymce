@@ -9,19 +9,23 @@ import AddOnManager from './AddOnManager';
 import { DomQueryConstructor } from './dom/DomQuery';
 import Editor from './Editor';
 import { NotificationManagerImpl } from './NotificationManager';
-import { WindowManagerImpl } from './WindowManager';
 import { EditorUiApi } from './ui/Ui';
+import { WindowManagerImpl } from './WindowManager';
 
-export type Theme = {
+export interface Theme {
   ui?: any;
   inline?: any;
-  execCommand? (command: string, ui?: boolean, value?: any): boolean;
-  destroy? (): void;
-  init? (editor: Editor, url: string, $: DomQueryConstructor);
-  renderUI? (): { iframeContainer?: HTMLIFrameElement; editorContainer: HTMLElement; api?: EditorUiApi };
-  getNotificationManagerImpl? (): NotificationManagerImpl;
-  getWindowManagerImpl? (): WindowManagerImpl;
-};
+  execCommand?: (command: string, ui?: boolean, value?: any) => boolean;
+  destroy?: () => void;
+  init?: (editor: Editor, url: string, $: DomQueryConstructor) => void;
+  renderUI?: () => {
+    iframeContainer?: HTMLIFrameElement;
+    editorContainer: HTMLElement;
+    api?: Partial<EditorUiApi>;
+  };
+  getNotificationManagerImpl?: () => NotificationManagerImpl;
+  getWindowManagerImpl?: () => WindowManagerImpl;
+}
 
 type ThemeManager = AddOnManager<Theme>;
 const ThemeManager: ThemeManager = AddOnManager.ThemeManager;

@@ -5,14 +5,16 @@ import * as FieldSchema from 'ephox/boulder/api/FieldSchema';
 import { FieldProcessorAdt } from 'ephox/boulder/api/Main';
 import * as ValueSchema from 'ephox/boulder/api/ValueSchema';
 
-UnitTest.test('Atomic Test: api.FieldSchemaTest', function () {
+UnitTest.test('Atomic Test: api.FieldSchemaTest', () => {
   const assertFieldValue = (label: string, expected: any, input: any, field: FieldProcessorAdt) => {
     const schema = ValueSchema.objOf([
       field
     ]);
 
     ValueSchema.asRaw('spec', schema, input).fold(
-      (err) => { throw err; },
+      (err) => {
+        throw err;
+      },
       (value) => Assert.eq(label, expected, value)
     );
   };

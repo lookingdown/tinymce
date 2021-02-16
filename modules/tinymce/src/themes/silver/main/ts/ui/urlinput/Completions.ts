@@ -6,7 +6,7 @@
  */
 
 import { Menu as BridgeMenu } from '@ephox/bridge';
-import { Arr, Optional, Strings } from '@ephox/katamari';
+import { Arr, Fun, Optional, Strings } from '@ephox/katamari';
 
 import { LinkInformation } from '../../backstage/UrlInputBackstage';
 import { LinkTarget, LinkTargetType } from '../core/LinkTargets';
@@ -23,7 +23,7 @@ const toMenuItem = (target: LinkTarget): BridgeMenu.MenuItemSpec => ({
   meta: {
     attach: target.attach
   },
-  onAction: () => { }
+  onAction: Fun.noop
 });
 
 const staticMenuItem = (title: string, url: string): BridgeMenu.MenuItemSpec => ({
@@ -33,7 +33,7 @@ const staticMenuItem = (title: string, url: string): BridgeMenu.MenuItemSpec => 
   meta: {
     attach: undefined
   },
-  onAction: () => { }
+  onAction: Fun.noop
 });
 
 const toMenuItems = (targets: LinkTarget[]): BridgeMenu.MenuItemSpec[] =>
@@ -55,16 +55,16 @@ const anchorTargetBottom = (linkInfo: LinkInformation) => Optional.from(linkInfo
 
 const historyTargets = (history: string[]) => Arr.map(history, (url) => staticMenuItem(url, url));
 
-const joinMenuLists = function (items: BridgeMenu.MenuItemSpec[][]) {
-  return Arr.foldl(items, function (a, b) {
+const joinMenuLists = (items: BridgeMenu.MenuItemSpec[][]) => {
+  return Arr.foldl(items, (a, b) => {
     const bothEmpty = a.length === 0 || b.length === 0;
     return bothEmpty ? a.concat(b) : a.concat(separator, b);
-  }, <SingleMenuItemSpec[]> []);
+  }, [] as SingleMenuItemSpec[]);
 };
 
-const filterByQuery = function (term: string, menuItems: BridgeMenu.MenuItemSpec[]) {
+const filterByQuery = (term: string, menuItems: BridgeMenu.MenuItemSpec[]) => {
   const lowerCaseTerm = term.toLowerCase();
-  return Arr.filter(menuItems, function (item) {
+  return Arr.filter(menuItems, (item) => {
     const text = item.meta !== undefined && item.meta.text !== undefined ? item.meta.text : item.text;
     return Strings.contains(text.toLowerCase(), lowerCaseTerm) || Strings.contains(item.value.toLowerCase(), lowerCaseTerm);
   });

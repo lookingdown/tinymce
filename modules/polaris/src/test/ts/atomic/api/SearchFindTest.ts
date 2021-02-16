@@ -5,11 +5,11 @@ import * as Search from 'ephox/polaris/api/Search';
 import * as Safe from 'ephox/polaris/pattern/Safe';
 import { PRegExp } from 'ephox/polaris/pattern/Types';
 
-UnitTest.test('api.Search.findall (using api.Pattern)', function () {
-  const checkAll = function (expected: [number, number][], input: string, pattern: PRegExp) {
+UnitTest.test('api.Search.findall (using api.Pattern)', () => {
+  const checkAll = (expected: [number, number][], input: string, pattern: PRegExp) => {
     const actual = Search.findall(input, pattern);
     assert.eq(expected.length, actual.length);
-    Arr.each(expected, function (exp, i) {
+    Arr.each(expected, (exp, i) => {
       assert.eq(exp[0], actual[i].start);
       assert.eq(exp[1], actual[i].finish);
     });
@@ -19,10 +19,10 @@ UnitTest.test('api.Search.findall (using api.Pattern)', function () {
     name
   });
 
-  const checkMany = function (expected: [number, number, string][], text: string, targets: ReturnType<typeof testData>[]) {
+  const checkMany = (expected: [number, number, string][], text: string, targets: ReturnType<typeof testData>[]) => {
     const actual = Search.findmany(text, targets);
     assert.eq(expected.length, actual.length);
-    Arr.each(expected, function (exp, i) {
+    Arr.each(expected, (exp, i) => {
       assert.eq(exp[0], actual[i].start);
       assert.eq(exp[1], actual[i].finish);
       assert.eq(exp[2], actual[i].name);

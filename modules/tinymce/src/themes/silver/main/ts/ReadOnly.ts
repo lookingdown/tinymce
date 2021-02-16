@@ -53,7 +53,7 @@ const receivingConfig = (): Behaviour.NamedConfiguredBehaviour<any, any> => Rece
   channels: {
     [ReadOnlyChannel]: {
       schema: ReadOnlyDataSchema,
-      onReceive(comp, data: ReadOnlyData) {
+      onReceive: (comp, data: ReadOnlyData) => {
         Disabling.set(comp, data.readonly);
       }
     }
@@ -63,5 +63,6 @@ const receivingConfig = (): Behaviour.NamedConfiguredBehaviour<any, any> => Rece
 export {
   ReadOnlyDataSchema,
   setupReadonlyModeSwitch,
-  receivingConfig
+  receivingConfig,
+  broadcastReadonly
 };

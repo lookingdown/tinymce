@@ -16,7 +16,6 @@ const point = (type: string, element: SugarElement<any>, x: number, y: number): 
 
   // Adapted from https://stackoverflow.com/a/42447620/11275515
   if (typeof TouchEvent === 'function' && typeof Touch === 'function') {
-    // @ts-ignore
     const touchAction = new Touch(touch);
     const ev: TouchEvent = new TouchEvent(type, {
       cancelable: true,
@@ -38,7 +37,7 @@ const point = (type: string, element: SugarElement<any>, x: number, y: number): 
       } as any);
     } else {
       // IE 11 doesn't support the UIEvent constructor, so we need to fallback to using createEvent
-      ev = (<Document> element.dom.ownerDocument).createEvent('UIEvent');
+      ev = element.dom.ownerDocument.createEvent('UIEvent');
       ev.initUIEvent(type, true, true, window, null);
     }
     // Patch in the touch properties
