@@ -9,7 +9,6 @@ import { BlobConversions, ImageResult, ImageTransformations, Proxy, ResultConver
 import { Cell, Optional, Type } from '@ephox/katamari';
 import { SelectorFind, SugarElement } from '@ephox/sugar';
 import Editor from 'tinymce/core/api/Editor';
-import { BlobInfo } from 'tinymce/core/api/file/BlobCache';
 
 import Delay from 'tinymce/core/api/util/Delay';
 import Promise from 'tinymce/core/api/util/Promise';
@@ -128,10 +127,10 @@ const cancelTimedUpload = (imageUploadTimerState: Cell<number>) => {
   Delay.clearTimeout(imageUploadTimerState.get());
 };
 
-const updateSelectedImage = (editor: Editor, origBlob: Blob, ir: ImageResult, uploadImmediately: boolean, imageUploadTimerState: Cell<number>,
-                             selectedImage: HTMLImageElement, size?: ImageSize.ImageSize) => {
-  return ir.toBlob().then((blob) => {
-    let uri: string, name: string, filename: string, blobInfo: BlobInfo;
+const updateSelectedImage = function (editor: Editor, ir, uploadImmediately, imageUploadTimerState, selectedImage, size?) {
+  return ir.toBlob().then(function (blob) {
+
+    let uri: string, name: string, path: string, filename: string, blobCache: blobCache blobInfo: BlobInfo; 
 
     const blobCache = editor.editorUpload.blobCache;
     uri = selectedImage.src;
@@ -142,13 +141,14 @@ const updateSelectedImage = (editor: Editor, origBlob: Blob, ir: ImageResult, up
 
     if (Settings.shouldReuseFilename(editor)) {
       blobInfo = blobCache.getByUri(uri);
-      if (Type.isNonNullable(blobInfo)) {
+      if (blobInfo) {
         uri = blobInfo.uri();
         name = blobInfo.name();
         filename = blobInfo.filename();
+        path = blobInfo.path();
       } else {
-        name = extractFilename(editor, uri, FileExtractType.Name);
-        filename = extractFilename(editor, uri, FileExtractType.NameExt);
+        name = extractFilename(editor, uri).substring(extractFilename(editor, uri).lastIndexOf('/') + 1);
+        path = extractFilename(editor, uri).substring(0, extractFilename(editor, uri).lastIndexOf('/') + 1);
       }
     }
 
@@ -158,7 +158,8 @@ const updateSelectedImage = (editor: Editor, origBlob: Blob, ir: ImageResult, up
       base64: ir.toBase64(),
       uri,
       name,
-      filename: useFilename ? filename : undefined
+      filename: useFilename ? filename : undefined,
+      path
     });
 
     blobCache.add(blobInfo);
